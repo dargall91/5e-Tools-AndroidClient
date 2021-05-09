@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/monster_legendary_actions_layout"
+    android:layout_width="1000dp"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="10dp"
+    android:gravity="start"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Legendary Actions"
+        android:textSize="30sp"
+        android:textStyle="bold"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:id="@+id/legendary_count_layout">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Legendary Action Count:"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:id="@+id/legendary_count_textview"/>
+
+        <Spinner
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/legendary_count_spinner"
+            android:entries="@array/legendary_action_values"
+            android:spinnerMode="dropdown"
+            android:dropDownWidth="85dp"/>
+    </LinearLayout>
+</LinearLayout>

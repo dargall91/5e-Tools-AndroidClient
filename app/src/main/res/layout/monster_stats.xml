@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/monster_stats"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="left"
+    android:columnCount="6"
+    android:rowCount="1">
+
+    <LinearLayout
+        android:layout_width="160dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="STR"
+            android:textStyle="bold"/>
+
+        <Spinner
+            android:id="@+id/strength"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:dropDownWidth="160dp"
+            android:spinnerMode="dropdown"
+            android:entries="@array/ability_scores"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/str_mod"/>
+
+        <CheckBox
+            android:id="@+id/str_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Saving Throws"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/athletics_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/athletics_prof"
+                android:text="Athletics"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="DEX"
+            android:textStyle="bold"/>
+
+        <Spinner
+            android:id="@+id/dexterity"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:dropDownWidth="160dp"
+            android:spinnerMode="dropdown"
+            android:entries="@array/ability_scores"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/dex_mod"/>
+
+        <CheckBox
+            android:id="@+id/dex_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Saving Throws"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/acrobatics_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/acrobatics_prof"
+                android:text="Acrobatics"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/sleight_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sleight_prof"
+                android:text="Sleight of Hand"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/stealth_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/stealth_prof"
+                android:text="Stealth"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="160dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="CON"
+            android:textStyle="bold"/>
+
+        <Spinner
+            android:id="@+id/constitution"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:dropDownWidth="160dp"
+            android:spinnerMode="dropdown"
+            android:entries="@array/ability_scores"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/con_mod"/>
+
+        <CheckBox
+            android:id="@+id/con_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Saving Throws"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="160dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="INT"
+            android:textStyle="bold"/>
+
+        <Spinner
+            android:id="@+id/intelligence"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:dropDownWidth="160dp"
+            android:spinnerMode="dropdown"
+            android:entries="@array/ability_scores"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/int_mod"/>
+
+        <CheckBox
+            android:id="@+id/int_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Saving Throws"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/arcana_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/arcana_prof"
+                android:text="Arcana"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/history_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/history_prof"
+                android:text="History"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/investigation_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/investigation_prof"
+                android:text="Investigation"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/nature_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/nature_prof"
+                android:text="Nature"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/religion_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/religion_prof"
+                android:text="Religion"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="160dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="WIS"
+            android:textStyle="bold"/>
+
+        <Spinner
+            android:id="@+id/wisdom"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:dropDownWidth="160dp"
+            android:spinnerMode="dropdown"
+            android:entries="@array/ability_scores"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/wis_mod"/>
+
+        <CheckBox
+            android:id="@+id/wis_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Saving Throws"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/animal_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/animal_prof"
+                android:text="Animal Handling"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/insight_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/insight_prof"
+                android:text="Insight"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/medicine_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/medicine_prof"
+                android:text="Medicine"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/perception_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/perception_prof"
+                android:text="Perception"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/survival_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/survival_prof"
+                android:text="Survival"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="160dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="CHA"
+            android:textStyle="bold"/>
+
+        <Spinner
+            android:id="@+id/charisma"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:dropDownWidth="160dp"
+            android:spinnerMode="dropdown"
+            android:entries="@array/ability_scores"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/cha_mod"/>
+
+        <CheckBox
+            android:id="@+id/cha_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Saving Throws"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/deception_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/deception_prof"
+                android:text="Deception"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/intimidation_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/intimidation_prof"
+                android:text="Intimidation"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/performance_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/performance_prof"
+                android:text="Performance"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/persuasion_exp"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/persuasion_prof"
+                android:text="Persuasion"/>
+        </LinearLayout>
+    </LinearLayout>
+</GridLayout>

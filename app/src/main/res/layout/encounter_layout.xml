@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/encounter_layout"
+    android:layout_width="1000dp"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="10dp"
+    android:gravity="left"
+    android:orientation="vertical">
+
+    <include layout="@layout/encounter_name_buttons_layout"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <include layout="@layout/encounter_player_levels_container"/>
+        <include layout="@layout/encounter_difficulty_layout"/>
+    </LinearLayout>
+
+    <include layout="@layout/encounter_music_lair_layout"/>
+    <include layout="@layout/encounter_monsters_container"/>
+
+</LinearLayout>

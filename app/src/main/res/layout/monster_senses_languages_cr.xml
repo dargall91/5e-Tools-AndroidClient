@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/monster_senses_languages_cr"
+    android:layout_width="1000dp"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="10dp"
+    android:gravity="start"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Senses:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="senses"
+            android:id="@+id/senses"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Languages:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="languages"
+            android:id="@+id/languages"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CR:"
+            android:textSize="20dp"/>
+
+        <Spinner
+            android:id="@+id/challenge"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:dropDownWidth="160dp"
+            android:spinnerMode="dropdown"
+            android:entries="@array/challenge_ratings"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/xp"
+            android:text="(0 XP)"
+            android:textSize="20dp"/>
+    </LinearLayout>
+
+</LinearLayout>

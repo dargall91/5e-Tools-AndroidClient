@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/monster_layout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="left"
+    android:orientation="vertical">
+
+    <include layout="@layout/basic_monster_info"/>
+    <include layout="@layout/monster_stats"/>
+    <include layout="@layout/monster_senses_languages_cr"/>
+    <include layout="@layout/monster_abilities_layout"/>
+    <include layout="@layout/add_ability_button"/>
+    <include layout="@layout/monster_actions_layout"/>
+    <include layout="@layout/add_action_button"/>
+    <include layout="@layout/monster_legendary_actions_layout"/>
+    <include layout="@layout/add_legendary_action_button"/>
+
+</LinearLayout>

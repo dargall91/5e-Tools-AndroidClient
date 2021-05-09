@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/add_monster_in_encounter_layout"
+    android:layout_width="400dp"
+    android:layout_height="400dp"
+    android:gravity="left"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Type the name of the monster to add to the encounter:"
+        android:textSize="20sp"/>
+
+    <AutoCompleteTextView
+        android:id="@+id/monster_text"
+        android:layout_width="300dp"
+        android:layout_height="40dp"
+        android:dropDownWidth="200dp"
+        android:spinnerMode="dropdown"
+        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
+</LinearLayout>

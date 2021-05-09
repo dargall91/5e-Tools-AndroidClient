@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/combatant_layout"
+    android:layout_width="wrap_content"
+    android:layout_height="50dp"
+    android:gravity="start"
+    android:orientation="horizontal"
+    android:layout_marginBottom="5dp"
+    android:layout_marginLeft="10dp">
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_marginRight="10dp"
+        android:textSize="20sp"/>
+
+    <TextView
+        android:id="@+id/ac_label"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="AC:"
+        android:textSize="20sp"
+        android:layout_marginRight="5dp"/>
+
+    <EditText
+        android:id="@+id/ac_text"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:layout_marginRight="10dp"/>
+
+    <TextView
+        android:id="@+id/hp_label"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="HP:"
+        android:textSize="20sp"
+        android:layout_marginRight="5dp"/>
+
+    <EditText
+        android:id="@+id/hp_text"
+        android:layout_width="75dp"
+        android:layout_height="40dp"
+        android:layout_marginRight="10dp"/>
+
+    <Button
+        android:id="@+id/kill_revive"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginLeft="10dp"
+        android:text="Kill"/>
+</LinearLayout>

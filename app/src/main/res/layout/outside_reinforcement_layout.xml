@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/outside_reinforcement_layout"
+    android:layout_width="400dp"
+    android:layout_height="400dp"
+    android:gravity="left"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select a monster, quantity, and initiative roll:"
+        android:textSize="20sp"/>
+
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:rowCount="2"
+        android:columnCount="3"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Monster:"
+            android:textStyle="bold"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Quantity:"
+            android:textStyle="bold"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Initiative:"
+            android:layout_marginLeft="20dp"
+            android:textStyle="bold"
+            android:textSize="20sp"/>
+
+        <AutoCompleteTextView
+            android:id="@+id/monster_text"
+            android:layout_width="200dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:dropDownWidth="200dp"
+            android:spinnerMode="dropdown"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
+
+        <Spinner
+            android:id="@+id/quantity_spinner"
+            android:layout_width="75dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:dropDownWidth="85dp"
+            android:entries="@array/d20_roll"
+            android:spinnerMode="dropdown"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
+
+        <Spinner
+            android:id="@+id/initiative_spinner"
+            android:layout_width="75dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="20dp"
+            android:dropDownWidth="85dp"
+            android:entries="@array/d20_roll"
+            android:spinnerMode="dropdown"
+            android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
+    </GridLayout>
+</LinearLayout>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/player_initiative_layout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center">
+
+    <Spinner
+        android:id="@+id/pc_spinner"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginLeft="10dp"
+        android:dropDownWidth="160dp"
+        android:spinnerMode="dropdown"
+        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+    <Spinner
+        android:id="@+id/initiative_spinner"
+        android:layout_width="75dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginLeft="20dp"
+        android:dropDownWidth="85dp"
+        android:entries="@array/initiatives"
+        android:spinnerMode="dropdown"
+        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
+</LinearLayout>

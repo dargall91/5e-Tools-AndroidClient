@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/basic_monster_info"
+    android:layout_width="1000dp"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="10dp"
+    android:gravity="start"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/name"
+        android:textSize="40sp"
+        android:text="Name"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Display Name:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="400dp"
+            android:layout_height="wrap_content"
+            android:hint="the name the players see"
+            android:id="@+id/display_name"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:id="@+id/save_monster"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:text="Delete"
+            android:id="@+id/delete_monster"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:text="Rename"
+            android:id="@+id/rename_monster"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Size:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="275dp"
+            android:layout_height="wrap_content"
+            android:hint="the monster's size"
+            android:id="@+id/size"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Type:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="275dp"
+            android:layout_height="wrap_content"
+            android:hint="the monster's type(s)"
+            android:id="@+id/type"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alignment:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="225dp"
+            android:layout_height="wrap_content"
+            android:hint="the monster's alignment"
+            android:id="@+id/alignment"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AC:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:hint="AC"
+            android:id="@+id/ac"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hit Points:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:hint="Hit Points"
+            android:id="@+id/hit_points"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Speed:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:hint="Speed"
+            android:id="@+id/speed"/>
+    </LinearLayout>
+
+</LinearLayout>
