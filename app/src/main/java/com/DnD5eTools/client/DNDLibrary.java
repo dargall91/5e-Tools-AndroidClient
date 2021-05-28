@@ -13,7 +13,7 @@ import java.util.ArrayList;
  */
 public interface DNDLibrary {
 	Monster getMonster(String name) throws JSONException;
-	Encounter getEncounter(String gname) throws JSONException;
+	Encounter getEncounter(String name) throws JSONException;
 	PlayerCharacter getPlayerCharacter(String name) throws JSONException;
 	boolean addMonster(String name) throws JSONException;
 	boolean addEncounter(String name) throws JSONException;

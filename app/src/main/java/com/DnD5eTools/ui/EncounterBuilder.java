@@ -625,14 +625,14 @@ public class EncounterBuilder extends Fragment {
                 }
             });
 
-            Spinner initative = monster.findViewById(R.id.initiative);
-            initative.setId(index);
-            initative.setTag(index);
-            initative.setSelection(monData.get(index).getInitiative() - 1, false);
-            initative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            Spinner initiative = monster.findViewById(R.id.initiative);
+            initiative.setId(index);
+            initiative.setTag(index);
+            initiative.setSelection(monData.get(index).getInitiative() - 1, false);
+            initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter[0].setInitiative(index,  initative.getSelectedItemPosition() + 1);
+                    encounter[0].setInitiative(index,  initiative.getSelectedItemPosition() + 1);
                 }
 
                 @Override

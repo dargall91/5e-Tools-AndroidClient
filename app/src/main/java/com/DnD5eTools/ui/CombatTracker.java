@@ -141,14 +141,6 @@ public class CombatTracker extends Fragment {
             connect.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    /*getFragmentManager().findFragmentById(tracker.getId());
-
-                    getFragmentManager().beginTransaction()
-                            .detach(tracker)
-                            .attach(tracker)
-                            .commit();
-
-                    onCreateView(inflater, container, savedInstanceState);*/
                     refresh();
                 }
             });
@@ -156,7 +148,7 @@ public class CombatTracker extends Fragment {
             connect.show();
         }
 
-        return view;//inflater.inflate(R.layout.combat_tracker_layout, container, false);
+        return view;
     }
 
     public boolean checkConnection() {
@@ -646,7 +638,6 @@ public class CombatTracker extends Fragment {
                 public void onNothingSelected(AdapterView<?> parent) { }
             });
 
-            //TODO: Why is this on a thread?
             thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -672,7 +663,6 @@ public class CombatTracker extends Fragment {
         ArrayList<MonsterData> monData = encounter[0].getMonsterData();
 
         for(MonsterData i : monData) {
-            //TODO: Why is this on a thread?
             thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -1376,11 +1366,9 @@ public class CombatTracker extends Fragment {
 
     }
 
-    //TODO: optimize so that I do not need multiple copies of sound clips. Each stress type should have 25-50% chance of playing that specific clip, or a generic one. In first if statement,
-    //basically do rand 0-x. If > 0, play random generic good/bad clip, then return. If 0, go to next block of code as normal, where specific sound will be played
-    //add second line to affliction and virtue dat files that will point to the generic sound clips
     /**
-     * Plays a sound based on the button clicked on the soundboard
+     * Plays a sound based on the button clicked on the soundboard.
+     *
      * @param dat the file path for the appropriate .dat file
      * @param stressType AFFLICTION if an affliction, VIRTUE if a virtue, any other non-null value otherwise
      */

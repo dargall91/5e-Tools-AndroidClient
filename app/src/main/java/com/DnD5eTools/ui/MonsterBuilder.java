@@ -123,8 +123,6 @@ public class MonsterBuilder extends Fragment {
         }
 
         return view;
-
-        //return inflater.inflate(R.layout.encounter_builder_layout, container, false);
     }
 
     public static MonsterBuilder getMonBuilder() {
@@ -157,6 +155,7 @@ public class MonsterBuilder extends Fragment {
                     monList.add(ADD_MONSTER);
                     Collections.sort(monList);
 
+                    //TODO: What happens if the list is empty? Should probably set monster[0] to null, then in onCreateView only call builderView() is monster != null
                     if (name == null)
                         monster[0] = proxy.getMonster(monList.get(1));
 
@@ -503,7 +502,7 @@ public class MonsterBuilder extends Fragment {
                             proxy.updateMonster(monster[0]);
                             proxy.saveMonster(monster[0].getName());
                         } catch (Exception e) {
-                            Log.i("update", e.getMessage());
+                            Log.i("save", e.getMessage());
                         }
                     }
                 });
@@ -523,26 +522,41 @@ public class MonsterBuilder extends Fragment {
             @Override
             public void onClick(View v) {
                 //TODO: alert dialog to confirm, then delete, then get new monList, then set monster[0] to monList.get(0), then listView() and builderView()
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            //proxy.deleteMonster(monster[0].getName());
-                        } catch (Exception e) {
-                            Log.i("update", e.getMessage());
-                        }
-                    }
-                });
+                new AlertDialog.Builder(getContext())
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle("Delete Monster")
+                        .setMessage("Delete " + monster[0].getName() + "?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final boolean[] deleted = new boolean[1];
+                                Thread thread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            deleted[0] = proxy.deleteMonster(monster[0].getName());
+                                        } catch (Exception e) {
+                                            Log.i("delete", e.getMessage());
+                                        }
+                                    }
+                                });
 
-                thread.start();
+                                thread.start();
 
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                                try {
+                                    thread.join();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
 
-                monsterListView(null);
+                                if (deleted[0]) {
+                                    monsterListView(null);
+                                    builderView();
+                                }
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
             }
         });
 
@@ -584,7 +598,7 @@ public class MonsterBuilder extends Fragment {
                                             monster[0].setName(newName.getText().toString());
                                             success[0] = proxy.renameMonster(oldName, monster[0]);
                                         } catch (Exception e) {
-                                            Log.i("update", e.getMessage());
+                                            Log.i("rename", e.getMessage());
                                         }
                                     }
                                 });
@@ -613,6 +627,48 @@ public class MonsterBuilder extends Fragment {
                 });
 
                 rename.show();
+            }
+        });
+
+        Button restore = basicInfo.findViewById(R.id.restore_monster);
+        restore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(getContext())
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle("Restore Monster")
+                        .setMessage("Restore " + monster[0].getName() + " to the last saved state from the server?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final boolean[] restored = new boolean[1];
+                                Thread thread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            restored[0] = proxy.restoreMonster(monster[0].getName());
+                                        } catch (Exception e) {
+                                            Log.i("restore", e.getMessage());
+                                        }
+                                    }
+                                });
+
+                                thread.start();
+
+                                try {
+                                    thread.join();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                if (restored[0]) {
+                                    monsterListView(monster[0].getName());
+                                    builderView();
+                                }
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
             }
         });
     }
