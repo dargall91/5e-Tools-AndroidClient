@@ -109,12 +109,12 @@ public class MonsterBuilder extends Fragment {
         this.savedInstanceState = savedInstanceState;
         builder = this;
 
-        proxy = MainActivity.getProxy();
-        view = inflater.inflate(R.layout.monster_builder_layout, container, false);
-        view.setId(View.generateViewId());
-        view.setTag("MonsterBuilder");
-
         if (MainActivity.isConnected()) {
+            proxy = MainActivity.getProxy();
+            view = inflater.inflate(R.layout.monster_builder_layout, container, false);
+            view.setId(View.generateViewId());
+            view.setTag("MonsterBuilder");
+
             abilities = view.findViewById(R.id.monster_abilities_layout);
             actions = view.findViewById(R.id.monster_actions_layout);
             legActions = view.findViewById(R.id.monster_legendary_actions_layout);

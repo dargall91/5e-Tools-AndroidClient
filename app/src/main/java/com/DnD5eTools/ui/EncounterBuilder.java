@@ -67,11 +67,11 @@ public class EncounterBuilder extends Fragment {
         this.savedInstanceState = savedInstanceState;
         builder = this;
 
-        view = inflater.inflate(R.layout.encounter_builder_layout, container, false);
-        view.setId(View.generateViewId());
-        view.setTag("EncounterBuilder");
-
         if (MainActivity.isConnected()) {
+            view = inflater.inflate(R.layout.encounter_builder_layout, container, false);
+            view.setId(View.generateViewId());
+            view.setTag("EncounterBuilder");
+
             playerLevelsContainer = view.findViewById(R.id.encounter_player_levels_container);
             monstersContainer = view.findViewById(R.id.encounter_monsters_container);
 
