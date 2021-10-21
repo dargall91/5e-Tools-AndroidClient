@@ -80,6 +80,7 @@ public class EncounterBuilder extends Fragment {
                 public void run() {
                     try {
                         musicList = proxy.getMusicList();
+                        Collections.sort(musicList);
                     } catch (Exception e) {
                         Log.i("update", e.getMessage());
                     }
@@ -293,7 +294,7 @@ public class EncounterBuilder extends Fragment {
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: confirmation, then delete (also needs done in mon builder
+                //TODO: confirmation, then delete (also needs done in mon builder)
             }
         });
 
