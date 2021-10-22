@@ -24,7 +24,7 @@ import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
     private static DNDClientProxy proxy;
-    private final String SERVER = "Data/server.dat";
+    private final String SERVER = "Data/home_server.dat";
     private static boolean[] connection = {false};
     private static FragmentManager fm;
 
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //TODO: cannot write to assets. Current solution for changing server works, but settings cannot be saved; find solution
-        //for Rpi: 192.168.1.110, 8000
+        //for Rpi: 192.168.1.112, 8000
         //for pc: 192.168.1.118, 8000
         //chris's house: 192.168.0.24 (I think?), 8000
         proxy = new DNDClientProxy(host, port);
