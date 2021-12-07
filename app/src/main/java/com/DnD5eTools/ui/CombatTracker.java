@@ -119,7 +119,7 @@ public class CombatTracker extends Fragment {
             final AlertDialog.Builder connectionDialog = new AlertDialog.Builder(getContext());
             connectionDialog.setView(checkConn);
             connectionDialog.setTitle("Connection Error");
-            connectionDialog.setCancelable(false);
+            connectionDialog.setCancelable(true);
             connectionDialog.setPositiveButton("Change Connection", null);
             connectionDialog.setNegativeButton("Retry", null);
 
@@ -142,6 +142,7 @@ public class CombatTracker extends Fragment {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
                     refresh();
+                    System.out.println("dismissed");
                 }
             });
 
@@ -179,7 +180,7 @@ public class CombatTracker extends Fragment {
     }
 
     public void refresh() {
-        CombatTracker tracker = this;
+        Fragment tracker = this;
         getFragmentManager().findFragmentById(tracker.getId());
 
         getFragmentManager().beginTransaction()
@@ -187,7 +188,7 @@ public class CombatTracker extends Fragment {
                 .attach(tracker)
                 .commit();
 
-        onCreateView(inflater, container, savedInstanceState);
+        //onCreateView(inflater, container, null);
 
         //update other two fragments
         MonsterBuilder.getMonBuilder().refresh();

@@ -67,11 +67,11 @@ public class EncounterBuilder extends Fragment {
         this.savedInstanceState = savedInstanceState;
         builder = this;
 
-        view = inflater.inflate(R.layout.encounter_builder_layout, container, false);
-        view.setId(View.generateViewId());
-        view.setTag("EncounterBuilder");
-
         if (MainActivity.isConnected()) {
+            view = inflater.inflate(R.layout.encounter_builder_layout, container, false);
+            view.setId(View.generateViewId());
+            view.setTag("EncounterBuilder");
+
             playerLevelsContainer = view.findViewById(R.id.encounter_player_levels_container);
             monstersContainer = view.findViewById(R.id.encounter_monsters_container);
 
@@ -80,6 +80,7 @@ public class EncounterBuilder extends Fragment {
                 public void run() {
                     try {
                         musicList = proxy.getMusicList();
+                        Collections.sort(musicList);
                     } catch (Exception e) {
                         Log.i("update", e.getMessage());
                     }
@@ -293,7 +294,7 @@ public class EncounterBuilder extends Fragment {
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: confirmation, then delete (also needs done in mon builder
+                //TODO: confirmation, then delete (also needs done in mon builder)
             }
         });
 
