@@ -24,7 +24,8 @@ import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
     private static DNDClientProxy proxy;
-    private final String SERVER = "Data/home_server.dat";
+    private final String HOME_SERVER = "Data/home_server.dat";
+    private final String CHRIS_SERVER = "Data/chris_server.dat";
     private static boolean[] connection = {false};
     private static FragmentManager fm;
 
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             AssetManager assets = getApplicationContext().getAssets();
-            reader = new BufferedReader(new InputStreamReader(assets.open(SERVER)));
+            reader = new BufferedReader(new InputStreamReader(assets.open(HOME_SERVER)));
             host = reader.readLine();
             System.out.println(host);
             port = Integer.parseInt(reader.readLine());
@@ -60,6 +61,32 @@ public class MainActivity extends AppCompatActivity {
                     reader.close();
                 } catch (IOException e) {
 
+                }
+            }
+        }
+
+        /**
+         * If failed to connect to home server, probably playing at Chris's house.
+         * Try to connect to server there
+         */
+        if (!isConnected()) {
+            try {
+                AssetManager assets = getApplicationContext().getAssets();
+                reader = new BufferedReader(new InputStreamReader(assets.open(CHRIS_SERVER)));
+                host = reader.readLine();
+                System.out.println(host);
+                port = Integer.parseInt(reader.readLine());
+            } catch (IOException e) {
+                Log.i("read error", e.getMessage());
+                host = "localhost";
+                port = 0;
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+
+                    }
                 }
             }
         }
