@@ -56,6 +56,7 @@ public class DNDClientProxy implements DNDLibrary {
             call.put("params", jsonParams);
 
             Socket sock = new Socket(host, port);
+            sock.setSoTimeout(15000);
             OutputStream out = sock.getOutputStream();
             InputStream in = sock.getInputStream();
 
