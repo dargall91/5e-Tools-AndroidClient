@@ -65,6 +65,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        //TODO: cannot write to assets. Current solution for changing server works, but settings cannot be saved; find solution
+        //for Rpi: 192.168.1.112, 8000
+        //for pc: 192.168.1.118, 8000
+        //chris's house: 192.168.0.24 (I think?), 8000
+        proxy = new DNDClientProxy(host, port);
+
         /**
          * If failed to connect to home server, probably playing at Chris's house.
          * Try to connect to server there
@@ -81,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 host = "localhost";
                 port = 0;
             } finally {
+                proxy = new DNDClientProxy(host, port);
                 if (reader != null) {
                     try {
                         reader.close();
@@ -90,12 +97,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-
-        //TODO: cannot write to assets. Current solution for changing server works, but settings cannot be saved; find solution
-        //for Rpi: 192.168.1.112, 8000
-        //for pc: 192.168.1.118, 8000
-        //chris's house: 192.168.0.24 (I think?), 8000
-        proxy = new DNDClientProxy(host, port);
     }
 
     private static void checkConnection() {
