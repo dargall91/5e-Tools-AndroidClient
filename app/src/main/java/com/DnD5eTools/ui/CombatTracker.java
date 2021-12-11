@@ -204,6 +204,7 @@ public class CombatTracker extends Fragment {
             public void run() {
                 try {
                     players = proxy.getPlayerCharacterList();
+                    Collections.sort(players);
                 } catch (Exception e) {
                     Log.i("Combat", e.getMessage());
                 }
@@ -926,11 +927,11 @@ public class CombatTracker extends Fragment {
                             }
                         });
 
-                        if (i.isAlive(index))
+                        if (i.isAlive(index)) {
                             kill.setText("Kill");
-
-                        else
+                        } else {
                             kill.setText("Revive");
+                        }
 
                         name.setEnabled(i.isAlive(index));
                         ac_text.setEnabled(i.isAlive(index));
@@ -942,6 +943,8 @@ public class CombatTracker extends Fragment {
                                 if (i.isAlive(index)) {
                                     i.kill(index);
                                     kill.setText("Revive");
+
+                                    playSound(MONSTER_KILL, "OTHER");
                                 } else {
                                     i.revive(index);
                                     kill.setText("Kill");
@@ -952,7 +955,8 @@ public class CombatTracker extends Fragment {
                                 hp_text.setEnabled(i.isAlive(index));
 
                                 JSONArray combatArray = new JSONArray();
-                                for (Combatant c : combatants)
+
+                                for (Combatant c : combatants) {
                                     for (int k = 0; k < c.getQuantity(); k++) {
                                         if (!c.isReinforcement() && c.isAlive(k)) {
                                             try {
@@ -962,6 +966,7 @@ public class CombatTracker extends Fragment {
                                             }
                                         }
                                     }
+                                }
 
                                 Thread innerThread = new Thread(new Runnable() {
                                     @Override
