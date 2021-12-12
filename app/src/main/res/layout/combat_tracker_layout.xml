@@ -12,6 +12,13 @@
         <include layout="@layout/combat_left_side"/>
     </ScrollView>
 
-    <include layout="@layout/sound_board"/>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <include layout="@layout/sound_clip_grid"/>
+        <include layout="@layout/music_player"/>
+    </LinearLayout>
 
 </LinearLayout>

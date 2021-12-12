@@ -59,6 +59,7 @@ public class CombatTracker extends Fragment {
     private ArrayList<String> players;
     private Encounter[] encounter;
     private ArrayList<Combatant> combatants;
+    private ArrayList<String> musicList;
     private View view;
     private LayoutInflater inflater;
     private ViewGroup container;
@@ -204,6 +205,7 @@ public class CombatTracker extends Fragment {
             public void run() {
                 try {
                     players = proxy.getPlayerCharacterList();
+                    Collections.sort(players);
                 } catch (Exception e) {
                     Log.i("Combat", e.getMessage());
                 }
@@ -856,6 +858,10 @@ public class CombatTracker extends Fragment {
                     kill.setId(tag);
                     kill.setTag(tag);
 
+                    Button remove = combatantView.findViewById(R.id.remove);
+                    remove.setId(tag);
+                    remove.setTag(tag);
+
                     name.setText(i.getName());
                     ac_text.setText(i.getAC(index));
                     ac_text.addTextChangedListener(new TextWatcher() {
@@ -886,9 +892,7 @@ public class CombatTracker extends Fragment {
                         hp_label.setVisibility(View.INVISIBLE);
                         hp_text.setVisibility(View.INVISIBLE);
                         kill.setVisibility(View.INVISIBLE);
-                    }
-
-                    else {
+                    } else {
                         System.out.println(i.getName() + " is monster");
                         Monster[] monster = new Monster[1];
 
@@ -926,11 +930,11 @@ public class CombatTracker extends Fragment {
                             }
                         });
 
-                        if (i.isAlive(index))
+                        if (i.isAlive(index)) {
                             kill.setText("Kill");
-
-                        else
+                        } else {
                             kill.setText("Revive");
+                        }
 
                         name.setEnabled(i.isAlive(index));
                         ac_text.setEnabled(i.isAlive(index));
@@ -942,6 +946,10 @@ public class CombatTracker extends Fragment {
                                 if (i.isAlive(index)) {
                                     i.kill(index);
                                     kill.setText("Revive");
+
+                                    playSound(MONSTER_KILL, "OTHER");
+
+                                    remove.setVisibility(View.VISIBLE);
                                 } else {
                                     i.revive(index);
                                     kill.setText("Kill");
@@ -952,7 +960,8 @@ public class CombatTracker extends Fragment {
                                 hp_text.setEnabled(i.isAlive(index));
 
                                 JSONArray combatArray = new JSONArray();
-                                for (Combatant c : combatants)
+
+                                for (Combatant c : combatants) {
                                     for (int k = 0; k < c.getQuantity(); k++) {
                                         if (!c.isReinforcement() && c.isAlive(k)) {
                                             try {
@@ -962,6 +971,7 @@ public class CombatTracker extends Fragment {
                                             }
                                         }
                                     }
+                                }
 
                                 Thread innerThread = new Thread(new Runnable() {
                                     @Override
@@ -981,6 +991,48 @@ public class CombatTracker extends Fragment {
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
+                            }
+                        });
+
+                        remove.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                combatants.remove(i);
+
+                                JSONArray combatArray = new JSONArray();
+
+                                for (Combatant c : combatants) {
+                                    for (int k = 0; k < c.getQuantity(); k++) {
+                                        if (!c.isReinforcement() && c.isAlive(k)) {
+                                            try {
+                                                combatArray.put(c.toSimpleJson());
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Thread innerThread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            proxy.updateCombat(combatArray);
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
+
+                                innerThread.start();
+
+                                try {
+                                    innerThread.join();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                combatView();
                             }
                         });
                     }
@@ -1224,9 +1276,9 @@ public class CombatTracker extends Fragment {
     }
 
     private void soundBoard() {
-        GridLayout soundBoard = view.findViewById(R.id.sound_board);
+        GridLayout clipGrid = view.findViewById(R.id.sound_clip_gird);
 
-        Button enemyCrit = soundBoard.findViewById(R.id.enemy_crit);
+        Button enemyCrit = clipGrid.findViewById(R.id.enemy_crit);
         enemyCrit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1234,7 +1286,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button playerCrit = soundBoard.findViewById(R.id.player_crit);
+        Button playerCrit = clipGrid.findViewById(R.id.player_crit);
         playerCrit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1242,7 +1294,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button enemyDeath = soundBoard.findViewById(R.id.enemy_death);
+        Button enemyDeath = clipGrid.findViewById(R.id.enemy_death);
         enemyDeath.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1250,7 +1302,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button playerDeath = soundBoard.findViewById(R.id.player_death);
+        Button playerDeath = clipGrid.findViewById(R.id.player_death);
         playerDeath.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1258,7 +1310,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button trap = soundBoard.findViewById(R.id.trap);
+        Button trap = clipGrid.findViewById(R.id.trap);
         trap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1266,7 +1318,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button fear = soundBoard.findViewById(R.id.fear);
+        Button fear = clipGrid.findViewById(R.id.fear);
         fear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1274,7 +1326,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button irrational = soundBoard.findViewById(R.id.irrational);
+        Button irrational = clipGrid.findViewById(R.id.irrational);
         irrational.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1282,7 +1334,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button powerful = soundBoard.findViewById(R.id.powerful);
+        Button powerful = clipGrid.findViewById(R.id.powerful);
         powerful.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1290,7 +1342,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button paranoid = soundBoard.findViewById(R.id.paranoid);
+        Button paranoid = clipGrid.findViewById(R.id.paranoid);
         paranoid.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1298,7 +1350,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button courageous = soundBoard.findViewById(R.id.courageous);
+        Button courageous = clipGrid.findViewById(R.id.courageous);
         courageous.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1306,7 +1358,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button selfish = soundBoard.findViewById(R.id.selfish);
+        Button selfish = clipGrid.findViewById(R.id.selfish);
         selfish.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1314,10 +1366,10 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button stalwart = soundBoard.findViewById(R.id.stalwart);
+        Button stalwart = clipGrid.findViewById(R.id.stalwart);
         stalwart.setOnClickListener(v -> playSound(STALWART, VIRTUE));
 
-        Button abusive = soundBoard.findViewById(R.id.abusive);
+        Button abusive = clipGrid.findViewById(R.id.abusive);
         abusive.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1325,7 +1377,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button vigorous = soundBoard.findViewById(R.id.vigorous);
+        Button vigorous = clipGrid.findViewById(R.id.vigorous);
         vigorous.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1333,7 +1385,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button fearful = soundBoard.findViewById(R.id.fearful);
+        Button fearful = clipGrid.findViewById(R.id.fearful);
         fearful.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1341,7 +1393,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button focused = soundBoard.findViewById(R.id.focused);
+        Button focused = clipGrid.findViewById(R.id.focused);
         focused.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1349,7 +1401,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button hopeless = soundBoard.findViewById(R.id.hopeless);
+        Button hopeless = clipGrid.findViewById(R.id.hopeless);
         hopeless.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1357,7 +1409,7 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button masochistic = soundBoard.findViewById(R.id.masochistic);
+        Button masochistic = clipGrid.findViewById(R.id.masochistic);
         masochistic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1365,6 +1417,80 @@ public class CombatTracker extends Fragment {
             }
         });
 
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    musicList = proxy.getMusicList();
+                    Collections.sort(musicList);
+                } catch (Exception e) {
+                    Log.i("update", e.getMessage());
+                }
+            }
+        });
+
+        thread.start();
+
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        LinearLayout musicPlayer = view.findViewById(R.id.music_player);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, musicList);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        Spinner title = musicPlayer.findViewById(R.id.music_title);
+        title.setAdapter(adapter);
+        title.setSelection(0,false);
+
+        title.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Thread innerThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+
+                        } catch (Exception e) {
+                            Log.i("Combat", e.getMessage());
+                        }
+                    }
+                });
+
+                innerThread.start();
+
+                try {
+                    innerThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                Thread innerThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+
+                        } catch (Exception e) {
+                            Log.i("Combat", e.getMessage());
+                        }
+                    }
+                });
+
+                innerThread.start();
+
+                try {
+                    innerThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     /**

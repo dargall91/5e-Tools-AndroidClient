@@ -308,4 +308,30 @@ public class DNDClientProxy implements DNDLibrary {
         JSONObject jsonResult = new JSONObject(result);
         return jsonResult.optBoolean("result", false);
     }
+
+    /**
+     * Plays the specified track on the ServerCombatScreen
+     *
+     * @param track The file name of the track to play
+     *
+     * @return True if the track successfully played, otherwise false
+     * @throws JSONException
+     */
+    public boolean playMusic(String track) throws JSONException {
+        String result = callMethod("music", "play", new Object[]{track});
+        JSONObject jsonResult = new JSONObject(result);
+        return jsonResult.optBoolean("result", false);
+    }
+
+    public boolean pauseMusic() throws JSONException {
+        String result = callMethod("music", "pause", new Object[0]);
+        JSONObject jsonResult = new JSONObject(result);
+        return jsonResult.optBoolean("result", false);
+    }
+
+    public boolean stopMusic() throws JSONException {
+        String result = callMethod("music", "stop", new Object[0]);
+        JSONObject jsonResult = new JSONObject(result);
+        return jsonResult.optBoolean("result", false);
+    }
 }
