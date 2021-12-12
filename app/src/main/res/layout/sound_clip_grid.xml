@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/sound_clip_gird"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:rowCount="11"
+    android:columnCount="2"
+    android:gravity="right">
+
+    <Button
+        android:id="@+id/enemy_crit"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Enemy Critical" />
+
+    <Button
+        android:id="@+id/player_crit"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Player Critical" />
+
+    <Button
+        android:id="@+id/enemy_death"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Enemy Death" />
+
+    <Button
+        android:id="@+id/player_death"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Player Death" />
+
+    <Button
+        android:id="@+id/trap"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Trap" />
+
+    <Button
+        android:id="@+id/fear"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Fear" />
+
+    <TextView
+        android:id="@+id/affliction"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textSize="30dp"
+        android:textStyle="bold"
+        android:text="Afflictions:" />
+
+    <TextView
+        android:id="@+id/virtue"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textSize="30dp"
+        android:textStyle="bold"
+        android:text="Virtues:"/>
+
+    <Button
+        android:id="@+id/irrational"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Irrational" />
+
+    <Button
+        android:id="@+id/powerful"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Powerful" />
+
+    <Button
+        android:id="@+id/paranoid"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Paranoid" />
+
+    <Button
+        android:id="@+id/courageous"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Courageous" />
+
+    <Button
+        android:id="@+id/selfish"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Selfish" />
+
+    <Button
+        android:id="@+id/stalwart"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Stalwart" />
+
+    <Button
+        android:id="@+id/abusive"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Abusive" />
+
+    <Button
+        android:id="@+id/vigorous"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Vigorous" />
+
+    <Button
+        android:id="@+id/fearful"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Fearful" />
+
+    <Button
+        android:id="@+id/focused"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Focused" />
+
+    <Button
+        android:id="@+id/hopeless"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Hopeless" />
+
+    <Button
+        android:id="@+id/invisible_button"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:visibility="gone"
+        android:text="Invisible" />
+
+    <Button
+        android:id="@+id/masochistic"
+        android:layout_width="200dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="40dp"
+        android:text="Masochistic" />
+
+</GridLayout>
