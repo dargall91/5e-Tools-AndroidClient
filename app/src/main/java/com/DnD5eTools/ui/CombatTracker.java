@@ -1446,14 +1446,15 @@ public class CombatTracker extends Fragment {
         title.setAdapter(adapter);
         title.setSelection(0,false);
 
-        title.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        Button pause = musicPlayer.findViewById(R.id.pause);
+        pause.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            public void onClick(View v) {
                 Thread innerThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-
+                            proxy.pauseMusic();
                         } catch (Exception e) {
                             Log.i("Combat", e.getMessage());
                         }
@@ -1468,14 +1469,42 @@ public class CombatTracker extends Fragment {
                     e.printStackTrace();
                 }
             }
+        });
 
+        Button play = musicPlayer.findViewById(R.id.play);
+        play.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+            public void onClick(View v) {
                 Thread innerThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
+                            proxy.playMusic(title.getSelectedItem().toString());
+                        } catch (Exception e) {
+                            Log.i("Combat", e.getMessage());
+                        }
+                    }
+                });
 
+                innerThread.start();
+
+                try {
+                    innerThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Button stop = musicPlayer.findViewById(R.id.stop);
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Thread innerThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            proxy.stopMusic();
                         } catch (Exception e) {
                             Log.i("Combat", e.getMessage());
                         }
