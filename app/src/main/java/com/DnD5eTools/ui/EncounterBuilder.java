@@ -99,7 +99,6 @@ public class EncounterBuilder extends Fragment {
             builderView();
         }
 
-
         return view;
     }
 
