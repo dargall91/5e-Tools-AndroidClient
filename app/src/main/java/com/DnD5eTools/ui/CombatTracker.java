@@ -153,33 +153,6 @@ public class CombatTracker extends Fragment {
         return view;
     }
 
-    public boolean checkConnection() {
-        boolean[] connection = {false};
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    connection[0] = proxy.isConnected();
-                } catch (Exception e) {
-                    Log.i("Connection", e.getMessage());
-                }
-            }
-        });
-
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(connection[0]);
-
-        return connection[0];
-    }
-
     public void refresh() {
         Fragment tracker = this;
         getFragmentManager().findFragmentById(tracker.getId());

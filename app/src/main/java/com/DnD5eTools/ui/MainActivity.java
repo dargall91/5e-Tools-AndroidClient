@@ -87,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
                 host = "localhost";
                 port = 0;
             } finally {
-                proxy = new DNDClientProxy(host, port);
                 if (reader != null) {
                     try {
                         reader.close();
@@ -97,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+
+        updateProxy(host, port);
     }
 
     private static void checkConnection() {
