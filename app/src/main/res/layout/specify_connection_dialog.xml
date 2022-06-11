@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="130dp"
-        android:text="Check that the server is running and retry, or change to different connection."
+        android:text="Enter the server host IP and port"
         android:textSize="20sp"/>
 
     <LinearLayout
