@@ -1,6 +1,5 @@
 package com.DnD5eTools.ui;
 
-import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.res.AssetManager;
 import android.os.Bundle;
@@ -11,9 +10,6 @@ import com.DnD5eTools.client.DNDClientProxy;
 import com.google.android.material.tabs.TabLayout;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentContainer;
-import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -50,10 +46,13 @@ public class MainActivity extends AppCompatActivity {
         tabs.setupWithViewPager(viewPager);
         viewPager.setOffscreenPageLimit(3);
 
-        setConnection();
+        setConnectionDialog();
     }
 
-    private void setConnection() {
+    /**
+     * Opens the dialog to select the server connection
+     */
+    private void setConnectionDialog() {
         View serverSelect = LayoutInflater.from(this).inflate(R.layout.select_server_dialog, (ViewGroup) findViewById(R.id.main_activity), false);
         Spinner select = serverSelect.findViewById(R.id.select);
 
@@ -78,35 +77,8 @@ public class MainActivity extends AppCompatActivity {
                         } else if (select.getSelectedItem().equals("PC")) {
                             initDNDClientProxy(PC_SERVER);
                         } else {
-                            //TODO: implement dialog for non-preset server host
-                                /*View specifyConn = inflater.inflate(R.layout.specify_connection_dialog, null);
-                                EditText host = specifyConn.findViewById(R.id.host);
-                                EditText port = specifyConn.findViewById(R.id.port);
-
-                                final android.app.AlertDialog.Builder specifyConnDialog = new android.app.AlertDialog.Builder(null);
-                                specifyConnDialog.setView(specifyConn);
-                                specifyConnDialog.setTitle("Specify Server");
-                                specifyConnDialog.setCancelable(true);
-                                specifyConnDialog.setPositiveButton("Set Server", null);
-                                specifyConnDialog.setNegativeButton("Cancel", null);
-
-                                android.app.AlertDialog specify = specifyConnDialog.create();
-                                specify.setOnShowListener(new DialogInterface.OnShowListener() {
-                                    @Override
-                                    public void onShow(DialogInterface dialogInterface) {
-                                        Button set = specify.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
-                                        set.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                proxy = new DNDClientProxy(host.getText().toString(), Integer.parseInt(port.getText().toString()));
-                                                checkConnection();
-                                                specify.dismiss();
-                                            }
-                                        });
-                                    }
-                                });
-
-                                specify.show();*/
+                            connect.dismiss();
+                            specifySetConnectionDialog();
                         }
 
                         connect.dismiss();
@@ -119,20 +91,79 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDismiss(DialogInterface dialog) {
                 //ensure successful connection to server
-                MainActivity.checkConnection();
+                checkConnection();
 
-                if (!isConnected()) {
-                    setConnection();
-                } else {
+                if (!isConnected() && !select.getSelectedItem().equals("Other")) {
+                    setConnectionDialog();
+                } else if (!select.getSelectedItem().equals("Other")) {
                     CombatTracker.getTracker().refresh();
                     EncounterBuilder.getEncBuilder().refresh();
                     MonsterBuilder.getMonBuilder().refresh();
                 }
-                //refresh();
             }
         });
 
         connect.show();
+    }
+
+    private void specifySetConnectionDialog() {
+        final boolean[] cancelled = {false};
+
+        View specifyConn = LayoutInflater.from(this).inflate(R.layout.specify_connection_dialog, (ViewGroup) findViewById(R.id.main_activity), false);
+        EditText host = specifyConn.findViewById(R.id.host);
+        EditText port = specifyConn.findViewById(R.id.port);
+
+        final android.app.AlertDialog.Builder specifyConnDialog = new android.app.AlertDialog.Builder(MainActivity.this);
+        specifyConnDialog.setView(specifyConn);
+        specifyConnDialog.setTitle("Specify Server");
+        specifyConnDialog.setCancelable(true);
+        specifyConnDialog.setPositiveButton("Set Server", null);
+        specifyConnDialog.setNegativeButton("Cancel", null);
+
+        android.app.AlertDialog specify = specifyConnDialog.create();
+        specify.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                Button set = specify.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
+                Button cancel = specify.getButton(android.app.AlertDialog.BUTTON_NEGATIVE);
+
+                set.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        proxy = new DNDClientProxy(host.getText().toString(), Integer.parseInt(port.getText().toString()));
+                        specify.dismiss();
+                    }
+                });
+
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        cancelled[0] = true;
+                        specify.dismiss();
+                    }
+                });
+            }
+        });
+
+        specify.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                //ensure successful connection to server
+                checkConnection();
+
+                if (!isConnected() && !cancelled[0]) {
+                    specifySetConnectionDialog();
+                } else if (!cancelled[0]) {
+                    CombatTracker.getTracker().refresh();
+                    EncounterBuilder.getEncBuilder().refresh();
+                    MonsterBuilder.getMonBuilder().refresh();
+                } else {
+                    setConnectionDialog();
+                }
+            }
+        });
+
+        specify.show();
     }
 
     /**
@@ -191,7 +222,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static boolean isConnected() {
-        //checkConnection();
         System.out.println("connected: " + connection[0]);
         return connection[0];
     }
