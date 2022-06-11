@@ -64,6 +64,7 @@ public class CombatTracker extends Fragment {
     private LayoutInflater inflater;
     private ViewGroup container;
     private Bundle savedInstanceState;
+    private static CombatTracker tracker;
     private LinearLayout leftView;
     private final String PLAYER_CRIT = "Data/player_crit.dat";
     private final String MONSTER_CRIT = "Data/monster_crit.dat";
@@ -95,6 +96,7 @@ public class CombatTracker extends Fragment {
         this.container = container;
         this.savedInstanceState = savedInstanceState;
         proxy = MainActivity.getProxy();
+        tracker = this;
 
         //inflate view if connected to server
         if (MainActivity.isConnected()) {
@@ -108,48 +110,6 @@ public class CombatTracker extends Fragment {
             preCombatView();
         }
 
-        //if not connected, get user to reset connection, or request a retry
-        //since this is the first fragment to load, dialog will be run from there
-        else {
-            View checkConn = inflater.inflate(R.layout.check_connection_dialog, null);
-            EditText host = checkConn.findViewById(R.id.host);
-            host.setText(proxy.getHost());
-            EditText port = checkConn.findViewById(R.id.port);
-            port.setText(Integer.toString(proxy.getPort()));
-
-            final AlertDialog.Builder connectionDialog = new AlertDialog.Builder(getContext());
-            connectionDialog.setView(checkConn);
-            connectionDialog.setTitle("Connection Error");
-            connectionDialog.setCancelable(true);
-            connectionDialog.setPositiveButton("Change Connection", null);
-            connectionDialog.setNegativeButton("Retry", null);
-
-            AlertDialog connect = connectionDialog.create();
-            connect.setOnShowListener(new DialogInterface.OnShowListener() {
-                @Override
-                public void onShow(DialogInterface dialogInterface) {
-                    Button change = connect.getButton(AlertDialog.BUTTON_POSITIVE);
-                    change.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            MainActivity.updateProxy(host.getText().toString(), Integer.parseInt(port.getText().toString()));
-                            connect.dismiss();
-                        }
-                    });
-                }
-            });
-
-            connect.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    refresh();
-                    System.out.println("dismissed");
-                }
-            });
-
-            connect.show();
-        }
-
         return view;
     }
 
@@ -161,12 +121,10 @@ public class CombatTracker extends Fragment {
                 .detach(tracker)
                 .attach(tracker)
                 .commit();
+    }
 
-        //onCreateView(inflater, container, null);
-
-        //update other two fragments
-        MonsterBuilder.getMonBuilder().refresh();
-        EncounterBuilder.getEncBuilder().refresh();
+    public static CombatTracker getTracker() {
+        return tracker;
     }
 
     /**

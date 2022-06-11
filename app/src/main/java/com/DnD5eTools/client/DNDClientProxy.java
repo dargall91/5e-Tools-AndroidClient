@@ -21,11 +21,24 @@ public class DNDClientProxy implements DNDLibrary {
     private String host;
     private int port;
 
+    /**
+     * Constructor which sets the host IP and port of the server
+     * to connect to
+     *
+     * @param host The host IP
+     * @param port The port
+     */
     public DNDClientProxy(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
+    /**
+     * Sets a new host and port for the server
+     *
+     * @param host The new host IP
+     * @param port The new port
+     */
     public void changeConnection(String host, int port) {
         this.host = host;
         this.port = port;
@@ -39,9 +52,24 @@ public class DNDClientProxy implements DNDLibrary {
         return port;
     }
 
+    /**
+     * Calls a specified method from the server. The method to call is determined
+     * by the library and method parameters. For example, to call the getMonster
+     * method, the library would be "monster" and the method would be "get"
+     *
+     * @param library The library to access (monster, encounter, etc)
+     * @param method The method type (get, add, delete, etc)
+     * @param params Any parameters required for the method
+     *
+     * @return A JSON result string from the server, or "{}" if an error was encountered
+     */
     private String callMethod(String library, String method, Object[] params) {
         JSONObject call = new JSONObject();
         String result = "";
+
+        Socket sock = null;
+        OutputStream out = null;
+        InputStream in = null;
 
         try {
             ArrayList<Object> list = new ArrayList();
@@ -55,10 +83,10 @@ public class DNDClientProxy implements DNDLibrary {
             JSONArray jsonParams = new JSONArray(list);
             call.put("params", jsonParams);
 
-            Socket sock = new Socket(host, port);
-            sock.setSoTimeout(15000);
-            OutputStream out = sock.getOutputStream();
-            InputStream in = sock.getInputStream();
+            sock = new Socket(host, port);
+            sock.setSoTimeout(1500);
+            out = sock.getOutputStream();
+            in = sock.getInputStream();
 
             String request = call.toString();
             //byte[] bytesToSend = request.getBytes();
@@ -74,13 +102,19 @@ public class DNDClientProxy implements DNDLibrary {
                 baos.write(buffer, 0, i);
 
             result = baos.toString();
-
-            out.close();
-            in.close();
-            sock.close();
         } catch (Exception e) {
             System.out.println("Exception in callMethod: " + e.getMessage());
             result = "{}";
+        } finally {
+            //close everything regardless of failure/success
+            try {
+                out.close();
+                in.close();
+                sock.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
 
         return result;
