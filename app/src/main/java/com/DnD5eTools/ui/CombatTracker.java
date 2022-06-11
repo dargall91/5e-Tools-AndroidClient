@@ -179,6 +179,7 @@ public class CombatTracker extends Fragment {
             }
 
             View playerView = inflater.inflate(R.layout.player_layout, leftView);
+
             TextView name = playerView.findViewById(R.id.player_name);
             name.setId(i);
             name.setText(players.get(i));
@@ -748,6 +749,12 @@ public class CombatTracker extends Fragment {
                     int tag = tag_counter * 10 + index;
 
                     View combatantView = inflater.inflate(R.layout.combatant_layout, leftView);
+
+                    TextView initiative = combatantView.findViewById(R.id.initiative);
+                    initiative.setId(tag);
+                    initiative.setTag(tag);
+                    tag++;
+
                     TextView name = combatantView.findViewById(R.id.name);
                     name.setId(tag);
                     name.setTag(tag);
@@ -781,6 +788,7 @@ public class CombatTracker extends Fragment {
                     remove.setId(tag);
                     remove.setTag(tag);
 
+                    initiative.setText(Integer.toString(i.getInitiative()));
                     name.setText(i.getName());
                     ac_text.setText(i.getAC(index));
                     ac_text.addTextChangedListener(new TextWatcher() {
@@ -1183,7 +1191,7 @@ public class CombatTracker extends Fragment {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        
+
                         leftView.removeAllViewsInLayout();
                         preCombatView();
                     }
