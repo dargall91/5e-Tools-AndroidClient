@@ -419,10 +419,6 @@ public class CombatTracker extends Fragment {
                     e.printStackTrace();
                 }
 
-                //no default item checked
-                String[] choice = new String[1];
-                int checked = -1;
-
                 View loadView = inflater.inflate(R.layout.choose_encounter_dialog, null);
                 AutoCompleteTextView encName = loadView.findViewById(R.id.encounter_text);
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, encList[0]);
@@ -440,14 +436,6 @@ public class CombatTracker extends Fragment {
                 loadEnc.setTitle("Select an Encounter");
                 loadEnc.setView(loadView);
                 loadEnc.setNegativeButton("Cancel", null);
-                /*CharSequence[] cs = encList[0].toArray(new CharSequence[encList[0].size()]);
-                loadEnc.setSingleChoiceItems(cs, checked, new DialogInterface.OnClickListener() {
-                   @Override
-                   public void onClick(DialogInterface dialog, int selected) {
-                       Log.i("selected", Integer.toString(selected));
-                        choice[0] = encList[0].get(selected);
-                   }
-                });*/
 
                 loadEnc.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
@@ -1166,8 +1154,51 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button finish = combatButtons.findViewById(R.id.finish_button);
-        finish.setOnClickListener(new View.OnClickListener() {
+        //End the encounter and stop the music
+        Button finishEndMusic = combatButtons.findViewById(R.id.finish_button_end_music);
+        finishEndMusic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final AlertDialog.Builder finishEnc = new AlertDialog.Builder(getContext());
+                finishEnc.setTitle("End the Encounter?");
+                finishEnc.setPositiveButton("Finish", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Thread innerThread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    proxy.endCombat();
+                                    proxy.stopMusic();
+                                } catch (Exception e) {
+                                    Log.i("Combat", e.getMessage());
+                                }
+                            }
+                        });
+
+                        innerThread.start();
+
+                        try {
+                            innerThread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        
+                        leftView.removeAllViewsInLayout();
+                        preCombatView();
+                    }
+                });
+
+                finishEnc.setNegativeButton("Cancel", null);
+
+                AlertDialog alert = finishEnc.create();
+                alert.show();
+            }
+        });
+
+        //end the encounter but don't stop the music
+        Button finishPlayMusic = combatButtons.findViewById(R.id.finish_button_music);
+        finishPlayMusic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final AlertDialog.Builder finishEnc = new AlertDialog.Builder(getContext());
@@ -1193,6 +1224,7 @@ public class CombatTracker extends Fragment {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+
                         leftView.removeAllViewsInLayout();
                         preCombatView();
                     }
