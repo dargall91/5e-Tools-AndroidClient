@@ -222,7 +222,8 @@ public class EncounterBuilder extends Fragment {
                     add.show();
                 }
                 //if the selected encounter is the current one, do nothing and exit
-                if (encounter[0].getName().equals(encList.get(position)))
+                //list size must be greater than 1 or it tries to update "Add Encounter"
+                if (encList.size() > 1 && encounter[0].getName().equals(encList.get(position)))
                     return;
 
                 //update encounter on server, get new encounter
@@ -251,7 +252,18 @@ public class EncounterBuilder extends Fragment {
         });
     }
 
+    /**
+     * Initializes the encounter builder view using
+     * the first encounter in the list. If there are
+     * no encounters in the list, it will be blank
+     */
     private void builderView() {
+        //the list is "empty" if the only item in the
+        //list is the "Add Encounter" item
+        if (encList.size() <= 1) {
+        return;
+        }
+
         nameView();
         playerLevels();
         difficulty();
