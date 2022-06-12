@@ -626,7 +626,7 @@ public class CombatTracker extends Fragment {
                         JSONArray combatArray = new JSONArray();
                         for (Combatant i : combatants)
                             for (int j = 0; j < i.getQuantity(); j++)
-                                if (!i.isReinforcement() && !i.isLairAction()) {
+                                if (!i.isReinforcement() && !i.isLairAction() && !i.isInvisible((j))) {
                                     try {
                                         combatArray.put(i.toSimpleJson());
                                     } catch (JSONException e) {
@@ -886,11 +886,14 @@ public class CombatTracker extends Fragment {
                                 ac_text.setEnabled(i.isAlive(index));
                                 hp_text.setEnabled(i.isAlive(index));
 
+                                //update server combat screen
                                 JSONArray combatArray = new JSONArray();
 
                                 for (Combatant c : combatants) {
                                     for (int k = 0; k < c.getQuantity(); k++) {
-                                        if (!c.isReinforcement() && c.isAlive(k)) {
+                                        //only show something on server screen if it's not a monster,
+                                        //it's alive, and its not invisible
+                                        if (!c.isReinforcement() && c.isAlive(k) && !c.isInvisible(k)) {
                                             try {
                                                 combatArray.put(c.toSimpleJson());
                                             } catch (JSONException e) {
@@ -925,7 +928,7 @@ public class CombatTracker extends Fragment {
                             @Override
                             public void onClick(View v) {
                                 //if there's only 1 of this monster, get rid of it
-                                //otherwise only remove one of this specific monster
+                                //otherwise only remove one of this specific monster instance
                                 if (i.getQuantity() == 1) {
                                     combatants.remove(i);
                                 } else {

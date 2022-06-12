@@ -34,18 +34,6 @@
         android:text="-"
         android:id="@+id/minus_quantity"/>
 
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="75dp"
-        android:id="@+id/reinforcement"/>
-
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="60dp"
-        android:id="@+id/minion"/>
-
     <Spinner
         android:id="@+id/initiative"
         android:layout_width="wrap_content"
@@ -55,5 +43,23 @@
         android:spinnerMode="dropdown"
         android:entries="@array/d20_roll"
         android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="75dp"
+        android:id="@+id/reinforcement"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="80dp"
+        android:id="@+id/minion"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="50dp"
+        android:id="@+id/invisible"/>
 
 </LinearLayout>

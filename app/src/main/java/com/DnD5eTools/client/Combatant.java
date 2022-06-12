@@ -20,6 +20,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
     private ArrayList<String> hp;
 	private int breaker; //used to break absolute ties (both initiative and bonus are ==), higher weight == higher initiative
 	private ArrayList<Boolean> alive;
+	private ArrayList<Boolean> invisible;
 	private String name, displayName;
 	boolean tied;
 
@@ -30,7 +31,6 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 * @param initiative the PC's initiative
 	 */
 	public Combatant(PlayerCharacter pc, int initiative) {
-		//this.pc = pc;
 		monster = false;
 		reinforcement = false;
 		this.initiative = initiative;
@@ -47,8 +47,6 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 		bonus = pc.getBonus();
 		name = pc.getName();
 		quantity = 1;
-		alive = new ArrayList<>();
-		alive.add(true);//PCs should always show up on the ServerCombatScreen
 	}
 
 	/**
@@ -69,6 +67,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 		ac = new ArrayList<>();
 		hp = new ArrayList<>();
 		alive = new ArrayList<>();
+		invisible = new ArrayList<>();
 
 		lairAction = false;
 		
@@ -76,6 +75,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 			ac.add(mon.getAC());
 			hp.add(mon.getHP());
 			alive.add(true);
+			invisible.add(monData.isInvisible());
 		}
 			
 		weight = 0;
@@ -107,6 +107,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 			ac.add(mon.getAC());
 			hp.add(mon.getHP());
 			alive.add(true);
+			invisible.add(false);
 		}
 
 		weight = 0;
@@ -195,6 +196,20 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 */
 	public boolean isReinforcement() {
 		return reinforcement;
+	}
+
+	/**
+	 * Checks if this combatant is invisible
+	 *
+	 * @param index The index of the monster
+	 * @return true if invisible
+	 */
+	public boolean isInvisible(int index) {
+		if (monster) {
+			return invisible.get(index);
+		}
+
+		return false;
 	}
 
 	/**
@@ -347,7 +362,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 			return alive.get(index);
 
 		else
-			return alive.get(0);
+			return true;
 	}
 
 	/**
