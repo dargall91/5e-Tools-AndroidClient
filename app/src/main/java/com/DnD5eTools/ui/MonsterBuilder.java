@@ -573,7 +573,6 @@ public class MonsterBuilder extends Fragment {
         rename.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: alert dialog to get new name, check if name exists, then proxy.renameMonster(args) (revisit, I forget the params), then proxy.getMonster(newName), then builderView()
                 View renameView = inflater.inflate(R.layout.rename_add_monster_dialog, null);
                 TextView exists = renameView.findViewById(R.id.monster_exists);
                 TextView text = renameView.findViewById(R.id.name_textview);
@@ -623,7 +622,7 @@ public class MonsterBuilder extends Fragment {
                                 if (success[0]) {
                                     rename.dismiss();
                                     monsterListView(monster[0].getName());
-                                    basicMonsterInfo();
+                                    builderView();
                                 }
 
                                 else {
@@ -678,6 +677,80 @@ public class MonsterBuilder extends Fragment {
                         })
                         .setNegativeButton("No", null)
                         .show();
+            }
+        });
+
+        Button copy = basicInfo.findViewById(R.id.copy_monster);
+        copy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                View renameView = inflater.inflate(R.layout.rename_add_monster_dialog, null);
+                TextView exists = renameView.findViewById(R.id.monster_exists);
+                TextView text = renameView.findViewById(R.id.name_textview);
+                text.setText("Enter a new name for the copy of " + monster[0].getName());
+                EditText newName = renameView.findViewById(R.id.name_entry);
+
+                final AlertDialog.Builder renameMonsterDialog = new AlertDialog.Builder(getContext());
+                renameMonsterDialog.setView(renameView);
+                renameMonsterDialog.setTitle("Copy " + monster[0].getName());
+                renameMonsterDialog.setPositiveButton("OK", null);
+                renameMonsterDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Log.i("CANCEL", "cancel");
+                    }
+                });
+
+                AlertDialog copy = renameMonsterDialog.create();
+                copy.setOnShowListener(new DialogInterface.OnShowListener() {
+                    @Override
+                    public void onShow(DialogInterface dialogInterface) {
+                        Button ok = copy.getButton(AlertDialog.BUTTON_POSITIVE);
+                        ok.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                boolean[] success = new boolean[1];
+                                final Monster[] newMon = new Monster[1];
+                                String name = newName.getText().toString();
+
+                                Thread thread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            success[0] = proxy.addMonster(name);
+
+                                            //if successful get the new monster
+                                            if (success[0]) {
+                                                monster[0].setName(name);
+                                                monster[0].setDisplayName(name);
+                                                proxy.updateMonster(monster[0]);
+                                            }
+                                        } catch (Exception e) {
+                                            Log.i("rename", e.getMessage());
+                                        }
+                                    }
+                                });
+
+                                thread.start();
+
+                                try {
+                                    thread.join();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                if (success[0]) {
+                                    copy.dismiss();
+                                    monsterListView(monster[0].getName());
+                                    builderView();
+                                } else {
+                                    exists.setVisibility(View.VISIBLE);
+                                }
+                            }
+                        });
+                    }
+                });
+
+                copy.show();
             }
         });
     }
