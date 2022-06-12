@@ -191,6 +191,10 @@ public class Encounter implements Serializable {
 	public void setMinion(int index, boolean minion) {
 		monsterData.get(index).setMinion(minion);
 	}
+
+	public void setInvisible(int index, boolean invisible) {
+		monsterData.get(index).setInvisible(invisible);
+	}
 	
 	public void setReinforcement(int index, boolean reinforcement) {
 		monsterData.get(index).setReinforcement(reinforcement);

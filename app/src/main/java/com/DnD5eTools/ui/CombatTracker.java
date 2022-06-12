@@ -179,6 +179,7 @@ public class CombatTracker extends Fragment {
             }
 
             View playerView = inflater.inflate(R.layout.player_layout, leftView);
+
             TextView name = playerView.findViewById(R.id.player_name);
             name.setId(i);
             name.setText(players.get(i));
@@ -419,10 +420,6 @@ public class CombatTracker extends Fragment {
                     e.printStackTrace();
                 }
 
-                //no default item checked
-                String[] choice = new String[1];
-                int checked = -1;
-
                 View loadView = inflater.inflate(R.layout.choose_encounter_dialog, null);
                 AutoCompleteTextView encName = loadView.findViewById(R.id.encounter_text);
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, encList[0]);
@@ -440,14 +437,6 @@ public class CombatTracker extends Fragment {
                 loadEnc.setTitle("Select an Encounter");
                 loadEnc.setView(loadView);
                 loadEnc.setNegativeButton("Cancel", null);
-                /*CharSequence[] cs = encList[0].toArray(new CharSequence[encList[0].size()]);
-                loadEnc.setSingleChoiceItems(cs, checked, new DialogInterface.OnClickListener() {
-                   @Override
-                   public void onClick(DialogInterface dialog, int selected) {
-                       Log.i("selected", Integer.toString(selected));
-                        choice[0] = encList[0].get(selected);
-                   }
-                });*/
 
                 loadEnc.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
@@ -637,7 +626,7 @@ public class CombatTracker extends Fragment {
                         JSONArray combatArray = new JSONArray();
                         for (Combatant i : combatants)
                             for (int j = 0; j < i.getQuantity(); j++)
-                                if (!i.isReinforcement() && !i.isLairAction()) {
+                                if (!i.isReinforcement() && !i.isLairAction() && !i.isInvisible((j))) {
                                     try {
                                         combatArray.put(i.toSimpleJson());
                                     } catch (JSONException e) {
@@ -760,6 +749,12 @@ public class CombatTracker extends Fragment {
                     int tag = tag_counter * 10 + index;
 
                     View combatantView = inflater.inflate(R.layout.combatant_layout, leftView);
+
+                    TextView initiative = combatantView.findViewById(R.id.initiative);
+                    initiative.setId(tag);
+                    initiative.setTag(tag);
+                    tag++;
+
                     TextView name = combatantView.findViewById(R.id.name);
                     name.setId(tag);
                     name.setTag(tag);
@@ -793,6 +788,7 @@ public class CombatTracker extends Fragment {
                     remove.setId(tag);
                     remove.setTag(tag);
 
+                    initiative.setText(Integer.toString(i.getInitiative()));
                     name.setText(i.getName());
                     ac_text.setText(i.getAC(index));
                     ac_text.addTextChangedListener(new TextWatcher() {
@@ -861,7 +857,10 @@ public class CombatTracker extends Fragment {
                             }
                         });
 
-                        if (i.isAlive(index)) {
+                        //set initial text of kill button
+                        if (i.isInvisible(index)) {
+                            kill.setText("Visible");
+                        } else if (i.isAlive(index)) {
                             kill.setText("Kill");
                         } else {
                             kill.setText("Revive");
@@ -874,7 +873,10 @@ public class CombatTracker extends Fragment {
                         kill.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if (i.isAlive(index)) {
+                                if (i.isInvisible(index)) {
+                                    i.setVisible(index);
+                                    kill.setText("Kill");
+                                } else if (i.isAlive(index)) {
                                     i.kill(index);
                                     kill.setText("Revive");
 
@@ -890,11 +892,14 @@ public class CombatTracker extends Fragment {
                                 ac_text.setEnabled(i.isAlive(index));
                                 hp_text.setEnabled(i.isAlive(index));
 
+                                //update server combat screen
                                 JSONArray combatArray = new JSONArray();
 
                                 for (Combatant c : combatants) {
                                     for (int k = 0; k < c.getQuantity(); k++) {
-                                        if (!c.isReinforcement() && c.isAlive(k)) {
+                                        //only show something on server screen if it's not a monster,
+                                        //it's alive, and its not invisible
+                                        if (!c.isReinforcement() && c.isAlive(k) && !c.isInvisible(k)) {
                                             try {
                                                 combatArray.put(c.toSimpleJson());
                                             } catch (JSONException e) {
@@ -928,13 +933,22 @@ public class CombatTracker extends Fragment {
                         remove.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                combatants.remove(i);
+                                //if there's only 1 of this monster, get rid of it
+                                //otherwise only remove one of this specific monster instance
+                                if (i.getQuantity() == 1) {
+                                    combatants.remove(i);
+                                } else {
+                                    i.remove(index);
+                                }
 
+                                //should be no need to update server screen because only
+                                //dead monsters can be removed (they already don't show up)
+                                /*
                                 JSONArray combatArray = new JSONArray();
 
                                 for (Combatant c : combatants) {
                                     for (int k = 0; k < c.getQuantity(); k++) {
-                                        if (!c.isReinforcement() && c.isAlive(k)) {
+                                        if (!c.isReinforcement() && c.isAlive(k) && !c.isInvisible(k)) {
                                             try {
                                                 combatArray.put(c.toSimpleJson());
                                             } catch (JSONException e) {
@@ -963,6 +977,8 @@ public class CombatTracker extends Fragment {
                                     e.printStackTrace();
                                 }
 
+                                */
+
                                 combatView();
                             }
                         });
@@ -983,9 +999,15 @@ public class CombatTracker extends Fragment {
                 for (Combatant i : combatants) {
                     if (i.isReinforcement()) {
                         View innerLayout = inflater.inflate(R.layout.reinforcement_layout, (ViewGroup) reinLayout);
+
+                        TextView initiative = reinLayout.findViewById(R.id.initiative);
+                        initiative.setText(Integer.toString(i.getInitiative()));
+                        initiative.setId(View.generateViewId());
+
                         TextView monName = reinLayout.findViewById(R.id.reinforcement_name);
                         monName.setText(i.getName() + " x" + i.getQuantity());
                         monName.setId(View.generateViewId());
+
                         CheckBox check = reinLayout.findViewById(R.id.reinforcement_checkbox);
                         check.setId(View.generateViewId());
                         check.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -1008,7 +1030,7 @@ public class CombatTracker extends Fragment {
                         JSONArray combatArray = new JSONArray();
                         for (Combatant i : combatants)
                             for (int j = 0; j < i.getQuantity(); j++)
-                                if (!i.isReinforcement() && i.isAlive(j)) {
+                                if (!i.isReinforcement() && i.isAlive(j) && !i.isInvisible(j)) {
                                     try {
                                         combatArray.put(i.toSimpleJson());
                                     } catch (JSONException e) {
@@ -1129,7 +1151,7 @@ public class CombatTracker extends Fragment {
                         JSONArray combatArray = new JSONArray();
                         for (Combatant i : combatants)
                             for (int j = 0; j < i.getQuantity(); j++)
-                                if (!i.isReinforcement() && i.isAlive(j)) {
+                                if (!i.isReinforcement() && i.isAlive(j) && !i.isInvisible(j)) {
                                     try {
                                         System.out.println(i.getName());
                                         combatArray.put(i.toSimpleJson());
@@ -1166,8 +1188,51 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button finish = combatButtons.findViewById(R.id.finish_button);
-        finish.setOnClickListener(new View.OnClickListener() {
+        //End the encounter and stop the music
+        Button finishEndMusic = combatButtons.findViewById(R.id.finish_button_end_music);
+        finishEndMusic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final AlertDialog.Builder finishEnc = new AlertDialog.Builder(getContext());
+                finishEnc.setTitle("End the Encounter?");
+                finishEnc.setPositiveButton("Finish", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Thread innerThread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    proxy.endCombat();
+                                    proxy.stopMusic();
+                                } catch (Exception e) {
+                                    Log.i("Combat", e.getMessage());
+                                }
+                            }
+                        });
+
+                        innerThread.start();
+
+                        try {
+                            innerThread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        leftView.removeAllViewsInLayout();
+                        preCombatView();
+                    }
+                });
+
+                finishEnc.setNegativeButton("Cancel", null);
+
+                AlertDialog alert = finishEnc.create();
+                alert.show();
+            }
+        });
+
+        //end the encounter but don't stop the music
+        Button finishPlayMusic = combatButtons.findViewById(R.id.finish_button_music);
+        finishPlayMusic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final AlertDialog.Builder finishEnc = new AlertDialog.Builder(getContext());
@@ -1193,6 +1258,7 @@ public class CombatTracker extends Fragment {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+
                         leftView.removeAllViewsInLayout();
                         preCombatView();
                     }

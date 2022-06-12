@@ -602,6 +602,20 @@ public class EncounterBuilder extends Fragment {
                 }
             });
 
+            Spinner initiative = monster.findViewById(R.id.initiative);
+            initiative.setId(index);
+            initiative.setTag(index);
+            initiative.setSelection(monData.get(index).getInitiative() - 1, false);
+            initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    encounter[0].setInitiative(index,  initiative.getSelectedItemPosition() + 1);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) { }
+            });
+
             CheckBox reinforcement = monster.findViewById(R.id.reinforcement);
             reinforcement.setId(index);
             reinforcement.setTag(index);
@@ -625,18 +639,15 @@ public class EncounterBuilder extends Fragment {
                 }
             });
 
-            Spinner initiative = monster.findViewById(R.id.initiative);
-            initiative.setId(index);
-            initiative.setTag(index);
-            initiative.setSelection(monData.get(index).getInitiative() - 1, false);
-            initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            CheckBox invisible = monster.findViewById(R.id.invisible);
+            invisible.setId(index);
+            invisible.setTag(index);
+            invisible.setChecked(monData.get(i).isInvisible());
+            invisible.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter[0].setInitiative(index,  initiative.getSelectedItemPosition() + 1);
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    encounter[0].setInvisible(index, isChecked);
                 }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) { }
             });
         }
 
