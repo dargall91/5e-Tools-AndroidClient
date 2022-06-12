@@ -999,9 +999,15 @@ public class CombatTracker extends Fragment {
                 for (Combatant i : combatants) {
                     if (i.isReinforcement()) {
                         View innerLayout = inflater.inflate(R.layout.reinforcement_layout, (ViewGroup) reinLayout);
+
+                        TextView initiative = reinLayout.findViewById(R.id.initiative);
+                        initiative.setText(Integer.toString(i.getInitiative()));
+                        initiative.setId(View.generateViewId());
+
                         TextView monName = reinLayout.findViewById(R.id.reinforcement_name);
                         monName.setText(i.getName() + " x" + i.getQuantity());
                         monName.setId(View.generateViewId());
+
                         CheckBox check = reinLayout.findViewById(R.id.reinforcement_checkbox);
                         check.setId(View.generateViewId());
                         check.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
