@@ -130,7 +130,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 		hp = new ArrayList<>();
 		hp.add("0");
 		alive = new ArrayList<>();
-		alive.add(true);
+		alive.add(false);
 		quantity = 1;
 	}
 
