@@ -369,7 +369,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 
 	/**
 	 * Checks if this is a Lair Action combatant or not
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isLairAction() {
@@ -429,6 +429,13 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 			
 		if (getBonus() < c.getBonus()) {
 			c.increaseWeight();
+			setTied(false);
+			return;
+		}
+
+		//if these two combatants are the same thing and monsters, no need to tie
+		//just increase weight of both
+		if (getName().equals(c.getName()) && isMonster() && c.isMonster()) {
 			setTied(false);
 			return;
 		}

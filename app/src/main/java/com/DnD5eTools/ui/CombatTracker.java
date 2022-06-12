@@ -932,6 +932,9 @@ public class CombatTracker extends Fragment {
                                     i.remove(index);
                                 }
 
+                                //should be no need to update server screen because only
+                                //dead monsters can be removed (they already don't show up)
+                                /*
                                 JSONArray combatArray = new JSONArray();
 
                                 for (Combatant c : combatants) {
@@ -964,6 +967,8 @@ public class CombatTracker extends Fragment {
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
+
+                                */
 
                                 combatView();
                             }
