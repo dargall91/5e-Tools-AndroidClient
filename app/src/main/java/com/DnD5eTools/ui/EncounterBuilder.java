@@ -305,7 +305,41 @@ public class EncounterBuilder extends Fragment {
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: confirmation, then delete (also needs done in mon builder)
+                new AlertDialog.Builder(getContext())
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle("Delete Encounter")
+                        .setMessage("Delete " + encounter[0].getName() + "?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final boolean[] deleted = new boolean[1];
+                                Thread thread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            deleted[0] = proxy.deleteEncounter(encounter[0].getName());
+                                        } catch (Exception e) {
+                                            Log.i("delete", e.getMessage());
+                                        }
+                                    }
+                                });
+
+                                thread.start();
+
+                                try {
+                                    thread.join();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                if (deleted[0]) {
+                                    encounterListView(null);
+                                    builderView();
+                                }
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
             }
         });
 

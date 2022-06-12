@@ -531,7 +531,6 @@ public class MonsterBuilder extends Fragment {
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: alert dialog to confirm, then delete, then get new monList, then set monster[0] to monList.get(0), then listView() and builderView()
                 new AlertDialog.Builder(getContext())
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .setTitle("Delete Monster")
