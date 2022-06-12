@@ -857,7 +857,10 @@ public class CombatTracker extends Fragment {
                             }
                         });
 
-                        if (i.isAlive(index)) {
+                        //set initial text of kill button
+                        if (i.isInvisible(index)) {
+                            kill.setText("Visible");
+                        } else if (i.isAlive(index)) {
                             kill.setText("Kill");
                         } else {
                             kill.setText("Revive");
@@ -870,7 +873,10 @@ public class CombatTracker extends Fragment {
                         kill.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if (i.isAlive(index)) {
+                                if (i.isInvisible(index)) {
+                                    i.setVisible(index);
+                                    kill.setText("Kill");
+                                } else if (i.isAlive(index)) {
                                     i.kill(index);
                                     kill.setText("Revive");
 
@@ -942,7 +948,7 @@ public class CombatTracker extends Fragment {
 
                                 for (Combatant c : combatants) {
                                     for (int k = 0; k < c.getQuantity(); k++) {
-                                        if (!c.isReinforcement() && c.isAlive(k)) {
+                                        if (!c.isReinforcement() && c.isAlive(k) && !c.isInvisible(k)) {
                                             try {
                                                 combatArray.put(c.toSimpleJson());
                                             } catch (JSONException e) {
@@ -1018,7 +1024,7 @@ public class CombatTracker extends Fragment {
                         JSONArray combatArray = new JSONArray();
                         for (Combatant i : combatants)
                             for (int j = 0; j < i.getQuantity(); j++)
-                                if (!i.isReinforcement() && i.isAlive(j)) {
+                                if (!i.isReinforcement() && i.isAlive(j) && !i.isInvisible(j)) {
                                     try {
                                         combatArray.put(i.toSimpleJson());
                                     } catch (JSONException e) {
@@ -1139,7 +1145,7 @@ public class CombatTracker extends Fragment {
                         JSONArray combatArray = new JSONArray();
                         for (Combatant i : combatants)
                             for (int j = 0; j < i.getQuantity(); j++)
-                                if (!i.isReinforcement() && i.isAlive(j)) {
+                                if (!i.isReinforcement() && i.isAlive(j) && !i.isInvisible(j)) {
                                     try {
                                         System.out.println(i.getName());
                                         combatArray.put(i.toSimpleJson());

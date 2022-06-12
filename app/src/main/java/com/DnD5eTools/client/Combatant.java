@@ -207,6 +207,8 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	public boolean isInvisible(int index) {
 		if (monster) {
 			return invisible.get(index);
+		} else if (lairAction) {
+			return true;
 		}
 
 		return false;
@@ -275,6 +277,18 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 */
 	public void setMonster(boolean monster) {
 		this.monster = monster;
+	}
+
+	/**
+	 * Makes this monster visible
+	 *
+	 * @param index the index of the monster
+	 */
+	public void setVisible(int index) {
+		if (monster) {
+			invisible.set(index, false);
+		}
+
 	}
 
 	/**
