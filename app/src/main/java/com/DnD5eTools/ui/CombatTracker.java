@@ -924,7 +924,13 @@ public class CombatTracker extends Fragment {
                         remove.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                combatants.remove(i);
+                                //if there's only 1 of this monster, get rid of it
+                                //otherwise only remove one of this specific monster
+                                if (i.getQuantity() == 1) {
+                                    combatants.remove(i);
+                                } else {
+                                    i.remove(index);
+                                }
 
                                 JSONArray combatArray = new JSONArray();
 

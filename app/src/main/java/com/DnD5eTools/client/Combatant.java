@@ -4,6 +4,7 @@ import com.DnD5eTools.monster.Monster;
 import com.DnD5eTools.player.PlayerCharacter;
 
 import java.io.*;
+import java.util.ArrayList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,12 +15,11 @@ import org.json.JSONObject;
 public class Combatant implements Comparable<Combatant>, Serializable {
 	private boolean monster, reinforcement, lairAction;
 	private int initiative, bonus, quantity;
-	private int weight; //used to break absolute ties (both initiative and bonus are ==), higher weight == higher initiative
-	//private PlayerCharacter pc;
-	private final String[] ac;
-    private String[] hp;
-	private int breaker;
-	private boolean[] alive;
+	private int weight;
+	private final ArrayList<String> ac;
+    private ArrayList<String> hp;
+	private int breaker; //used to break absolute ties (both initiative and bonus are ==), higher weight == higher initiative
+	private ArrayList<Boolean> alive;
 	private String name, displayName;
 	boolean tied;
 
@@ -36,24 +36,28 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 		this.initiative = initiative;
 		breaker = 0;
 		weight = 0;
-		ac = new String[1];
-		ac[0] = Integer.toString(pc.getAC());
-		hp = new String[] {"0"};
+		ac = new ArrayList<>();
+		ac.add(Integer.toString(pc.getAC()));
+
+		hp = new ArrayList<>();
+		hp.add("0");
+
 		displayName = pc.getName();
 		lairAction = false;
 		bonus = pc.getBonus();
 		name = pc.getName();
 		quantity = 1;
-		alive = new boolean[] {true}; //PCs should always show up on the ServerCombatScreen
+		alive = new ArrayList<>();
+		alive.add(true);//PCs should always show up on the ServerCombatScreen
 	}
 
 	/**
-	 * Constructor for a Monster combatant
+	 * Constructor for a predefined Monster combatant
+	 *
 	 * @param monData the Monster's MonsterData object
 	 * @param mon the Monster object
 	 */
 	public Combatant(MonsterData monData, Monster mon) {
-		//this.monData = monData;
 		name = mon.getName();
 		displayName = mon.getDisplayName();
 		monster = true;
@@ -62,19 +66,17 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 		initiative = monData.getInitiative() + bonus;
 		breaker = 0;
 		this.quantity = monData.getQuantity();
-		ac = new String[quantity];
-		hp = new String[quantity];
-		alive = new boolean[quantity];
+		ac = new ArrayList<>();
+		hp = new ArrayList<>();
+		alive = new ArrayList<>();
+
 		lairAction = false;
 		
-		for (int i = 0; i < quantity; i++)
-			setAC(i, mon.getAC());
-			
-		for (int i = 0; i < quantity; i++)
-			setHP(i, mon.getHP());
-
-		for (int i = 0; i < quantity; i++)
-			alive[i] = true;
+		for (int i = 0; i < quantity; i++) {
+			ac.add(mon.getAC());
+			hp.add(mon.getHP());
+			alive.add(true);
+		}
 			
 		weight = 0;
 	}
@@ -95,25 +97,23 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 		this.initiative = initiative + bonus;
 		breaker = 0;
 		this.quantity = quantity;
-		ac = new String[quantity];
-		hp = new String[quantity];
-		alive = new boolean[quantity];
+		ac = new ArrayList<>();
+		hp = new ArrayList<>();
+		alive = new ArrayList<>();
+
 		lairAction = false;
 
-		for (int i = 0; i < quantity; i++)
-			setAC(i, mon.getAC());
-
-		for (int i = 0; i < quantity; i++)
-			setHP(i, mon.getHP());
-
-		for (int i = 0; i < quantity; i++)
-			alive[i] = true;
+		for (int i = 0; i < quantity; i++) {
+			ac.add(mon.getAC());
+			hp.add(mon.getHP());
+			alive.add(true);
+		}
 
 		weight = 0;
 	}
 
 	/**
-	 * Constructor for a Lair Actions
+	 * Constructor for a Lair Action
 	 */
 	public Combatant() {
 		name = "Lair Action";
@@ -124,111 +124,194 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 		bonus = -9999; //set to an impossibly low number to ensure lair actions always lose ties
 		initiative = 20;
 		breaker = 0;
-		ac = new String[] {"0"};
-		hp = new String[] {"0"};
-		alive = new boolean[] {true};
+
+		ac = new ArrayList<>();
+		ac.add("0");
+		hp = new ArrayList<>();
+		hp.add("0");
+		alive = new ArrayList<>();
+		alive.add(true);
 		quantity = 1;
-		alive = new boolean[] {false};
 	}
 
-	public void initFromJson(JSONObject json) {
-		//TODO: is this even needed?
-	}
-	
+	/**
+	 * Name getter
+	 *
+	 * @return combatant name
+	 */
 	public String getName() {
 		return name;
 	}
-	
+
+	/**
+	 * Initiative getter
+	 *
+	 * @return combatant initiative
+	 */
 	public int getInitiative() {
 		return initiative;
 	}
-	
+
+	/**
+	 * Initiative bonus getter
+	 *
+	 * @return combatant initiative bonus
+	 */
 	public int getBonus() {
 		return bonus;
 	}
-	
+
+	/**
+	 * Quantity getter
+	 *
+	 * @return number of this combatant
+	 */
 	public int getQuantity() {
 		return quantity;
 	}
-	
+
+	/**
+	 * Tie breaker getter
+	 *
+	 * @return combatant tie breaker value
+	 */
 	public int getBreaker() {
 		return breaker;
 	}
-	
+
+	/**
+	 * Checks if this is a monster or not
+	 *
+	 * @return true if monster, otherwise false
+	 */
 	public boolean isMonster() {
 		return monster;
 	}
-	
+
+	/**
+	 * Checks if this is a reinforcement or not
+	 *
+	 * @return true if a reinforcement, otherwise false
+	 */
 	public boolean isReinforcement() {
 		return reinforcement;
 	}
-	
+
+	/**
+	 * AC getter
+	 *
+	 * @param index The index of the combatant, only used if there is more than 1 of this monster
+	 * @return combatant AC
+	 */
 	public String getAC(int index) {
 		if (monster)
-			return ac[index];
+			return ac.get(index);
 			
-		return ac[0];
+		return ac.get(0);
 	}
 
 	/**
 	 * Gets the Hit Points of the combatant
-	 * @param index THe index of the monster, only used if there is more than 1 of this smonster
-	 * @return The HP of the monster, or 999 if this is a PC
+	 *
+	 * @param index The index of the combatant, only used if there is more than 1 of this monster
+	 * @return The HP of the combatant
 	 */
 	public String getHP(int index) {
 		if (monster)
-			return hp[index];
+			return hp.get(index);
 		
-		return hp[0];
+		return hp.get(0);
 	}
-	
+
+	/**
+	 * Sets the PC for this combatant
+	 *
+	 * @param pc The player character
+	 */
 	public void setPlayerCharacter(PlayerCharacter pc) {
 		bonus = pc.getBonus();
 		name = pc.getName();
 		displayName = pc.getName();
-		ac[0] = Integer.toString(pc.getAC());
+		ac.set(0, Integer.toString(pc.getAC()));
 	}
-	
+
+	/**
+	 * Initiative setter
+	 *
+	 * @param initiative
+	 */
 	public void setInitiative(int initiative) {
 		this.initiative = initiative;
 	}
-	
+
+	/**
+	 * Initiative bonus setter
+	 *
+	 * @param bonus
+	 */
 	public void setBonus(int bonus) {
 		this.bonus = bonus;
 	}
-	
+
+	/**
+	 * Sets flag that marks if this is a monster or not
+	 *
+	 * @param monster boolean
+	 */
 	public void setMonster(boolean monster) {
 		this.monster = monster;
 	}
-	
+
+	/**
+	 * Sets flag that marks if this is a reinforcement or not
+	 *
+	 * @param reinforcement boolean
+	 */
 	public void setReinforcement(boolean reinforcement) {
 		this.reinforcement = reinforcement;
 	}
-	
+
+	/**
+	 * Sets the combatant's AC
+	 *
+	 * @param index The index of the combatant, only used if this is a monster
+	 * @param ac The AC to set
+	 */
 	public void setAC(int index, String ac) {
 		if (monster)
-			this.ac[index] = ac;
+			this.ac.set(index, ac);
 		
 		else
-			this.ac[0] = ac;
+			this.ac.set(0, ac);
 	}
-	
+
+	/**
+	 * Sets the combatant's HP
+	 *
+	 * @param index The index of the combatant, only used if this is a monster
+	 * @param hp The HP to set
+	 */
 	public void setHP(int index, String hp) {
 		if (monster)
-			this.hp[index] = hp;
+			this.hp.set(index, hp);
 
 		else
-			this.hp[0] = hp;
+			this.hp.set(0, hp);
 	}
 	
-	public void increaseWeight() {
+	private void increaseWeight() {
 		weight++;
 	}
 	
-	public int getWeight() {
+	private int getWeight() {
 		return weight;
 	}
-	
+
+	/**
+	 * Sets the tie breaker value for this combatant
+	 *
+	 * @param breaker Tie breaker value
+	 */
 	public void setBreaker(int breaker) {
 		this.breaker = breaker;
 	}
@@ -240,7 +323,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 */
 	public void kill(int index) {
 		if (monster)
-			alive[index] = false;
+			alive.set(index, false);
 	}
 
 	/**
@@ -250,7 +333,7 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 */
 	public void revive(int index) {
 		if (monster)
-			alive[index] = true;
+			alive.set(index, true);
 	}
 
 	/**
@@ -261,14 +344,32 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 */
 	public boolean isAlive(int index) {
 		if (monster)
-			return alive[index];
+			return alive.get(index);
 
 		else
-			return alive[0];
+			return alive.get(0);
 	}
 
 	/**
-	 * Checks if this is a Lair Action comabatant or not
+	 * Permanently removes this combatant.
+	 * This method should only be called on monsters
+	 *
+	 * @param index
+	 * @return true if alive, false otherwise
+	 */
+	public void remove(int index) {
+		if (monster) {
+			ac.remove(index);
+			hp.remove(index);
+			alive.remove(index);
+
+			quantity--;
+		}
+	}
+
+	/**
+	 * Checks if this is a Lair Action combatant or not
+	 * 
 	 * @return
 	 */
 	public boolean isLairAction() {
