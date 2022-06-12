@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private static DNDClientProxy proxy;
     private final String HOME_SERVER = "Data/home_server.dat";
     private final String CHRIS_SERVER = "Data/chris_server.dat";
+    private final String KARISSA_SERVER = "Data/karissa_server.dat";
     private final String PC_SERVER = "Data/pc_server.dat";
     private static boolean[] connection = {false};
 
@@ -76,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
                             initDNDClientProxy(CHRIS_SERVER);
                         } else if (select.getSelectedItem().equals("PC")) {
                             initDNDClientProxy(PC_SERVER);
+                        } else if (select.getSelectedItem().equals("Karissa")) {
+                            initDNDClientProxy(KARISSA_SERVER);
                         } else {
                             connect.dismiss();
                             specifySetConnectionDialog();

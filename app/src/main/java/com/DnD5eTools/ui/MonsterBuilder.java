@@ -245,8 +245,10 @@ public class MonsterBuilder extends Fragment {
 
                     add.show();
                 }
+
                 //if the selected monster is the current one, do nothing and exit
-                if (monster[0].getName().equals(monList.get(position)))
+                //list size must be greater than 1 or it tries to update "Add Monster"
+                if (monList.size() > 1 && monster[0].getName().equals(monList.get(position)))
                     return;
 
                 //update monster on server, get new monster
@@ -276,9 +278,17 @@ public class MonsterBuilder extends Fragment {
     }
 
     /**
-     * Updates the monster's info in the builder
+     * Initializes the monster builder view using
+     * the first monster in the list. If there are
+     * no monsters in the list, it will be blank
      */
     private void builderView() {
+        //the list is "empty" if the only item in the
+        //list is the "Add Monster" item
+        if (monList.size() <= 1) {
+            return;
+        }
+
         basicMonsterInfo();
         monsterStats();
         monsterSensesLanguagesCR();
