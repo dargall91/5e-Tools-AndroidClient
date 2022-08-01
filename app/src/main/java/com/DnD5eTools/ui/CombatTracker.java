@@ -546,15 +546,15 @@ public class CombatTracker extends Fragment {
                 }
             });
 
-            Spinner initiative = playerView.findViewById(R.id.initiative_spinner);
-            initiative.setId(index);
-            initiative.setTag(index);
-            initiative.setSelection(5, false);
+            Spinner initRoll = playerView.findViewById(R.id.init_roll_spinner);
+            initRoll.setId(index);
+            initRoll.setTag(index);
+            initRoll.setSelection(0, false);
 
-            initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            initRoll.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    combatants.get(index).setInitiative(Integer.parseInt((String) initiative.getSelectedItem()));
+                    combatants.get(index).setInitiative(Integer.parseInt((String) initRoll.getSelectedItem()));
                 }
 
                 @Override
@@ -565,7 +565,8 @@ public class CombatTracker extends Fragment {
                 @Override
                 public void run() {
                     try {
-                        combatants.add(new Combatant(proxy.getPlayerCharacter((String) pcSpin.getSelectedItem()), Integer.parseInt((String) initiative.getSelectedItem())));
+                        combatants.add(new Combatant(proxy.getPlayerCharacter((String) pcSpin.getSelectedItem()),
+                                Integer.parseInt((String) initRoll.getSelectedItem())));
                         Log.i("Combatant:", combatants.get(index).getName());
                     } catch (Exception e) {
                         Log.i("Combat", e.getMessage());
@@ -1104,7 +1105,7 @@ public class CombatTracker extends Fragment {
                 });
 
                 Spinner quantity = outsideReinLayout.findViewById(R.id.quantity_spinner);
-                Spinner initiative = outsideReinLayout.findViewById(R.id.initiative_spinner);
+                Spinner initiative = outsideReinLayout.findViewById(R.id.init_roll_spinner);
 
                 final AlertDialog.Builder outsideRein = new AlertDialog.Builder(getContext());
                 outsideRein.setTitle("Add Reinforcements");
