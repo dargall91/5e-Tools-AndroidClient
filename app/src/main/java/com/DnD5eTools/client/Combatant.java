@@ -28,12 +28,13 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 * Constructor for a Player Character combatant
 	 *
 	 * @param pc the PlayerCharacter object
-	 * @param initiative the PC's initiative
+	 * @param initRoll the PC's initiative roll
 	 */
-	public Combatant(PlayerCharacter pc, int initiative) {
+	public Combatant(PlayerCharacter pc, int initRoll) {
 		monster = false;
 		reinforcement = false;
-		this.initiative = initiative;
+		bonus = pc.getBonus();
+		initiative = initRoll + bonus;
 		breaker = 0;
 		weight = 0;
 		ac = new ArrayList<>();
@@ -44,7 +45,6 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 
 		displayName = pc.getName();
 		lairAction = false;
-		bonus = pc.getBonus();
 		name = pc.getName();
 		quantity = 1;
 	}
@@ -255,10 +255,10 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	/**
 	 * Initiative setter
 	 *
-	 * @param initiative
+	 * @param initRoll The PC's initiative roll
 	 */
-	public void setInitiative(int initiative) {
-		this.initiative = initiative;
+	public void setInitiative(int initRoll) {
+		initiative = initRoll + bonus;
 	}
 
 	/**

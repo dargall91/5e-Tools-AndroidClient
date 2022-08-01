@@ -30,7 +30,7 @@
         android:layout_gravity="center"
         android:layout_marginLeft="20dp"
         android:dropDownWidth="85dp"
-        android:entries="@array/modifiers"
+        android:entries="@array/initiatives"
         android:spinnerMode="dropdown"
         android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
 
