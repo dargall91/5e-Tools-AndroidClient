@@ -53,6 +53,13 @@ import java.util.Random;
 
 /**
  * Tab for tracking player data, combat, and housing the soundboard.
+ *
+ * When first loaded, the user will see a list of all Player Characters
+ * on the left of the screen, and the sound board on the right of the
+ * screen. When an encounter is loaded, the Player list wil be replaced
+ * with a list of all combatants currently involved in the encounter
+ * sorted by initiative order. Ending the combat will return the user
+ * to the list of players.
  */
 public class CombatTracker extends Fragment {
     private DNDClientProxy proxy;
@@ -294,6 +301,41 @@ public class CombatTracker extends Fragment {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                }
+            });
+
+            //index of initiative = initiative - 1
+            Spinner initiative = playerView.findViewById(R.id.init_roll_spinner);
+            initiative.setId(i);
+            initiative.setSelection(pc[0].getBonus() - 1, false);
+            initiative.setTag(i);
+
+            initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    Thread innerThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                pc[0].setInitative(Integer.parseInt(initiative.getSelectedItem().toString()));
+                                proxy.updatePlayerCharacter(pc[0]);
+                            } catch (Exception e) {
+                                Log.i("Combat", e.getMessage());
+                            }
+                        }
+                    });
+
+                    innerThread.start();
+
+                    try {
+                        innerThread.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
                 }
             });
 

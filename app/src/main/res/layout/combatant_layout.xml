@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/combatant_layout"
     android:layout_width="wrap_content"
-    android:layout_height="40dp"
+    android:layout_height="wrap_content"
     android:gravity="start"
     android:orientation="horizontal"
     android:layout_marginBottom="5dp"
@@ -11,20 +11,20 @@
     <TextView
         android:id="@+id/initiative"
         android:layout_width="30dp"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_marginRight="10dp"/>
 
     <TextView
         android:id="@+id/name"
         android:layout_width="200dp"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_marginRight="10dp"
         android:textSize="20sp"/>
 
     <TextView
         android:id="@+id/ac_label"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:text="AC:"
         android:textSize="20sp"
         android:layout_marginRight="5dp"/>
@@ -32,13 +32,13 @@
     <EditText
         android:id="@+id/ac_text"
         android:layout_width="70dp"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_marginRight="10dp"/>
 
     <TextView
         android:id="@+id/hp_label"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:text="HP:"
         android:textSize="20sp"
         android:layout_marginRight="5dp"/>
@@ -46,7 +46,7 @@
     <EditText
         android:id="@+id/hp_text"
         android:layout_width="70dp"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_marginRight="10dp"/>
 
     <Button

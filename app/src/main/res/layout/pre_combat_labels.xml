@@ -8,8 +8,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="130dp"
+        android:layout_marginLeft="60dp"
+        android:layout_marginRight="105dp"
         android:text="PC:"
         android:textSize="30sp"/>
 
@@ -24,7 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Bonus:"
-        android:layout_marginRight="40dp"
+        android:layout_marginRight="15dp"
         android:textSize="30sp"/>
 
     <TextView

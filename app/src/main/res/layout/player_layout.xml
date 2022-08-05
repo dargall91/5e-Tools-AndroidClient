@@ -5,11 +5,16 @@
     android:layout_height="wrap_content"
     android:gravity="center">
 
+    <CheckBox
+        android:id="@+id/combatant_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"/>
+
     <TextView
         android:id="@+id/player_name"
-        android:layout_width="150dp"
-        android:layout_height="match_parent"
-        android:layout_marginLeft="10dp"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
         android:textSize="20sp"/>
 
     <Spinner
@@ -32,7 +37,7 @@
         android:dropDownWidth="85dp"
         android:entries="@array/initiatives"
         android:spinnerMode="dropdown"
-        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
+        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
 
     <Spinner
         android:id="@+id/init_roll_spinner"
@@ -43,13 +48,13 @@
         android:dropDownWidth="85dp"
         android:entries="@array/d20_roll"
         android:spinnerMode="dropdown"
-        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
+        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
 
     <Button
         android:id="@+id/delete_player"
         android:layout_width="110dp"
         android:layout_height="40dp"
-        android:insetLeft="20dp"
+        android:layout_marginLeft="50dp"
         android:text="Delete"
         android:textSize="14sp"/>
 
