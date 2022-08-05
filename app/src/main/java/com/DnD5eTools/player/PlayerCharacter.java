@@ -9,12 +9,13 @@ import org.json.JSONObject;
  */
 public class PlayerCharacter implements Serializable {
 	private String name;
-	private int bonus, ac;
+	private int bonus, ac, initiative;
 	
 	public PlayerCharacter(String name) {
 		this.name = name;
 		bonus = 0;
 		ac = 0;
+		initiative = 1;
 	}
 	 
 	public PlayerCharacter(JSONObject json) {
@@ -26,6 +27,7 @@ public class PlayerCharacter implements Serializable {
 			name = json.getString("name");
 			ac = json.getInt("ac");
 			bonus = json.getInt("bonus");
+			initiative = json.getInt("initiative");
 		} catch (Exception e) {
 			System.out.println("Error in PlayerCharacter(JSONObject): " + e.getMessage());
 		}
@@ -42,6 +44,10 @@ public class PlayerCharacter implements Serializable {
 	public int getBonus() {
 		return bonus;
 	}
+
+	public int getInitiative() {
+		return initiative;
+	}
 	
 	public void setName(String name) {
 		this.name = name;
@@ -54,6 +60,10 @@ public class PlayerCharacter implements Serializable {
 	public void setBonus(int bonus) {
 		this.bonus = bonus;
 	}
+
+	public void setInitative(int initiative) {
+		this.initiative = initiative;
+	}
 	
 	public JSONObject toJson() {
 		JSONObject obj = new JSONObject();
@@ -62,34 +72,12 @@ public class PlayerCharacter implements Serializable {
 			obj.put("name", name);
 			obj.put("ac", ac);
 			obj.put("bonus", bonus);
+			obj.put("initiative", initiative);
 		} catch (Exception e) {
 			System.out.println("Exception in PlayerCharacter.toJson: " + e.getMessage());
 		}
 		
 		return obj;
 	}
-	
-	/*public boolean saveJson() {
-		boolean result = false;
-		
-		try {
-			File file = new File("PCs/" + name + ".json");
-			
-			if (!file.exists())
-				file.createNewFile();
-				
-			FileWriter out = new FileWriter(file);
-			out.write(toJsonString());
-			out.flush();
-			out.close();
-			result = true;
-			
-			System.out.println("Monster " + name + " save successful.");
-		} catch (Exception e) {
-			System.out.println("Error in Monster.saveJson: " + e.getMessage());
-		}
-		
-		return true;
-	 }*/
  }
 		 
