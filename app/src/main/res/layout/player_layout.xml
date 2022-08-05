@@ -34,9 +34,20 @@
         android:spinnerMode="dropdown"
         android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
 
+    <Spinner
+        android:id="@+id/init_roll_spinner"
+        android:layout_width="75dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_marginLeft="20dp"
+        android:dropDownWidth="85dp"
+        android:entries="@array/d20_roll"
+        android:spinnerMode="dropdown"
+        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
+
     <Button
         android:id="@+id/delete_player"
-        android:layout_width="150dp"
+        android:layout_width="110dp"
         android:layout_height="40dp"
         android:insetLeft="20dp"
         android:text="Delete"
