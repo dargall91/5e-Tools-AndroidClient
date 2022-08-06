@@ -10,12 +10,14 @@ import org.json.JSONObject;
 public class PlayerCharacter implements Serializable {
 	private String name;
 	private int bonus, ac, initiative;
+	private boolean combatant;
 	
 	public PlayerCharacter(String name) {
 		this.name = name;
 		bonus = 0;
 		ac = 0;
 		initiative = 1;
+		combatant = false;
 	}
 	 
 	public PlayerCharacter(JSONObject json) {
@@ -23,6 +25,8 @@ public class PlayerCharacter implements Serializable {
 	}
 	
 	private void initFromJson(JSONObject json) {
+		combatant = false;
+
 		try {
 			name = json.getString("name");
 			ac = json.getInt("ac");
@@ -48,6 +52,10 @@ public class PlayerCharacter implements Serializable {
 	public int getInitiative() {
 		return initiative;
 	}
+
+	public boolean isCombatant() {
+		return combatant;
+	}
 	
 	public void setName(String name) {
 		this.name = name;
@@ -63,6 +71,10 @@ public class PlayerCharacter implements Serializable {
 
 	public void setInitative(int initiative) {
 		this.initiative = initiative;
+	}
+
+	public void setCombatant(boolean combatant) {
+		this.combatant = combatant;
 	}
 	
 	public JSONObject toJson() {
