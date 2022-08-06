@@ -40,6 +40,7 @@ public class Monster implements Serializable {
 			//convert to string
 			Scanner sc = new Scanner(in);
 			StringBuffer sb = new StringBuffer();
+
 			while(sc.hasNext()){
 				sb.append(sc.nextLine());
 			}

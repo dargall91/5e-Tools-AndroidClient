@@ -11,6 +11,9 @@ import org.json.JSONObject;
 
 /**
  * Combatant data to be sent to the server.
+ *
+ * TODO: this should be an abstract class with three abstractions:
+ * 		PlayerCombatant, MonsterCombatant, and LairCombatant
  */
 public class Combatant implements Comparable<Combatant>, Serializable {
 	private boolean monster, reinforcement, lairAction;
@@ -28,13 +31,12 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 * Constructor for a Player Character combatant
 	 *
 	 * @param pc the PlayerCharacter object
-	 * @param initRoll the PC's initiative roll
 	 */
-	public Combatant(PlayerCharacter pc, int initRoll) {
+	public Combatant(PlayerCharacter pc) {
 		monster = false;
 		reinforcement = false;
 		bonus = pc.getBonus();
-		initiative = initRoll + bonus;
+		initiative = pc.getInitiative() + bonus;
 		breaker = 0;
 		weight = 0;
 		ac = new ArrayList<>();

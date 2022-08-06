@@ -9,7 +9,7 @@
 
     <Spinner
         android:id="@+id/music_title"
-        android:layout_width="400dp"
+        android:layout_width="350dp"
         android:layout_height="wrap_content"
         android:spinnerMode="dropdown"
         android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
