@@ -32,6 +32,7 @@ import com.DnD5eTools.client.DNDClientProxy;
 import com.DnD5eTools.monster.Encounter;
 import com.DnD5eTools.client.MonsterData;
 import com.DnD5eTools.client.PlayerData;
+import com.DnD5eTools.ui.main.SectionsPagerAdapter;
 
 import org.json.JSONException;
 
@@ -409,6 +410,22 @@ public class EncounterBuilder extends Fragment {
                 });
 
                 rename.show();
+            }
+        });
+
+        Button load = nameView.findViewById(R.id.load);
+        load.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SectionsPagerAdapter spa = new SectionsPagerAdapter(getContext(), getFragmentManager());
+
+                CombatTracker combat = (CombatTracker) spa.getItem(0);
+
+                //CombatTracker combat = spa.getCombatTracker();
+
+                //combat.loadEncounter(encounter[0].getName());
+
+                CombatTracker.getTracker().loadEncounter(encounter[0].getName());
             }
         });
     }

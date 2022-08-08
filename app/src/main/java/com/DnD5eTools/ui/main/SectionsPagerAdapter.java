@@ -22,6 +22,9 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     @StringRes
     private static final int[] TAB_TITLES = new int[]{R.string.tab_text_1, R.string.tab_text_2, R.string.tab_text_3};
     private final Context mContext;
+    private CombatTracker combat;
+    private MonsterBuilder monster;
+    private EncounterBuilder encounter;
 
     public SectionsPagerAdapter(Context context, FragmentManager fm) {
         super(fm);
@@ -39,8 +42,11 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         //TODO: add 4th page for magic items? (also requires update in strings.xml)
         switch (position) {
             case 0:
-                fragment = new CombatTracker();
-                break;
+                if (combat == null) {
+                    combat = new CombatTracker();
+                }
+
+                return combat;
             case 1:
                 fragment = new MonsterBuilder();
                 break;
@@ -50,6 +56,14 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         }
 
         return fragment;
+    }
+
+    public CombatTracker getCombatTracker() {
+        if (combat == null) {
+            combat = new CombatTracker();
+        }
+
+        return combat;
     }
 
     @Nullable

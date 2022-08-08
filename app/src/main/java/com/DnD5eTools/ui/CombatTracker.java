@@ -74,6 +74,7 @@ public class CombatTracker extends Fragment {
     private Bundle savedInstanceState;
     private static CombatTracker tracker;
     private LinearLayout leftView;
+
     private final String PLAYER_CRIT = "Data/player_crit.dat";
     private final String MONSTER_CRIT = "Data/monster_crit.dat";
     private final String PLAYER_KILL = "Data/player_kill.dat";
@@ -95,6 +96,8 @@ public class CombatTracker extends Fragment {
     private final String STALWART = "Data/stalwart.dat";
     private final String VIGOROUS = "Data/vigorous.dat";
     private final String FOCUSED = "Data/focused.dat";
+
+    private Button loadButton;
 
     @Nullable
     @Override
@@ -414,12 +417,12 @@ public class CombatTracker extends Fragment {
             }
         });
 
-        Button loadEncounter = buttonLayout.findViewById((R.id.load_encounter));
-        loadEncounter.setOnClickListener(new View.OnClickListener() {
+        loadButton = buttonLayout.findViewById((R.id.load_encounter));
+        loadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //First click of this button loads an encounter
-                if (loadEncounter.getText().toString().equals("Load Encounter")) {
+                if (loadButton.getText().toString().equals("Load Encounter")) {
                     final ArrayList<String>[] encList = new ArrayList[1];
 
                     //Get list of all encounters
@@ -458,49 +461,21 @@ public class CombatTracker extends Fragment {
                     });
 
                     //load drop down into dialog box
-                    final AlertDialog.Builder loadEnc = new AlertDialog.Builder(getContext());
-                    loadEnc.setTitle("Select an Encounter");
-                    loadEnc.setView(loadView);
-                    loadEnc.setNegativeButton("Cancel", null);
+                    final AlertDialog.Builder loadDialog = new AlertDialog.Builder(getContext());
+                    loadDialog.setTitle("Select an Encounter");
+                    loadDialog.setView(loadView);
+                    loadDialog.setNegativeButton("Cancel", null);
 
-                    loadEnc.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    loadDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            //ensure that the encounter name entered exists, then start playing music
-                            if (encName.getText().toString().equals("")) {
-                                return;
-                            }
-
-                            Thread innerThread = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        encounter[0] = proxy.getEncounter(encName.getText().toString());
-                                        combatants = new ArrayList<Combatant>();
-                                        proxy.startCombat(encounter[0].getName());
-                                    } catch (JSONException e) {
-                                        Log.i("Error Loading Combat", e.getMessage());
-                                        return;
-                                    }
-                                }
-                            });
-
-                            innerThread.start();
-
-                            try {
-                                innerThread.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                            //change button text to start encounter
-                            loadEncounter.setText("Start Encounter");
+                            loadEncounter(encName.getText().toString());
                         }
                     });
 
-                    loadEnc.setNegativeButton("Cancel", null);
+                    loadDialog.setNegativeButton("Cancel", null);
 
-                    AlertDialog load = loadEnc.create();
+                    AlertDialog load = loadDialog.create();
                     load.show();
                 } else {
                     //on second button click encounter is already loaded, get confirmation to start
@@ -556,6 +531,42 @@ public class CombatTracker extends Fragment {
                 }
             }
         });
+    }
+
+    /**
+     * Loads an encounter on the server to be run at a later time
+     */
+    public void loadEncounter(String name) {
+        //ensure that the encounter name entered exists, then start playing music
+        if (name.equals("")) {
+            return;
+        }
+
+        Log.i("Load", name);
+        Thread innerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    encounter[0] = proxy.getEncounter(name);
+                    combatants = new ArrayList<Combatant>();
+                    proxy.startCombat(encounter[0].getName());
+                } catch (JSONException e) {
+                    Log.i("Error Loading Combat", e.getMessage());
+                    return;
+                }
+            }
+        });
+
+        innerThread.start();
+
+        try {
+            innerThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        //change button text to start encounter
+        loadButton.setText("Start Encounter");
     }
 
     /**
