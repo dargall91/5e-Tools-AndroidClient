@@ -9,7 +9,7 @@ import org.json.JSONObject;
 //Also, possibly use Factory DP to create these objects.
 
 /**
- * Montser Ability object. An ability is simply a name and a description of that ability.
+ * Monster Ability object. An ability is simply a name and a description of that ability.
  */
 public class Ability implements Serializable {
 	private String name;

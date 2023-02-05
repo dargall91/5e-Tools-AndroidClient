@@ -1,12 +1,16 @@
 package com.DnD5eTools.ui;
 
 import android.content.DialogInterface;
-import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.os.Bundle;
 
 import com.DnD5eTools.R;
 import com.DnD5eTools.client.DNDClientProxy;
 
+import com.DnD5eTools.models.ServerConnection;
+import com.DnD5eTools.util.Util;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.tabs.TabLayout;
 
 import androidx.appcompat.app.AlertDialog;
@@ -17,23 +21,20 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.DnD5eTools.ui.main.SectionsPagerAdapter;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static DNDClientProxy proxy;
-    private final String HOME_SERVER = "Data/home_server.dat";
-    private final String CHRIS_SERVER = "Data/chris_server.dat";
-    private final String KARISSA_SERVER = "Data/karissa_server.dat";
-    private final String PC_SERVER = "Data/pc_server.dat";
-    private static boolean[] connection = {false};
+    private static boolean[] connected = { false };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,203 +48,159 @@ public class MainActivity extends AppCompatActivity {
         tabs.setupWithViewPager(viewPager);
         viewPager.setOffscreenPageLimit(3);
 
-        setConnectionDialog();
+        displaySelectConnectionDialog();
     }
 
     /**
      * Opens the dialog to select the server connection
      */
-    private void setConnectionDialog() {
-        View serverSelect = LayoutInflater.from(this).inflate(R.layout.select_server_dialog, (ViewGroup) findViewById(R.id.main_activity), false);
+    private void displaySelectConnectionDialog() {
+        boolean[] isConnected = { false };
+
+        //build spinner list
+        List<ServerConnection> serverConnections = getServerConnections();
+        List<String> connectionNames = new ArrayList<>();
+
+        for (ServerConnection con : serverConnections) {
+            connectionNames.add(con.getName());
+        }
+
+        ArrayAdapter<String> conNameAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
+                connectionNames);
+
+        View serverSelect = LayoutInflater.from(this).inflate(R.layout.select_server_dialog,
+                (ViewGroup) findViewById(R.id.main_activity), false);
+        TextView invalidCon = serverSelect.findViewById(R.id.invalid_connection);
         Spinner select = serverSelect.findViewById(R.id.select);
+        select.setAdapter(conNameAdapter);
 
         final android.app.AlertDialog.Builder connectionDialog = new android.app.AlertDialog.Builder(MainActivity.this);
         connectionDialog.setView(serverSelect);
-        connectionDialog.setTitle("Select Server");
+        connectionDialog.setTitle("Select Server Connection");
         connectionDialog.setCancelable(false);
         connectionDialog.setPositiveButton("Select", null);
 
         android.app.AlertDialog connect = connectionDialog.create();
-        connect.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialogInterface) {
-                Button change = connect.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
-                change.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (select.getSelectedItem().equals("Home")) {
-                            initDNDClientProxy(HOME_SERVER);
-                        } else if (select.getSelectedItem().equals("Chris's House")) {
-                            initDNDClientProxy(CHRIS_SERVER);
-                        } else if (select.getSelectedItem().equals("PC")) {
-                            initDNDClientProxy(PC_SERVER);
-                        } else if (select.getSelectedItem().equals("Karissa")) {
-                            initDNDClientProxy(KARISSA_SERVER);
-                        } else {
-                            connect.dismiss();
-                            specifySetConnectionDialog();
-                        }
+        connect.setOnShowListener(dialogInterface -> {
+            Button change = connect.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
+            change.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Util.setServerConnection(serverConnections.get(select.getSelectedItemPosition()));
 
+                    //validate connection, display custom connection dialog if no connection string set
+                    if (Util.getServerConnection().getUrl().isEmpty()) {
+                        isConnected[0] = false;
+                        displayCustomConnectionDialog();
                         connect.dismiss();
+                    } else {
+                        isConnected[0] = Util.isConnectedToServer();
                     }
-                });
-            }
+
+                    //if connected dismiss, otherwise display error message
+                    if (isConnected[0]) {
+                        connect.dismiss();
+                    } else {
+                        invalidCon.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
         });
 
-        connect.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                //ensure successful connection to server
-                checkConnection();
-
-                if (!isConnected() && !select.getSelectedItem().equals("Other")) {
-                    setConnectionDialog();
-                } else if (!select.getSelectedItem().equals("Other")) {
-                    CombatTracker.getTracker().refresh();
-                    EncounterBuilder.getEncBuilder().refresh();
-                    MonsterBuilder.getMonBuilder().refresh();
-                }
+        connect.setOnDismissListener(dialog -> {
+            //if connected load the tabs
+            if (isConnected[0]) {
+                CombatTracker.getTracker().refresh();
+                EncounterBuilder.getEncBuilder().refresh();
+                MonsterBuilder.getMonBuilder().refresh();
             }
         });
 
         connect.show();
     }
 
-    private void specifySetConnectionDialog() {
-        final boolean[] cancelled = {false};
+    private void displayCustomConnectionDialog() {
+        final boolean[] cancelled = { false };
+        final boolean[] connected = { false };
 
-        View specifyConn = LayoutInflater.from(this).inflate(R.layout.specify_connection_dialog, (ViewGroup) findViewById(R.id.main_activity), false);
-        EditText host = specifyConn.findViewById(R.id.host);
-        EditText port = specifyConn.findViewById(R.id.port);
+        View customConnectionView = LayoutInflater.from(this).inflate(R.layout.custom_connection_dialog,
+                (ViewGroup) findViewById(R.id.main_activity), false);
+        TextView invalidCon = customConnectionView.findViewById(R.id.invalid_connection);
+        EditText host = customConnectionView.findViewById(R.id.host);
+        EditText port = customConnectionView.findViewById(R.id.port);
 
-        final android.app.AlertDialog.Builder specifyConnDialog = new android.app.AlertDialog.Builder(MainActivity.this);
-        specifyConnDialog.setView(specifyConn);
-        specifyConnDialog.setTitle("Specify Server");
-        specifyConnDialog.setCancelable(true);
-        specifyConnDialog.setPositiveButton("Set Server", null);
-        specifyConnDialog.setNegativeButton("Cancel", null);
+        final android.app.AlertDialog.Builder customConnectionDialog =
+                new android.app.AlertDialog.Builder(MainActivity.this);
+        customConnectionDialog.setView(customConnectionView);
+        customConnectionDialog.setTitle("Custom Server Connection");
+        customConnectionDialog.setCancelable(true);
+        customConnectionDialog.setPositiveButton("Set Connection", null);
+        customConnectionDialog.setNegativeButton("Cancel", null);
 
-        android.app.AlertDialog specify = specifyConnDialog.create();
-        specify.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialogInterface) {
-                Button set = specify.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
-                Button cancel = specify.getButton(android.app.AlertDialog.BUTTON_NEGATIVE);
+        android.app.AlertDialog custom = customConnectionDialog.create();
+        custom.setOnShowListener(dialogInterface -> {
+            Button set = custom.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
+            Button cancel = custom.getButton(android.app.AlertDialog.BUTTON_NEGATIVE);
 
-                set.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        proxy = new DNDClientProxy(host.getText().toString(), Integer.parseInt(port.getText().toString()));
-                        specify.dismiss();
-                    }
-                });
+            set.setOnClickListener(v -> {
+                String url = "http://" + host.getText() + ":" + port.getText() + "/";
+                Util.getServerConnection().setUrl(url);
+                connected[0] = Util.isConnectedToServer();
 
-                cancel.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        cancelled[0] = true;
-                        specify.dismiss();
-                    }
-                });
-            }
-        });
-
-        specify.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                //ensure successful connection to server
-                checkConnection();
-
-                if (!isConnected() && !cancelled[0]) {
-                    specifySetConnectionDialog();
-                } else if (!cancelled[0]) {
-                    CombatTracker.getTracker().refresh();
-                    EncounterBuilder.getEncBuilder().refresh();
-                    MonsterBuilder.getMonBuilder().refresh();
+                //do not dismiss if not connected
+                if (connected[0]) {
+                    custom.dismiss();
                 } else {
-                    setConnectionDialog();
+                    invalidCon.setVisibility(View.VISIBLE);
                 }
+            });
+
+            cancel.setOnClickListener(v -> {
+                cancelled[0] = true;
+                custom.dismiss();
+            });
+        });
+
+        custom.setOnDismissListener(dialog -> {
+            //if cancelled, return to normal connection selection, otherwise load views
+            if (cancelled[0]) {
+                displaySelectConnectionDialog();
+            } else {
+                CombatTracker.getTracker().refresh();
+                EncounterBuilder.getEncBuilder().refresh();
+                MonsterBuilder.getMonBuilder().refresh();
             }
         });
 
-        specify.show();
-    }
-
-    /**
-     * Reads the host and port data from the specified asset file
-     * and initializes the DNDClientProxy using that data
-     *
-     * @param asset The asset file with the required data
-     */
-    public void initDNDClientProxy(String asset) {
-        BufferedReader reader = null;
-        String host;
-        int port;
-
-        try {
-            AssetManager assets = getApplicationContext().getAssets();
-            reader = new BufferedReader(new InputStreamReader(assets.open(asset)));
-            host = reader.readLine();
-            System.out.println(host);
-            port = Integer.parseInt(reader.readLine());
-        } catch (IOException e) {
-            Log.i("read error", e.getMessage());
-            host = "localhost";
-            port = 0;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-
-                }
-            }
-        }
-
-        proxy = new DNDClientProxy(host, port);
-    }
-
-    public static void checkConnection() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    connection[0] = proxy.isConnected();
-                } catch (Exception e) {
-                    Log.i("Connection", e.getMessage());
-                }
-            }
-        });
-
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        custom.show();
     }
 
     public static boolean isConnected() {
-        System.out.println("connected: " + connection[0]);
-        return connection[0];
+        System.out.println("connected: " + connected[0]);
+        return connected[0];
     }
 
     public static DNDClientProxy getProxy() {
         return proxy;
     }
 
-    /**
-     * Changes the DNDClientProxy connection
-     *
-     * @param host
-     * @param port
-     */
-    public static void changeProxyServer(String host, int port) {
-        proxy.changeConnection(host, port);
+    private List<ServerConnection> getServerConnections() {
+        Resources resources = getResources();
+        String[] jsonConnections = resources.getStringArray(R.array.serverConnections);
+        List<ServerConnection> serverConnections = new ArrayList<>();
 
-        //update connection status
-        checkConnection();
+        ObjectMapper mapper = new ObjectMapper();
+
+        for (String jsonCon : jsonConnections) {
+            try {
+                ServerConnection connection = mapper.readValue(jsonCon, ServerConnection.class);
+                serverConnections.add(connection);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return serverConnections;
     }
 
     @Override
