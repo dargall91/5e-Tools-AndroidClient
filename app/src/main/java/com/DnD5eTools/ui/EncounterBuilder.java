@@ -125,23 +125,20 @@ public class EncounterBuilder extends Fragment {
      * @param name the name of the monster to load, null should be used to load the first encounter in the encounter lists
      */
     private void encounterListView(String name) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    encList = proxy.getEncounterList();
-                    encList.add(ADD_ENCOUNTER);
-                    Collections.sort(encList);
+        Thread thread = new Thread(() -> {
+            try {
+                encList = proxy.getEncounterList();
+                encList.add(ADD_ENCOUNTER);
+                Collections.sort(encList);
 
-                    if (name == null)
-                        encounter[0] = proxy.getEncounter(encList.get(1));
+                if (name == null)
+                    encounter[0] = proxy.getEncounter(encList.get(1));
 
-                    else
-                        encounter[0] = proxy.getEncounter(name);
+                else
+                    encounter[0] = proxy.getEncounter(name);
 
-                } catch (Exception e) {
-                    Log.i("EncList", e.getMessage());
-                }
+            } catch (Exception e) {
+                Log.i("EncList", e.getMessage());
             }
         });
 

@@ -14,13 +14,23 @@
         android:text="Select a server"
         android:textSize="20sp"/>
 
+    <TextView
+        android:id="@+id/invalid_connection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="130dp"
+        android:visibility="gone"
+        android:text="Could not connect. Is the server running?"
+        android:textSize="20sp"
+        android:textColor="#FF0000"/>
+
     <Spinner
         android:id="@+id/select"
         android:layout_width="200dp"
         android:layout_height="40dp"
 
         android:dropDownWidth="200dp"
-        android:entries="@array/server_list"
         android:spinnerMode="dropdown"
         android:theme="@style/Widget.AppCompat.DropDownItem.Spinner" />
 </LinearLayout>

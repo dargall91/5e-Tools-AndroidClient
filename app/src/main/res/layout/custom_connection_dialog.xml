@@ -14,6 +14,17 @@
         android:text="Enter the server host IP and port"
         android:textSize="20sp"/>
 
+    <TextView
+        android:id="@+id/invalid_connection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="130dp"
+        android:visibility="gone"
+        android:text="The connection you entered was invalid. Is the server running?"
+        android:textSize="20sp"
+        android:textColor="#FF0000"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">

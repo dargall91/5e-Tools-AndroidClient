@@ -227,12 +227,4 @@
         <item>29</item>
         <item>30</item>
     </string-array>
-
-    <string-array name="server_list">
-        <item>Home</item>
-        <item>Chris\'s House</item>
-        <item>Karissa</item>
-        <item>PC</item>
-        <item>Other</item>
-    </string-array>
 </resources>
