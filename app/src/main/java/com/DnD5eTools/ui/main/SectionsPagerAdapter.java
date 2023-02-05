@@ -58,14 +58,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         return fragment;
     }
 
-    public CombatTracker getCombatTracker() {
-        if (combat == null) {
-            combat = new CombatTracker();
-        }
-
-        return combat;
-    }
-
     @Nullable
     @Override
     public CharSequence getPageTitle(int position) {

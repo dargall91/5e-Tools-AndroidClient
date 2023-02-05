@@ -1,9 +1,8 @@
-package com.DnD5eTools.entities.encounter;
+package com.DnD5eTools.entities;
 
 public class Music {
     private int id;
     private String name;
-    private String fileName;
 
     public int getId() {
         return id;
@@ -19,13 +18,5 @@ public class Music {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
     }
 }

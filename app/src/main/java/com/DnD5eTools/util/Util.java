@@ -1,5 +1,6 @@
 package com.DnD5eTools.util;
 
+import com.DnD5eTools.interfaces.CampaignInterface;
 import com.DnD5eTools.models.ServerConnection;
 
 public class Util {
@@ -14,6 +15,6 @@ public class Util {
     }
 
     public static boolean isConnectedToServer() {
-        return CampaignManager.getActiveCampaign() != null;
+        return CampaignInterface.getActiveCampaign() != null;
     }
 }

@@ -83,26 +83,23 @@ public class MainActivity extends AppCompatActivity {
         android.app.AlertDialog connect = connectionDialog.create();
         connect.setOnShowListener(dialogInterface -> {
             Button change = connect.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
-            change.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Util.setServerConnection(serverConnections.get(select.getSelectedItemPosition()));
+            change.setOnClickListener(view -> {
+                Util.setServerConnection(serverConnections.get(select.getSelectedItemPosition()));
 
-                    //validate connection, display custom connection dialog if no connection string set
-                    if (Util.getServerConnection().getUrl().isEmpty()) {
-                        isConnected[0] = false;
-                        displayCustomConnectionDialog();
-                        connect.dismiss();
-                    } else {
-                        isConnected[0] = Util.isConnectedToServer();
-                    }
+                //validate connection, display custom connection dialog if no connection string set
+                if (Util.getServerConnection().getUrl().isEmpty()) {
+                    isConnected[0] = false;
+                    displayCustomConnectionDialog();
+                    connect.dismiss();
+                } else {
+                    isConnected[0] = Util.isConnectedToServer();
+                }
 
-                    //if connected dismiss, otherwise display error message
-                    if (isConnected[0]) {
-                        connect.dismiss();
-                    } else {
-                        invalidCon.setVisibility(View.VISIBLE);
-                    }
+                //if connected dismiss, otherwise display error message
+                if (isConnected[0]) {
+                    connect.dismiss();
+                } else {
+                    invalidCon.setVisibility(View.VISIBLE);
                 }
             });
         });
@@ -142,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
             Button set = custom.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
             Button cancel = custom.getButton(android.app.AlertDialog.BUTTON_NEGATIVE);
 
-            set.setOnClickListener(v -> {
+            set.setOnClickListener(view -> {
                 String url = "http://" + host.getText() + ":" + port.getText() + "/";
                 Util.getServerConnection().setUrl(url);
                 connected[0] = Util.isConnectedToServer();

@@ -1,5 +1,7 @@
 package com.DnD5eTools.entities.encounter;
 
+import com.DnD5eTools.entities.Music;
+
 import java.util.ArrayList;
 import java.util.List;
 
