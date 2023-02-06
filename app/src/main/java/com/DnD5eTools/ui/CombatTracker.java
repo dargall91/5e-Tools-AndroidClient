@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * Tab for tracking player data, combat, and housing the soundboard.
@@ -131,10 +132,6 @@ public class CombatTracker extends Fragment {
     public void loadViews() {
         soundBoard();
         preCombatView();
-    }
-
-    public static CombatTracker getTracker() {
-        return tracker;
     }
 
     /**
@@ -1000,10 +997,9 @@ public class CombatTracker extends Fragment {
         masochistic.setOnClickListener(view -> playSound(MASOCHISTIC, AFFLICTION));
 
         musicList = MusicInterface.getMusicList();
-
-        for (Music music : musicList) {
-            musicNameList.add(music.getName());
-        }
+        musicNameList = musicList.stream()
+                .map(Music::getName)
+                .collect(Collectors.toList());
 
         LinearLayout musicPlayer = view.findViewById(R.id.music_player);
 

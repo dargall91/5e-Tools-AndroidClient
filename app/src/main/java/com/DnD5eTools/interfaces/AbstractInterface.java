@@ -2,9 +2,11 @@ package com.DnD5eTools.interfaces;
 
 import static com.DnD5eTools.util.Util.getServerConnection;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.MediaType;
@@ -40,13 +42,13 @@ public class AbstractInterface {
         return result.get();
     }
 
-    public static <T> T[] getArrayResult(Class<T[]> classType, String endpoint) {
-        AtomicReference<T[]> result = new AtomicReference<>();
+    public static <T> List<T> getListResult(TypeReference<List<T>> typeReference, String endpoint) {
+        AtomicReference<List<T>> result = new AtomicReference<>();
 
         Thread thread = new Thread(() -> {
             try {
                 URL url = new URL(getServerConnection().getUrl() + endpoint);
-                result.set(mapper.readValue(url, classType));
+                result.set(mapper.readValue(url, typeReference));
             } catch (Exception e) {
                 e.printStackTrace();
             }

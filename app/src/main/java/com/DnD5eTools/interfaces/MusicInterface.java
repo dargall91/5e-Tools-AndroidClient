@@ -1,6 +1,8 @@
 package com.DnD5eTools.interfaces;
 
 import com.DnD5eTools.entities.Music;
+import com.DnD5eTools.models.projections.NameIdProjection;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +23,6 @@ public class MusicInterface extends AbstractInterface {
     }
 
     public static List<Music> getMusicList() {
-        return Arrays.asList(getArrayResult(Music[].class, path + "list"));
+        return getListResult(new TypeReference<List<Music>>() {}, path + "list");
     }
 }
