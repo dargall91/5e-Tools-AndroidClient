@@ -32,6 +32,7 @@ import com.DnD5eTools.monster.Action;
 import com.DnD5eTools.client.DNDClientProxy;
 import com.DnD5eTools.monster.LegendaryAction;
 import com.DnD5eTools.monster.Monster;
+import com.DnD5eTools.util.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,7 +110,7 @@ public class MonsterBuilder extends Fragment {
         this.savedInstanceState = savedInstanceState;
         builder = this;
 
-        if (MainActivity.isConnected()) {
+        if (Util.isConnectedToServer()) {
             proxy = MainActivity.getProxy();
             view = inflater.inflate(R.layout.monster_builder_layout, container, false);
             view.setId(View.generateViewId());

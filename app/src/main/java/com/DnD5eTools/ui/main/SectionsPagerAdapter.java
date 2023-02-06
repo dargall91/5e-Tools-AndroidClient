@@ -22,9 +22,9 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     @StringRes
     private static final int[] TAB_TITLES = new int[]{R.string.tab_text_1, R.string.tab_text_2, R.string.tab_text_3};
     private final Context mContext;
-    private CombatTracker combat;
-    private MonsterBuilder monster;
-    private EncounterBuilder encounter;
+    private CombatTracker combatTracker;
+    private MonsterBuilder monsterBuilder;
+    private EncounterBuilder encounterBuilder;
 
     public SectionsPagerAdapter(Context context, FragmentManager fm) {
         super(fm);
@@ -42,16 +42,25 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         //TODO: add 4th page for magic items? (also requires update in strings.xml)
         switch (position) {
             case 0:
-                if (combat == null) {
-                    combat = new CombatTracker();
+                if (combatTracker == null) {
+                    combatTracker = new CombatTracker();
                 }
 
-                return combat;
+                fragment = combatTracker;
+                break;
             case 1:
-                fragment = new MonsterBuilder();
+                if (monsterBuilder == null) {
+                    monsterBuilder = new MonsterBuilder();
+                }
+
+                fragment = monsterBuilder;
                 break;
             case 2:
-                fragment = new EncounterBuilder();
+                if (encounterBuilder == null) {
+                    encounterBuilder = new EncounterBuilder();
+                }
+
+                fragment = encounterBuilder;
                 break;
         }
 
@@ -59,11 +68,15 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     }
 
     public CombatTracker getCombatTracker() {
-        if (combat == null) {
-            combat = new CombatTracker();
-        }
+        return combatTracker;
+    }
 
-        return combat;
+    public MonsterBuilder getMonsterBuilder() {
+        return monsterBuilder;
+    }
+
+    public EncounterBuilder getEncounterBuilder() {
+        return encounterBuilder;
     }
 
     @Nullable

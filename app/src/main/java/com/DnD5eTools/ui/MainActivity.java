@@ -1,5 +1,6 @@
 package com.DnD5eTools.ui;
 
+import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -17,7 +18,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,14 +34,14 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static DNDClientProxy proxy;
-    private static boolean[] connected = { false };
+    SectionsPagerAdapter sectionsPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
+        sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
         ViewPager viewPager = findViewById(R.id.view_pager);
         viewPager.setAdapter(sectionsPagerAdapter);
         TabLayout tabs = findViewById(R.id.tabs);
@@ -83,26 +83,23 @@ public class MainActivity extends AppCompatActivity {
         android.app.AlertDialog connect = connectionDialog.create();
         connect.setOnShowListener(dialogInterface -> {
             Button change = connect.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
-            change.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Util.setServerConnection(serverConnections.get(select.getSelectedItemPosition()));
+            change.setOnClickListener(view -> {
+                Util.setServerConnection(serverConnections.get(select.getSelectedItemPosition()));
 
-                    //validate connection, display custom connection dialog if no connection string set
-                    if (Util.getServerConnection().getUrl().isEmpty()) {
-                        isConnected[0] = false;
-                        displayCustomConnectionDialog();
-                        connect.dismiss();
-                    } else {
-                        isConnected[0] = Util.isConnectedToServer();
-                    }
+                //validate connection, display custom connection dialog if no connection string set
+                if (Util.getServerConnection().getUrl().isEmpty()) {
+                    isConnected[0] = false;
+                    displayCustomConnectionDialog();
+                    connect.dismiss();
+                } else {
+                    isConnected[0] = Util.isConnectedToServer();
+                }
 
-                    //if connected dismiss, otherwise display error message
-                    if (isConnected[0]) {
-                        connect.dismiss();
-                    } else {
-                        invalidCon.setVisibility(View.VISIBLE);
-                    }
+                //if connected dismiss, otherwise display error message
+                if (isConnected[0]) {
+                    connect.dismiss();
+                } else {
+                    invalidCon.setVisibility(View.VISIBLE);
                 }
             });
         });
@@ -110,9 +107,7 @@ public class MainActivity extends AppCompatActivity {
         connect.setOnDismissListener(dialog -> {
             //if connected load the tabs
             if (isConnected[0]) {
-                CombatTracker.getTracker().refresh();
-                EncounterBuilder.getEncBuilder().refresh();
-                MonsterBuilder.getMonBuilder().refresh();
+                loadAllTabs();
             }
         });
 
@@ -142,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
             Button set = custom.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
             Button cancel = custom.getButton(android.app.AlertDialog.BUTTON_NEGATIVE);
 
-            set.setOnClickListener(v -> {
+            set.setOnClickListener(view -> {
                 String url = "http://" + host.getText() + ":" + port.getText() + "/";
                 Util.getServerConnection().setUrl(url);
                 connected[0] = Util.isConnectedToServer();
@@ -166,18 +161,17 @@ public class MainActivity extends AppCompatActivity {
             if (cancelled[0]) {
                 displaySelectConnectionDialog();
             } else {
-                CombatTracker.getTracker().refresh();
-                EncounterBuilder.getEncBuilder().refresh();
-                MonsterBuilder.getMonBuilder().refresh();
+                loadAllTabs();
             }
         });
 
         custom.show();
     }
 
-    public static boolean isConnected() {
-        System.out.println("connected: " + connected[0]);
-        return connected[0];
+    private void loadAllTabs() {
+        sectionsPagerAdapter.getCombatTracker().loadViews();
+        //sectionsPagerAdapter.getMonsterBuilder().loadViews();
+        //sectionsPagerAdapter.getEncounterBuilder().loadViews();
     }
 
     public static DNDClientProxy getProxy() {
@@ -209,12 +203,7 @@ public class MainActivity extends AppCompatActivity {
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setTitle("Exit")
                 .setMessage("Are you sure you want to exit?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
+                .setPositiveButton("Yes", (dialog, which) -> finish())
                 .setNegativeButton("No", null)
                 .show();
     }
