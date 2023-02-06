@@ -114,28 +114,23 @@ public class CombatTracker extends Fragment {
         proxy = MainActivity.getProxy();
         tracker = this;
 
+        view = inflater.inflate(R.layout.combat_tracker_layout, container, false);
+        view.setTag("CombatTracker");
+        view.setId(View.generateViewId());
+
+        leftView = view.findViewById(R.id.combat_left_side);
+
         //inflate view if connected to server
         if (Util.isConnectedToServer()) {
-            view = inflater.inflate(R.layout.combat_tracker_layout, container, false);
-            view.setTag("CombatTracker");
-            view.setId(View.generateViewId());
-
-            leftView = view.findViewById(R.id.combat_left_side);
-
-            soundBoard();
-            preCombatView();
+            loadViews();
         }
 
         return view;
     }
 
-    public void refresh() {
-        getParentFragmentManager().beginTransaction()
-                .detach(CombatTracker.this)
-                .commit();
-        getParentFragmentManager().beginTransaction()
-                .attach(CombatTracker.this)
-                .commit();
+    public void loadViews() {
+        soundBoard();
+        preCombatView();
     }
 
     public static CombatTracker getTracker() {

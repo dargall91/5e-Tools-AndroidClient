@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.tabs.TabLayout;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -108,10 +107,7 @@ public class MainActivity extends AppCompatActivity {
         connect.setOnDismissListener(dialog -> {
             //if connected load the tabs
             if (isConnected[0]) {
-                Fragment combatTracker =
-                        getSupportFragmentManager().findFragmentById(sectionsPagerAdapter.getItem(0).getId());
-
-                CombatTracker.getTracker().refresh();
+                loadAllTabs();
             }
         });
 
@@ -165,13 +161,17 @@ public class MainActivity extends AppCompatActivity {
             if (cancelled[0]) {
                 displaySelectConnectionDialog();
             } else {
-                CombatTracker.getTracker().refresh();
-//                EncounterBuilder.getEncBuilder().refresh();
-//                MonsterBuilder.getMonBuilder().refresh();
+                loadAllTabs();
             }
         });
 
         custom.show();
+    }
+
+    private void loadAllTabs() {
+        sectionsPagerAdapter.getCombatTracker().loadViews();
+        //sectionsPagerAdapter.getMonsterBuilder().loadViews();
+        //sectionsPagerAdapter.getEncounterBuilder().loadViews();
     }
 
     public static DNDClientProxy getProxy() {
@@ -203,12 +203,7 @@ public class MainActivity extends AppCompatActivity {
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setTitle("Exit")
                 .setMessage("Are you sure you want to exit?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
+                .setPositiveButton("Yes", (dialog, which) -> finish())
                 .setNegativeButton("No", null)
                 .show();
     }
