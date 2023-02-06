@@ -1,31 +1,26 @@
 package com.DnD5eTools.interfaces;
 
-import static com.DnD5eTools.util.Util.getServerConnection;
-
 import com.DnD5eTools.entities.Music;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class MusicInterface {
+public class MusicInterface extends AbstractInterface {
     private static final String path = "5eTools/api/music/";
-    private static final ObjectMapper mapper = new ObjectMapper();
+
+    public static void playMusic(int musicId) {
+        postNoResult(path + "play?musicId=" + musicId, null);
+    }
+
+    public static void pauseMusic() {
+        postNoResult(path + "pause", null);
+    }
+
+    public static void stopMusic() {
+        postNoResult(path + "stop", null);
+    }
 
     public static List<Music> getMusicList() {
-        AtomicReference<Music[]> musicList = new AtomicReference<>();
-
-        new Thread(() -> {
-            try {
-                URL url = new URL(getServerConnection().getUrl() + path + "getActive");
-                musicList.set(mapper.readValue(url, Music[].class));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-        return Arrays.asList(musicList.get());
+        return Arrays.asList(getArrayResult(Music[].class, path + "list"));
     }
 }

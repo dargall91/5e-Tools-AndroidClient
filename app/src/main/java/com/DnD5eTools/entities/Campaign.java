@@ -1,5 +1,8 @@
 package com.DnD5eTools.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Campaign {
     private Integer id;
     private String name;

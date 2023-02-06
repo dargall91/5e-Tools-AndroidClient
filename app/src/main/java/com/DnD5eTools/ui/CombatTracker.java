@@ -35,11 +35,15 @@ import androidx.fragment.app.Fragment;
 
 import com.DnD5eTools.R;
 import com.DnD5eTools.client.DNDClientProxy;
+import com.DnD5eTools.entities.Music;
+import com.DnD5eTools.entities.PlayerCharacter;
+import com.DnD5eTools.interfaces.MusicInterface;
+import com.DnD5eTools.interfaces.PlayerInterface;
 import com.DnD5eTools.monster.Encounter;
 import com.DnD5eTools.monster.Monster;
 import com.DnD5eTools.client.MonsterData;
-import com.DnD5eTools.player.PlayerCharacter;
 import com.DnD5eTools.client.Combatant;
+import com.DnD5eTools.util.Util;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -63,11 +68,11 @@ import java.util.Random;
  */
 public class CombatTracker extends Fragment {
     private DNDClientProxy proxy;
-    private ArrayList<String> pcNames;
-    private ArrayList<PlayerCharacter> pcData;
+    private List<PlayerCharacter> playerList;
     private Encounter[] encounter;
     private ArrayList<Combatant> combatants;
-    private ArrayList<String> musicList;
+    private List<String> musicNameList = new ArrayList<>();
+    private List<Music> musicList;
     private View view;
     private LayoutInflater inflater;
     private ViewGroup container;
@@ -110,7 +115,7 @@ public class CombatTracker extends Fragment {
         tracker = this;
 
         //inflate view if connected to server
-        if (MainActivity.isConnected()) {
+        if (Util.isConnectedToServer()) {
             view = inflater.inflate(R.layout.combat_tracker_layout, container, false);
             view.setTag("CombatTracker");
             view.setId(View.generateViewId());
@@ -125,12 +130,11 @@ public class CombatTracker extends Fragment {
     }
 
     public void refresh() {
-        Fragment tracker = this;
-        getFragmentManager().findFragmentById(tracker.getId());
-
-        getFragmentManager().beginTransaction()
-                .detach(tracker)
-                .attach(tracker)
+        getParentFragmentManager().beginTransaction()
+                .detach(CombatTracker.this)
+                .commit();
+        getParentFragmentManager().beginTransaction()
+                .attach(CombatTracker.this)
                 .commit();
     }
 
@@ -142,99 +146,41 @@ public class CombatTracker extends Fragment {
      * Sets up the pre combat view (PC names, ac, bonus, delete button)
      */
     private void preCombatView() {
-        //TODO: optimize so that all PC data is received in one server call
-        Thread thread = new Thread(() -> {
-            try {
-                pcNames = proxy.getPlayerCharacterList();
-                Collections.sort(pcNames);
-            } catch (Exception e) {
-                Log.i("Combat", e.getMessage());
-            }
-        });
-
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        playerList = PlayerInterface.getPlayerList();
 
         //TODO: 99% sure this line is unneeded
         View labels = inflater.inflate(R.layout.pre_combat_labels, leftView);
 
-        pcData = new ArrayList<>();
-
         //loop and add layouts
-        for (int i = 0; i < pcNames.size(); i++) {
+        for (int i = 0; i < playerList.size(); i++) {
             final int index = i;
             final PlayerCharacter[] pc = {null};
-
-            thread = new Thread(() -> {
-                try {
-                    pc[0] = proxy.getPlayerCharacter(pcNames.get(index));
-                    pcData.add(pc[0]);
-                } catch (Exception e) {
-                    Log.i("Combat", e.getMessage());
-                }
-            });
-
-            thread.start();
-
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
 
             View playerView = inflater.inflate(R.layout.player_layout, leftView);
 
             TextView name = playerView.findViewById(R.id.player_name);
-            name.setId(i);
-            name.setText(pcNames.get(i));
-            name.setTag(i);
+            name.setId(index);
+            name.setText(playerList.get(index).getName());
+            name.setTag(index);
 
             CheckBox isCombatant = playerView.findViewById(R.id.combatant_checkbox);
-            isCombatant.setId(i);
+            isCombatant.setId(index);
             isCombatant.setChecked(false);
-            isCombatant.setTag(i);
+            isCombatant.setTag(index);
 
-            isCombatant.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    pc[0].setCombatant(isChecked);
-                }
-            });
+            isCombatant.setOnCheckedChangeListener((buttonView, isChecked) -> playerList.get(index).setCombatant(isChecked));
 
             //index of ac = ac - 1
             Spinner ac = playerView.findViewById(R.id.ac_spinner);
-            ac.setId(i);
-            ac.setSelection(pc[0].getAC() - 1, false);
-            ac.setTag(i);
+            ac.setId(index);
+            ac.setSelection(playerList.get(index).getAc() - 1, false);
+            ac.setTag(index);
 
             ac.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    Thread innerThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                pc[0].setAC(Integer.parseInt(ac.getSelectedItem().toString()));
-                                proxy.updatePlayerCharacter(pc[0]);
-                                Log.i("ac item select", "selected");
-                            } catch (Exception e) {
-                                Log.i("Combat", e.getMessage());
-                            }
-                        }
-                    });
-
-                    innerThread.start();
-
-                    try {
-                        innerThread.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    playerList.get(index).setAc(Integer.parseInt(ac.getSelectedItem().toString()));
+                    PlayerInterface.updatePlayer(playerList.get(index));
                 }
 
                 @Override
@@ -244,33 +190,15 @@ public class CombatTracker extends Fragment {
 
             //index of bonus = bonus + 5
             Spinner bonus = playerView.findViewById(R.id.bonus_spinner);
-            bonus.setId(i);
-            bonus.setSelection(pc[0].getBonus() + 5, false);
-            bonus.setTag(i);
+            bonus.setId(index);
+            bonus.setSelection(playerList.get(index).getInitiativeBonus() + 5, false);
+            bonus.setTag(index);
 
             bonus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    Thread innerThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                pc[0].setBonus(Integer.parseInt(bonus.getSelectedItem().toString()));
-                                proxy.updatePlayerCharacter(pc[0]);
-                                Log.i("bonus item select", "selected");
-                            } catch (Exception e) {
-                                Log.i("Combat", e.getMessage());
-                            }
-                        }
-                    });
-
-                    innerThread.start();
-
-                    try {
-                        innerThread.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    playerList.get(index).setInitiativeBonus(Integer.parseInt(bonus.getSelectedItem().toString()));
+                    PlayerInterface.updatePlayer(playerList.get(index));
                 }
 
                 @Override
@@ -280,32 +208,15 @@ public class CombatTracker extends Fragment {
 
             //index of initiative = initiative - 1
             Spinner initiative = playerView.findViewById(R.id.init_roll_spinner);
-            initiative.setId(i);
-            initiative.setSelection(pc[0].getInitiative() - 1, false);
-            initiative.setTag(i);
+            initiative.setId(index);
+            initiative.setSelection(playerList.get(index).getRolledInitiative() - 1, false);
+            initiative.setTag(index);
 
             initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    Thread innerThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                pc[0].setInitative(Integer.parseInt(initiative.getSelectedItem().toString()));
-                                proxy.updatePlayerCharacter(pc[0]);
-                            } catch (Exception e) {
-                                Log.i("Combat", e.getMessage());
-                            }
-                        }
-                    });
-
-                    innerThread.start();
-
-                    try {
-                        innerThread.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    playerList.get(index).setRolledInitiative(Integer.parseInt(initiative.getSelectedItem().toString()));
+                    PlayerInterface.updatePlayer(playerList.get(index));
                 }
 
                 @Override
@@ -314,28 +225,9 @@ public class CombatTracker extends Fragment {
             });
 
             Button delete = playerView.findViewById((R.id.delete_player));
-            delete.setId(i);
+            delete.setId(index);
             delete.setOnClickListener(view -> {
-                Thread innerThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            proxy.deletePlayerCharacter(pc[0].getName());
-                            leftView.removeAllViewsInLayout();
-                        } catch (Exception e) {
-                            Log.i("Combat", e.getMessage());
-                        }
-                    }
-                });
-
-                innerThread.start();
-
-                try {
-                    innerThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
+                PlayerInterface.deletePlayerCharacter(playerList.get(index).getId());
                 preCombatView();
             });
         }
@@ -344,62 +236,28 @@ public class CombatTracker extends Fragment {
 
         Button addPlayer = buttonLayout.findViewById((R.id.add_player));
         addPlayer.setOnClickListener(view -> {
-            final boolean[] addPC = {false};
             View addView = inflater.inflate(R.layout.add_player_dialog, null);
-            TextView exists = addView.findViewById((R.id.pc_exists));
             EditText nameEntry = addView.findViewById((R.id.name_entry));
 
             final AlertDialog.Builder addPlayerDialog = new AlertDialog.Builder(getContext());
             addPlayerDialog.setView(addView);
             addPlayerDialog.setTitle("Add New PC");
             addPlayerDialog.setPositiveButton("OK", null);
-            addPlayerDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    Log.i("CANCEL", "cancel");
-                }
-            });
+            addPlayerDialog.setNegativeButton("Cancel", (dialog, id) -> Log.i("CANCEL", "cancel"));
 
             AlertDialog add = addPlayerDialog.create();
-            add.setOnShowListener(new DialogInterface.OnShowListener() {
-                @Override
-                public void onShow(DialogInterface dialogInterface) {
-                    Button ok = add.getButton(AlertDialog.BUTTON_POSITIVE);
-                    ok.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            String entry = nameEntry.getText().toString();
-                            Thread innerThread = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        if (!entry.equals(""))
-                                            addPC[0] = proxy.addPlayerCharacter(entry);
-                                    } catch (Exception e) {
-                                        Log.i("Combat", e.getMessage());
-                                    }
-                                }
-                            });
+            add.setOnShowListener(dialogInterface -> {
+                Button ok = add.getButton(AlertDialog.BUTTON_POSITIVE);
+                ok.setOnClickListener(v -> {
+                    String entry = nameEntry.getText().toString();
 
-                            innerThread.start();
-
-                            try {
-                                innerThread.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                            if (addPC[0]) {
-                                add.dismiss();
-                                leftView.removeAllViewsInLayout();
-                                preCombatView();
-                            }
-
-                            else {
-                                exists.setVisibility(View.VISIBLE);
-                            }
-                        }
-                    });
-                }
+                    if (!entry.trim().isEmpty()) {
+                        PlayerInterface.addPlayerCharacter(entry);
+                        add.dismiss();
+                        leftView.removeAllViewsInLayout();
+                        preCombatView();
+                    }
+                });
             });
 
             add.show();
@@ -543,7 +401,7 @@ public class CombatTracker extends Fragment {
      */
     private void loadCombatants() {
         //check for players marked as combatants
-        for (PlayerCharacter pc : pcData) {
+        for (PlayerCharacter pc : playerList) {
             if(pc.isCombatant()) {
                 combatants.add(new Combatant(pc));
             }
@@ -553,14 +411,11 @@ public class CombatTracker extends Fragment {
         ArrayList<MonsterData> monData = encounter[0].getMonsterData();
 
         for(MonsterData mon : monData) {
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        combatants.add(new Combatant(mon, proxy.getMonster(mon.getMonster())));
-                    } catch (Exception e) {
-                        Log.i("monData", e.getMessage());
-                    }
+            Thread thread = new Thread(() -> {
+                try {
+                    combatants.add(new Combatant(mon, proxy.getMonster(mon.getMonster())));
+                } catch (Exception e) {
+                    Log.i("monData", e.getMessage());
                 }
             });
 
@@ -861,15 +716,15 @@ public class CombatTracker extends Fragment {
                 if (i.isReinforcement()) {
                     View innerLayout = inflater.inflate(R.layout.reinforcement_layout, (ViewGroup) reinLayout);
 
-                    TextView initiative = reinLayout.findViewById(R.id.initiative);
+                    TextView initiative = innerLayout.findViewById(R.id.initiative);
                     initiative.setText(Integer.toString(i.getInitiative()));
                     initiative.setId(View.generateViewId());
 
-                    TextView monName = reinLayout.findViewById(R.id.reinforcement_name);
+                    TextView monName = innerLayout.findViewById(R.id.reinforcement_name);
                     monName.setText(i.getName() + " x" + i.getQuantity());
                     monName.setId(View.generateViewId());
 
-                    CheckBox check = reinLayout.findViewById(R.id.reinforcement_checkbox);
+                    CheckBox check = innerLayout.findViewById(R.id.reinforcement_checkbox);
                     check.setId(View.generateViewId());
                     check.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                         @Override
@@ -1028,32 +883,29 @@ public class CombatTracker extends Fragment {
         finishEndMusic.setOnClickListener(view -> {
             final AlertDialog.Builder finishEnc = new AlertDialog.Builder(getContext());
             finishEnc.setTitle("End the Encounter?");
-            finishEnc.setPositiveButton("Finish", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Thread innerThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                proxy.endCombat();
-                                proxy.stopMusic();
-                            } catch (Exception e) {
-                                Log.i("Combat", e.getMessage());
-                            }
+            finishEnc.setPositiveButton("Finish", (dialog, which) -> {
+                Thread innerThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            proxy.endCombat();
+                            proxy.stopMusic();
+                        } catch (Exception e) {
+                            Log.i("Combat", e.getMessage());
                         }
-                    });
-
-                    innerThread.start();
-
-                    try {
-                        innerThread.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
+                });
 
-                    leftView.removeAllViewsInLayout();
-                    preCombatView();
+                innerThread.start();
+
+                try {
+                    innerThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+
+                leftView.removeAllViewsInLayout();
+                preCombatView();
             });
 
             finishEnc.setNegativeButton("Cancel", null);
@@ -1152,26 +1004,16 @@ public class CombatTracker extends Fragment {
         Button masochistic = clipGrid.findViewById(R.id.masochistic);
         masochistic.setOnClickListener(view -> playSound(MASOCHISTIC, AFFLICTION));
 
-        Thread thread = new Thread(() -> {
-            try {
-                musicList = proxy.getMusicList();
-                Collections.sort(musicList);
-            } catch (Exception e) {
-                Log.i("update", e.getMessage());
-            }
-        });
+        musicList = MusicInterface.getMusicList();
 
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (Music music : musicList) {
+            musicNameList.add(music.getName());
         }
 
         LinearLayout musicPlayer = view.findViewById(R.id.music_player);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, musicList);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item,
+                musicNameList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Spinner title = musicPlayer.findViewById(R.id.music_title);
@@ -1180,59 +1022,20 @@ public class CombatTracker extends Fragment {
 
         Button pause = musicPlayer.findViewById(R.id.pause);
         pause.setOnClickListener(view -> {
-            Thread innerThread = new Thread(() -> {
-                try {
-                    proxy.pauseMusic();
-                } catch (Exception e) {
-                    Log.i("Combat", e.getMessage());
-                }
-            });
-
-            innerThread.start();
-
-            try {
-                innerThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            //todo: confirm
+            MusicInterface.pauseMusic();
         });
 
         Button play = musicPlayer.findViewById(R.id.play);
         play.setOnClickListener(view -> {
-            Thread innerThread = new Thread(() -> {
-                try {
-                    proxy.playMusic(title.getSelectedItem().toString());
-                } catch (Exception e) {
-                    Log.i("Combat", e.getMessage());
-                }
-            });
-
-            innerThread.start();
-
-            try {
-                innerThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            //todo: confirm works
+            MusicInterface.playMusic(musicList.get(title.getSelectedItemPosition()).getId());
         });
 
         Button stop = musicPlayer.findViewById(R.id.stop);
         stop.setOnClickListener(view -> {
-            Thread innerThread = new Thread(() -> {
-                try {
-                    proxy.stopMusic();
-                } catch (Exception e) {
-                    Log.i("Combat", e.getMessage());
-                }
-            });
-
-            innerThread.start();
-
-            try {
-                innerThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            //todo: confirm
+            MusicInterface.stopMusic();
         });
     }
 

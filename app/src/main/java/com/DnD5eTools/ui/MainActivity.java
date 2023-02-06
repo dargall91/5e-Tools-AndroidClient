@@ -1,5 +1,6 @@
 package com.DnD5eTools.ui;
 
+import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -14,10 +15,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.tabs.TabLayout;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,14 +35,14 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static DNDClientProxy proxy;
-    private static boolean[] connected = { false };
+    SectionsPagerAdapter sectionsPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
+        sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
         ViewPager viewPager = findViewById(R.id.view_pager);
         viewPager.setAdapter(sectionsPagerAdapter);
         TabLayout tabs = findViewById(R.id.tabs);
@@ -107,9 +108,10 @@ public class MainActivity extends AppCompatActivity {
         connect.setOnDismissListener(dialog -> {
             //if connected load the tabs
             if (isConnected[0]) {
+                Fragment combatTracker =
+                        getSupportFragmentManager().findFragmentById(sectionsPagerAdapter.getItem(0).getId());
+
                 CombatTracker.getTracker().refresh();
-                EncounterBuilder.getEncBuilder().refresh();
-                MonsterBuilder.getMonBuilder().refresh();
             }
         });
 
@@ -164,17 +166,12 @@ public class MainActivity extends AppCompatActivity {
                 displaySelectConnectionDialog();
             } else {
                 CombatTracker.getTracker().refresh();
-                EncounterBuilder.getEncBuilder().refresh();
-                MonsterBuilder.getMonBuilder().refresh();
+//                EncounterBuilder.getEncBuilder().refresh();
+//                MonsterBuilder.getMonBuilder().refresh();
             }
         });
 
         custom.show();
-    }
-
-    public static boolean isConnected() {
-        System.out.println("connected: " + connected[0]);
-        return connected[0];
     }
 
     public static DNDClientProxy getProxy() {

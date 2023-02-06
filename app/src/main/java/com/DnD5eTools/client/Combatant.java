@@ -1,7 +1,7 @@
 package com.DnD5eTools.client;
 
 import com.DnD5eTools.monster.Monster;
-import com.DnD5eTools.player.PlayerCharacter;
+import com.DnD5eTools.entities.PlayerCharacter;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -35,12 +35,12 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	public Combatant(PlayerCharacter pc) {
 		monster = false;
 		reinforcement = false;
-		bonus = pc.getBonus();
-		initiative = pc.getInitiative() + bonus;
+		bonus = pc.getInitiativeBonus();
+		initiative = pc.getRolledInitiative() + bonus;
 		breaker = 0;
 		weight = 0;
 		ac = new ArrayList<>();
-		ac.add(Integer.toString(pc.getAC()));
+		ac.add(Integer.toString(pc.getAc()));
 
 		hp = new ArrayList<>();
 		hp.add("0");
@@ -248,10 +248,10 @@ public class Combatant implements Comparable<Combatant>, Serializable {
 	 * @param pc The player character
 	 */
 	public void setPlayerCharacter(PlayerCharacter pc) {
-		bonus = pc.getBonus();
+		bonus = pc.getInitiativeBonus();
 		name = pc.getName();
 		displayName = pc.getName();
-		ac.set(0, Integer.toString(pc.getAC()));
+		ac.set(0, Integer.toString(pc.getAc()));
 	}
 
 	/**

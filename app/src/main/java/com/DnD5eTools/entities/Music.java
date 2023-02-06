@@ -1,5 +1,8 @@
 package com.DnD5eTools.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Music {
     private int id;
     private String name;
