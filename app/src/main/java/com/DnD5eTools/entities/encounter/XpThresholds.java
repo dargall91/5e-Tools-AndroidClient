@@ -6,6 +6,7 @@ public class XpThresholds {
     private int medium;
     private int hard;
     private int deadly;
+    private int budget;
 
     public int getLevel() {
         return level;
@@ -25,5 +26,9 @@ public class XpThresholds {
 
     public int getDeadly() {
         return deadly;
+    }
+
+    public int getBudget() {
+        return budget;
     }
 }

@@ -24,8 +24,12 @@ public class AbstractInterface {
 
         Thread thread = new Thread(() -> {
             try {
-                URL url = new URL(getServerConnection().getUrl() + endpoint);
-                result.set(mapper.readValue(url, classType));
+                Request request = new Request.Builder()
+                        .url(getServerConnection().getUrl() + endpoint)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                result.set(mapper.readValue(response.body().string(), classType));
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -123,13 +123,13 @@ public class CombatTracker extends Fragment {
 
         //inflate view if connected to server
         if (Util.isConnectedToServer()) {
-            loadViews();
+            initViews();
         }
 
         return view;
     }
 
-    public void loadViews() {
+    public void initViews() {
         soundBoard();
         preCombatView();
     }
