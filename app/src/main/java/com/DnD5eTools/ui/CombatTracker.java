@@ -121,11 +121,6 @@ public class CombatTracker extends Fragment {
 
         leftView = view.findViewById(R.id.combat_left_side);
 
-        //inflate view if connected to server
-        if (Util.isConnectedToServer()) {
-            initViews();
-        }
-
         return view;
     }
 

@@ -1,10 +1,12 @@
 package com.DnD5eTools.entities.encounter;
 
 import com.DnD5eTools.entities.Music;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Encounter {
     private Integer id;
     private int campaignId;

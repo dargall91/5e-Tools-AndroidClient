@@ -15,7 +15,7 @@ public class EncounterInterface extends AbstractInterface {
     }
 
     public static NameIdProjection addEncounter(String name) {
-        return getSingleResult(NameIdProjection.class, path + "add?name=" + name);
+        return putSingleResult(NameIdProjection.class, path + "add?name=" + name, null);
     }
 
     public static Encounter getEncounter(int encounterId) {

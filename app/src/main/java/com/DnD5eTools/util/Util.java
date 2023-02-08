@@ -78,7 +78,7 @@ public class Util {
     public static List<String> getMonsterNameList() {
         //ensure both lists are initialized and same size, otherwise update this list
         if (monsterNameList == null || monsterNameList.size() != getMonsterList().size()) {
-            monsterNameList = monsterList.stream()
+            monsterNameList = getMonsterList().stream()
                     .map(NameIdProjection::getName)
                     .collect(Collectors.toList());
         }

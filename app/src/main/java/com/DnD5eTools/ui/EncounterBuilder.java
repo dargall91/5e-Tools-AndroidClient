@@ -36,7 +36,6 @@ import com.DnD5eTools.interfaces.EncounterInterface;
 import com.DnD5eTools.interfaces.MonsterInterface;
 import com.DnD5eTools.interfaces.MusicInterface;
 import com.DnD5eTools.models.projections.NameIdProjection;
-import com.DnD5eTools.client.PlayerData;
 import com.DnD5eTools.util.Util;
 
 import java.text.MessageFormat;
@@ -85,11 +84,6 @@ public class EncounterBuilder extends Fragment {
 
         playerLevelsContainer = view.findViewById(R.id.encounter_player_levels_container);
         monstersContainer = view.findViewById(R.id.encounter_monsters_container);
-
-        //todo: do I even need these? main activity can handle inits, and this method should never be retriggered
-        if (Util.isConnectedToServer()) {
-            initViews();
-        }
 
         return view;
     }
@@ -202,12 +196,6 @@ public class EncounterBuilder extends Fragment {
      * no encounters in the list, it will be blank
      */
     private void builderView() {
-        //the list is "empty" if the only item in the - this should never happen anymore?
-        //list is the "Add Encounter" item if only 1 item
-//        if (encounterNameList.size() <= 1) {
-//            return;
-//        }
-
         nameView();
         playerLevelsView();
         difficultyView();
@@ -358,25 +346,25 @@ public class EncounterBuilder extends Fragment {
         TextView total = difficultyView.findViewById(R.id.total);
         total.setText(MessageFormat.format("Total XP: {0}", encounterXpTotal));
 
-        if (encounterXpTotal <= easyThreshold) {
+        if (encounterXpTotal < easyThreshold) {
             //trivial
             easy.setTypeface(Typeface.DEFAULT);
             medium.setTypeface(Typeface.DEFAULT);
             hard.setTypeface(Typeface.DEFAULT);
             deadly.setTypeface(Typeface.DEFAULT);
-        } else if (encounterXpTotal <= mediumThreshold) {
+        } else if (encounterXpTotal < mediumThreshold) {
             //easy
             easy.setTypeface(Typeface.DEFAULT_BOLD);
             medium.setTypeface(Typeface.DEFAULT);
             hard.setTypeface(Typeface.DEFAULT);
             deadly.setTypeface(Typeface.DEFAULT);
-        }  else if (encounterXpTotal <= hardThreshold) {
+        }  else if (encounterXpTotal < hardThreshold) {
             //medium
             easy.setTypeface(Typeface.DEFAULT);
             medium.setTypeface(Typeface.DEFAULT_BOLD);
             hard.setTypeface(Typeface.DEFAULT);
             deadly.setTypeface(Typeface.DEFAULT);
-        } else if (encounterXpTotal <= deadlyThreshold) {
+        } else if (encounterXpTotal < deadlyThreshold) {
             //hard
             easy.setTypeface(Typeface.DEFAULT);
             medium.setTypeface(Typeface.DEFAULT);
@@ -416,6 +404,7 @@ public class EncounterBuilder extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 encounter.setMusic(musicList.get(position));
+                EncounterInterface.updateEncounter(encounter);
             }
 
             @Override
@@ -424,7 +413,10 @@ public class EncounterBuilder extends Fragment {
 
         CheckBox lair = musicLairView.findViewById(R.id.lair_action);
         lair.setChecked(encounter.isLairAction());
-        lair.setOnCheckedChangeListener((buttonView, isChecked) -> encounter.setLairAction(isChecked));
+        lair.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            encounter.setLairAction(isChecked);
+            EncounterInterface.updateEncounter(encounter);
+        });
     }
 
     private void monsterListView() {
@@ -444,7 +436,7 @@ public class EncounterBuilder extends Fragment {
             EditText quantity = monsterView.findViewById(R.id.quantity);
             quantity.setId(index);
             quantity.setTag(index);
-            quantity.setText(monsterList.get(index).getQuantity());
+            quantity.setText(String.valueOf(monsterList.get(index).getQuantity()));
             quantity.addTextChangedListener(new TextWatcher() {
                 Handler handler;
 
@@ -465,7 +457,12 @@ public class EncounterBuilder extends Fragment {
                     handler.postDelayed(() -> {
                         int monQuantity = Integer.parseInt(quantity.getText().toString());
 
-                        if (monQuantity == 0) {
+                        //pressed minus quickly in succession
+                        if (encounter.getMonsterList().size() == 0) {
+                            return;
+                        }
+
+                        if (monQuantity <= 0) {
                             encounter.getMonsterList().remove(index);
                             monsterListView();
                         } else {
@@ -483,29 +480,14 @@ public class EncounterBuilder extends Fragment {
             plus.setId(index);
             plus.setTag(index);
             plus.setOnClickListener(view -> {
-                int monQuantity = encounter.getMonsterList().get(index).getQuantity() + 1;
-                encounter.getMonsterList().get(index).setQuantity(monQuantity);
-                EncounterInterface.updateEncounter(encounter);
-                quantity.setText(monQuantity);
-                difficultyView();
+                quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) + 1));
             });
 
             Button minus = monsterView.findViewById(R.id.minus_quantity);
             minus.setId(index);
             minus.setTag(index);
             minus.setOnClickListener(view -> {
-                int monQuantity = encounter.getMonsterList().get(index).getQuantity() + 1;
-
-                if (monQuantity == 0) {
-                    encounter.getMonsterList().remove(index);
-                    monsterListView();
-                } else {
-                    encounter.getMonsterList().get(index).setQuantity(monQuantity);
-                }
-
-                EncounterInterface.updateEncounter(encounter);
-
-                difficultyView();
+                quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) - 1));
             });
 
             Spinner initiative = monsterView.findViewById(R.id.initiative);
@@ -561,31 +543,36 @@ public class EncounterBuilder extends Fragment {
                     android.R.layout.simple_dropdown_item_1line, Util.getMonsterNameList());
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             monName.setAdapter(adapter);
-
             monName.setOnClickListener(view -> monName.showDropDown());
+            TextView invalidName = addMonster.findViewById(R.id.invalid_name);
 
             final AlertDialog.Builder addMonDialog = new AlertDialog.Builder(getContext());
             addMonDialog.setTitle("Add Monster to Encounter");
             addMonDialog.setView(addMonster);
             addMonDialog.setNegativeButton("Cancel", null);
-            addMonDialog.setPositiveButton("OK", (dialog, which) -> {
-                String name = monName.getText().toString();
-
-                if (!Util.getMonsterNameList().contains(name)) {
-                    System.out.println("not contains");
-                    return;
-                }
-
-                int index = Util.getMonsterNameList().indexOf(name);
-                Monster newMonster = MonsterInterface.getMonster(Util.getMonsterList().get(index).getId());
-                encounter.getMonsterList().add(new EncounterMonster(newMonster));
-                EncounterInterface.updateEncounter(encounter);
-
-                monsterListView();
-                difficultyView();
-            });
+            addMonDialog.setPositiveButton("OK", null);
 
             AlertDialog alert = addMonDialog.create();
+            alert.setOnShowListener(dialogInterface -> {
+                Button ok = alert.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
+                ok.setOnClickListener(view -> {
+                    String name = monName.getText().toString();
+
+                    if (!Util.getMonsterNameList().contains(name)) {
+                        invalidName.setVisibility(View.VISIBLE);
+                        return;
+                    }
+
+                    int index = Util.getMonsterNameList().indexOf(name);
+                    Monster newMonster = MonsterInterface.getMonster(Util.getMonsterList().get(index).getId());
+                    encounter.getMonsterList().add(new EncounterMonster(newMonster));
+                    EncounterInterface.updateEncounter(encounter);
+
+                    monsterListView();
+                    difficultyView();
+                    alert.dismiss();
+                });
+            });
             alert.show();
         });
     }
