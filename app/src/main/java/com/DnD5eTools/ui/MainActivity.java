@@ -169,9 +169,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadAllTabs() {
-        sectionsPagerAdapter.getCombatTracker().loadViews();
-        //sectionsPagerAdapter.getMonsterBuilder().loadViews();
-        //sectionsPagerAdapter.getEncounterBuilder().loadViews();
+        sectionsPagerAdapter.getCombatTracker().initViews();
+//        sectionsPagerAdapter.getMonsterBuilder().initViews();
+        sectionsPagerAdapter.getEncounterBuilder().initViews();
     }
 
     public static DNDClientProxy getProxy() {

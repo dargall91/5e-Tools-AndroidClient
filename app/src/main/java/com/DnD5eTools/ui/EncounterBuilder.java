@@ -1,7 +1,6 @@
 package com.DnD5eTools.ui;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,7 +15,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -29,226 +27,167 @@ import androidx.fragment.app.Fragment;
 
 import com.DnD5eTools.R;
 import com.DnD5eTools.client.DNDClientProxy;
-import com.DnD5eTools.monster.Encounter;
-import com.DnD5eTools.client.MonsterData;
-import com.DnD5eTools.client.PlayerData;
-import com.DnD5eTools.ui.main.SectionsPagerAdapter;
+import com.DnD5eTools.entities.Music;
+import com.DnD5eTools.entities.encounter.Encounter;
+import com.DnD5eTools.entities.encounter.EncounterMonster;
+import com.DnD5eTools.entities.encounter.XpThresholds;
+import com.DnD5eTools.entities.monster.Monster;
+import com.DnD5eTools.interfaces.EncounterInterface;
+import com.DnD5eTools.interfaces.MonsterInterface;
+import com.DnD5eTools.interfaces.MusicInterface;
+import com.DnD5eTools.models.projections.NameIdProjection;
 import com.DnD5eTools.util.Util;
 
-import org.json.JSONException;
-
+import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Tabs for creating and editing Encounters.
  */
 public class EncounterBuilder extends Fragment {
     private DNDClientProxy proxy;
-    private Encounter[] encounter;
-    private ArrayList<String> encList;
-    private ArrayList<String> musicList;
+    private Encounter encounter;
+    private List<String> encounterNameList;
+    private List<NameIdProjection> encounterList;
+    private List<String> musicNameList = new ArrayList<>();
+    private List<Music> musicList;
     private LayoutInflater inflater;
     private ViewGroup container;
     private Bundle savedInstanceState;
-    private static EncounterBuilder builder;
     private View view;
     private LinearLayout playerLevelsContainer;
     private LinearLayout monstersContainer;
-    private final String ADD_ENCOUNTER = "   Add Encounter";
+    private final String ADD_ENCOUNTER = "Add Encounter";
+    private List<Integer> playerCountList;
+    private List<Integer> playerLevelList;
+    private List<XpThresholds> xpThresholdsList;
+    private int easyThreshold;
+    private int mediumThreshold;
+    private int hardThreshold;
+    private int deadlyThreshold;
+    private int dailyXpBudget;
     final int DELAY = 250;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        //return super.onCreateView(inflater, container, savedInstanceState);
-        encounter = new Encounter[1];
         this.inflater = inflater;
         proxy = MainActivity.getProxy();
         this.container = container;
         this.savedInstanceState = savedInstanceState;
-        builder = this;
 
-        if (Util.isConnectedToServer()) {
-            view = inflater.inflate(R.layout.encounter_builder_layout, container, false);
-            view.setId(View.generateViewId());
-            view.setTag("EncounterBuilder");
+        view = inflater.inflate(R.layout.encounter_builder_layout, container, false);
+        view.setId(View.generateViewId());
+        view.setTag("EncounterBuilder");
 
-            playerLevelsContainer = view.findViewById(R.id.encounter_player_levels_container);
-            monstersContainer = view.findViewById(R.id.encounter_monsters_container);
-
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        musicList = proxy.getMusicList();
-                        Collections.sort(musicList);
-                    } catch (Exception e) {
-                        Log.i("update", e.getMessage());
-                    }
-                }
-            });
-
-            thread.start();
-
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            encounterListView(null);
-            builderView();
-        }
+        playerLevelsContainer = view.findViewById(R.id.encounter_player_levels_container);
+        monstersContainer = view.findViewById(R.id.encounter_monsters_container);
 
         return view;
     }
 
-    public static EncounterBuilder getEncBuilder() {
-        return builder;
-    }
+    public void initViews() {
+        //set music list
+        musicList = MusicInterface.getMusicList();
+        musicNameList = musicList.stream()
+                .map(Music::getName)
+                .collect(Collectors.toList());
 
-    public void refresh() {
-        EncounterBuilder builder = this;
-        getFragmentManager().findFragmentById(builder.getId());
+        xpThresholdsList = EncounterInterface.getXpThresholds();
 
-        getFragmentManager().beginTransaction()
-                .detach(builder)
-                .attach(builder)
-                .commit();
-
-        onCreateView(inflater, container, savedInstanceState);
+        encounterListView(0);
+        builderView();
     }
 
     /**
      * Sets up the ListView that contains a list of all the encounters on the server
      *
-     * @param name the name of the monster to load, null should be used to load the first encounter in the encounter lists
+     * @param index the index of the encounter in the list to load
      */
-    private void encounterListView(String name) {
-        Thread thread = new Thread(() -> {
-            try {
-                encList = proxy.getEncounterList();
-                encList.add(ADD_ENCOUNTER);
-                Collections.sort(encList);
+    private void encounterListView(int index) {
+        initEncounterList();
 
-                if (name == null)
-                    encounter[0] = proxy.getEncounter(encList.get(1));
+        int encounterId;
 
-                else
-                    encounter[0] = proxy.getEncounter(name);
-
-            } catch (Exception e) {
-                Log.i("EncList", e.getMessage());
-            }
-        });
-
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        //get default encounter to display
+        if (index == 0 && encounterList.size() == 1) {
+            //no encounters in list, make a new encounter and add it to the list
+            encounterList.add(EncounterInterface.addEncounter("New Encounter"));
+            encounterNameList.add(encounterList.get(1).getName());
+            encounterId = encounterList.get(1).getId();
+        } else if (index == 0) {
+            encounterId = encounterList.get(1).getId();
+        } else {
+            encounterId = encounterList.get(index).getId();
         }
 
+        encounter = EncounterInterface.getEncounter(encounterId);
+
         ListView encListView = view.findViewById(R.id.encounter_list);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), R.layout.simple_list_view, encList);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.simple_list_view, encounterNameList);
         encListView.setAdapter(adapter);
-        encListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //check if add encounter was selected, should be first encounter in list
-                if (encList.get(position).equals(ADD_ENCOUNTER)) {
-                    View addView = inflater.inflate(R.layout.rename_add_encounter_dialog, null);
-                    TextView exists = addView.findViewById(R.id.encounter_exists);
-                    TextView text = addView.findViewById(R.id.name_textview);
-                    text.setText("Enter the new encounter's name:");
-                    EditText newName = addView.findViewById(R.id.name_entry);
+        encListView.setOnItemClickListener((parent, view, position, id) -> {
+            //check if add encounter was selected, should be first encounter in list
+            if (position == 0) {
+                View addView = inflater.inflate(R.layout.rename_add_encounter_dialog, null);
+                TextView text = addView.findViewById(R.id.name_textview);
+                text.setText("Enter the new encounter's name:");
+                EditText newName = addView.findViewById(R.id.name_entry);
 
-                    final AlertDialog.Builder renameEncounterDialog = new AlertDialog.Builder(getContext());
-                    renameEncounterDialog.setView(addView);
-                    renameEncounterDialog.setTitle("Add Encounter");
-                    renameEncounterDialog.setPositiveButton("OK", null);
-                    renameEncounterDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            Log.i("CANCEL", "cancel");
-                        }
+                final AlertDialog.Builder renameEncounterDialog = new AlertDialog.Builder(getContext());
+                renameEncounterDialog.setView(addView);
+                renameEncounterDialog.setTitle("Add Encounter");
+                renameEncounterDialog.setPositiveButton("OK", null);
+                renameEncounterDialog.setNegativeButton("Cancel", (dialog, id1) -> Log.i("CANCEL", "cancel"));
+
+                AlertDialog add = renameEncounterDialog.create();
+                add.setOnShowListener(dialogInterface -> {
+                    Button ok = add.getButton(AlertDialog.BUTTON_POSITIVE);
+                    ok.setOnClickListener(v -> {
+                        //create new encounter
+                        String name = newName.getText().toString();
+                        NameIdProjection addedEncounter = EncounterInterface.addEncounter(name);
+
+                        //reload list then display new encounter in builder
+                        initEncounterList();
+                        encounter = EncounterInterface.getEncounter(addedEncounter.getId());
+                        builderView();
                     });
-
-                    AlertDialog add = renameEncounterDialog.create();
-                    add.setOnShowListener(new DialogInterface.OnShowListener() {
-                        @Override
-                        public void onShow(DialogInterface dialogInterface) {
-                            Button ok = add.getButton(AlertDialog.BUTTON_POSITIVE);
-                            ok.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    boolean[] success = new boolean[1];
-                                    final String name = newName.getText().toString();
-                                    Thread thread = new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            try {
-                                                success[0] = proxy.addEncounter(name);
-                                            } catch (Exception e) {
-                                                Log.i("update", e.getMessage());
-                                            }
-                                        }
-                                    });
-
-                                    thread.start();
-
-                                    try {
-                                        thread.join();
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-
-                                    if (success[0]) {
-                                        add.dismiss();
-                                        encounterListView(name);
-                                        builderView();
-                                    }
-
-                                    else {
-                                        exists.setVisibility(View.VISIBLE);
-                                    }
-                                }
-                            });
-                        }
-                    });
-
-                    add.show();
-                }
-                //if the selected encounter is the current one, do nothing and exit
-                //list size must be greater than 1 or it tries to update "Add Encounter"
-                if (encList.size() > 1 && encounter[0].getName().equals(encList.get(position)))
-                    return;
-
-                //update encounter on server, get new encounter
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            proxy.updateEncounter(encounter[0]);
-                            encounter[0] = proxy.getEncounter(encList.get(position));
-                        } catch (Exception e) {
-                            Log.i("update", e.getMessage());
-                        }
-                    }
                 });
 
-                thread.start();
-
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                builderView();
+                add.show();
             }
+
+            //if the selected encounter is the current one, do nothing and exit
+            if (encounterList.get(position).getId() == encounter.getId()) {
+                return;
+            }
+
+            //update encounter on server, get new encounter, display in builder
+            EncounterInterface.updateEncounter(encounter);
+            encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
+            builderView();
         });
+    }
+
+    /**
+     * Initializes the encounter list including an entry at index 0 for adding new encounters
+     */
+    private void initEncounterList() {
+        //setup add encounter
+        NameIdProjection addEncounter = new NameIdProjection();
+        addEncounter.setName(ADD_ENCOUNTER);
+        addEncounter.setId(0);
+
+        encounterList = new ArrayList<>();
+        encounterList.add(addEncounter);
+        List<NameIdProjection> list = EncounterInterface.getEncounterList();
+        encounterList.addAll(EncounterInterface.getEncounterList());
+        encounterNameList = encounterList.stream()
+                .map(NameIdProjection::getName)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -257,193 +196,96 @@ public class EncounterBuilder extends Fragment {
      * no encounters in the list, it will be blank
      */
     private void builderView() {
-        //the list is "empty" if the only item in the
-        //list is the "Add Encounter" item
-        if (encList.size() <= 1) {
-        return;
-        }
-
         nameView();
-        playerLevels();
-        difficulty();
-        musicLair();
-        monsters();
+        playerLevelsView();
+        difficultyView();
+        musicLairActionView();
+        monsterListView();
     }
 
     private void nameView() {
         View nameView = view.findViewById(R.id.encounter_name_buttons_layout);
         TextView name = nameView.findViewById(R.id.name);
-        name.setText(encounter[0].getName());
+        name.setText(encounter.getName());
+        //todo: can probably get rid of this button because update endpoint saves
         Button save = nameView.findViewById(R.id.save);
-        save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            proxy.updateEncounter(encounter[0]);
-                            proxy.saveEncounter(encounter[0].getName());
-                        } catch (Exception e) {
-                            Log.i("update", e.getMessage());
-                        }
-                    }
-                });
-
-                thread.start();
-
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        save.setOnClickListener(view -> {
+            EncounterInterface.updateEncounter(encounter);
         });
 
-        Button delete = nameView.findViewById(R.id.delete);
-        delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new AlertDialog.Builder(getContext())
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle("Delete Encounter")
-                        .setMessage("Delete " + encounter[0].getName() + "?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                final boolean[] deleted = new boolean[1];
-                                Thread thread = new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            deleted[0] = proxy.deleteEncounter(encounter[0].getName());
-                                        } catch (Exception e) {
-                                            Log.i("delete", e.getMessage());
-                                        }
-                                    }
-                                });
-
-                                thread.start();
-
-                                try {
-                                    thread.join();
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-
-                                if (deleted[0]) {
-                                    encounterListView(null);
-                                    builderView();
-                                }
-                            }
-                        })
-                        .setNegativeButton("No", null)
-                        .show();
-            }
-        });
+        Button archive = nameView.findViewById(R.id.archive);
+        archive.setOnClickListener(view -> new AlertDialog.Builder(getContext())
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Delete Encounter")
+                .setMessage("Delete " + encounter.getName() + "?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    EncounterInterface.archiveEncounter(encounter.getId());
+                    encounterListView(0);
+                    builderView();
+                })
+                .setNegativeButton("No", null)
+                .show());
 
         Button rename = nameView.findViewById(R.id.rename);
-        rename.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                View renameView = inflater.inflate(R.layout.rename_add_encounter_dialog, null);
-                TextView exists = renameView.findViewById(R.id.encounter_exists);
-                TextView text = renameView.findViewById(R.id.name_textview);
-                text.setText("Enter a new name for " + encounter[0].getName());
-                EditText newName = renameView.findViewById(R.id.name_entry);
+        rename.setOnClickListener(view -> {
+            View renameView = inflater.inflate(R.layout.rename_add_encounter_dialog, null);
+            TextView text = renameView.findViewById(R.id.name_textview);
+            text.setText(MessageFormat.format("Enter a new name for {0}", encounter.getName()));
+            EditText newName = renameView.findViewById(R.id.name_entry);
 
-                final AlertDialog.Builder renameEncounterDialog = new AlertDialog.Builder(getContext());
-                renameEncounterDialog.setView(renameView);
-                renameEncounterDialog.setTitle("Rename " + encounter[0].getName());
-                renameEncounterDialog.setPositiveButton("OK", null);
-                renameEncounterDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        Log.i("CANCEL", "cancel");
-                    }
+            final AlertDialog.Builder renameEncounterDialog = new AlertDialog.Builder(getContext());
+            renameEncounterDialog.setView(renameView);
+            renameEncounterDialog.setTitle("Rename " + encounter.getName());
+            renameEncounterDialog.setPositiveButton("OK", null);
+            renameEncounterDialog.setNegativeButton("Cancel", (dialog, id) -> Log.i("CANCEL", "cancel"));
+
+            AlertDialog renameDialog = renameEncounterDialog.create();
+            renameDialog.setOnShowListener(dialogInterface -> {
+                Button ok = renameDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                ok.setOnClickListener(v -> {
+                    encounter.setName(newName.getText().toString());
+                    name.setText(encounter.getName());
+                    EncounterInterface.updateEncounter(encounter);
+                    renameDialog.dismiss();
                 });
+            });
 
-                AlertDialog rename = renameEncounterDialog.create();
-                rename.setOnShowListener(new DialogInterface.OnShowListener() {
-                    @Override
-                    public void onShow(DialogInterface dialogInterface) {
-                        Button ok = rename.getButton(AlertDialog.BUTTON_POSITIVE);
-                        ok.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                boolean[] success = new boolean[1];
-                                final String oldName = encounter[0].getName();
-                                Thread thread = new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            encounter[0].setName(newName.getText().toString());
-                                            success[0] = proxy.renameEncounter(oldName, encounter[0]);
-                                        } catch (Exception e) {
-                                            Log.i("update", e.getMessage());
-                                        }
-                                    }
-                                });
-
-                                thread.start();
-
-                                try {
-                                    thread.join();
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-
-                                if (success[0]) {
-                                    rename.dismiss();
-                                    encounterListView(encounter[0].getName());
-                                    nameView();
-                                }
-
-                                else {
-                                    encounter[0].setName(oldName);
-                                    exists.setVisibility(View.VISIBLE);
-                                }
-                            }
-                        });
-                    }
-                });
-
-                rename.show();
-            }
+            renameDialog.show();
         });
 
         Button load = nameView.findViewById(R.id.load);
-        load.setOnClickListener(v -> {
-            SectionsPagerAdapter spa = new SectionsPagerAdapter(getContext(), getFragmentManager());
-
-            //CombatTracker combat = (CombatTracker) spa.getItem(0);
-
-            //CombatTracker combat = spa.getCombatTracker();
-
-            //combat.loadEncounter(encounter[0].getName());
-
-            CombatTracker.getTracker().loadEncounter(encounter[0].getName());
+        load.setOnClickListener(view -> {
+            Util.loadEncounter(encounter);
         });
     }
 
-    private void playerLevels() {
+    private void playerLevelsView() {
+        //on first pass the lists will be null, make en entry for 4 players of level 1
+        if (playerCountList == null) {
+            playerCountList = new ArrayList<>();
+            playerCountList.add(4);
+
+            playerLevelList = new ArrayList<>();
+            playerLevelList.add(1);
+        }
+
+        //unload any previous entries
         if (playerLevelsContainer.getChildCount() > 1)
             playerLevelsContainer.removeViewsInLayout(1, playerLevelsContainer.getChildCount() - 1);
 
-        ArrayList<PlayerData> playerData = encounter[0].getPlayerData();
-
-        for (int i = 0; i < playerData.size(); i++) {
+        for (int i = 0; i < playerCountList.size(); i++) {
             final int index = i;
             View playerLevels = inflater.inflate(R.layout.encounter_player_levels_layout, playerLevelsContainer);
             Spinner players = playerLevels.findViewById(R.id.num_players);
             players.setId(index);
             players.setTag(index);
-            players.setSelection(playerData.get(index).getPlayers() - 1, false);
+            players.setSelection(playerCountList.get(index) - 1, false);
             System.out.println("index: " + index);
             players.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter[0].updateNumPlayers(index, position + 1);
-                    difficulty();
+                    playerCountList.set(index, position + 1);
+                    difficultyView();
                 }
 
                 @Override
@@ -453,105 +295,116 @@ public class EncounterBuilder extends Fragment {
             Spinner level = playerLevels.findViewById(R.id.level);
             level.setId(index);
             level.setTag(index);
-            level.setSelection(playerData.get(index).getLevel() - 1, false);
+            level.setSelection(playerLevelList.get(index) - 1, false);
             level.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter[0].updatePlayerLevel(index, position + 1);
-                    difficulty();
+                    playerLevelList.set(index, position + 1);
+                    difficultyView();
                 }
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) { }
             });
 
-            Button delete = playerLevels.findViewById(R.id.delete);
+            Button delete = playerLevels.findViewById(R.id.archive);
             delete.setId(index);
             delete.setTag(index);
-            delete.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    encounter[0].deletePlayerData(index);
-                    playerLevels();
-                    difficulty();
-                }
+            delete.setOnClickListener(view -> {
+                playerCountList.remove(index);
+                playerLevelList.remove(index);
+                playerLevelsView();
+                difficultyView();
             });
         }
 
         inflater.inflate(R.layout.add_player_level_button, playerLevelsContainer);
         Button add = view.findViewById(R.id.add_player_level);
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                encounter[0].addPlayerData();
-                playerLevels();
-                difficulty();
-            }
+        add.setOnClickListener(v -> {
+            playerCountList.add(1);
+            playerLevelList.add(1);
+            playerLevelsView();
+            difficultyView();
         });
     }
 
-    //TODO: music selector, add lair action functionality (also requires update of combat tracker to mark lair actions), add option for second combat track (also requires update of tracker)
-    private void difficulty() {
+    private void difficultyView() {
+        calculateXpThresholds();
+        int encounterXpTotal = encounter.getXpTotal();
+
         View difficultyView = view.findViewById(R.id.encounter_difficulty_layout);
         TextView easy = difficultyView.findViewById(R.id.easy);
-        easy.setText("Easy: " + encounter[0].getEasyThreshold());
+        easy.setText(MessageFormat.format("Easy: {0}", easyThreshold));
         TextView medium = difficultyView.findViewById(R.id.medium);
-        medium.setText("Medium: " + encounter[0].getMediumThreshold());
+        medium.setText(MessageFormat.format("Medium: {0}", mediumThreshold));
         TextView hard = difficultyView.findViewById(R.id.hard);
-        hard.setText("Hard: " + encounter[0].getHardThreshold());
+        hard.setText(MessageFormat.format("Hard: {0}", hardThreshold));
         TextView deadly = difficultyView.findViewById(R.id.deadly);
-        deadly.setText("Deadly: " + encounter[0].getDeadlyThreshold());
+        deadly.setText(MessageFormat.format("Deadly: {0}", deadlyThreshold));
         TextView budget = difficultyView.findViewById(R.id.budget);
-        budget.setText("Daily Budget: " + encounter[0].getDailyBudget());
+        budget.setText(MessageFormat.format("Daily Budget: {0}", dailyXpBudget));
         TextView total = difficultyView.findViewById(R.id.total);
-        total.setText("Total XP: " + encounter[0].getXPTotal());
+        total.setText(MessageFormat.format("Total XP: {0}", encounterXpTotal));
 
-        switch (encounter[0].getDifficulty()) {
-            case "Trivial":
-                easy.setTypeface(Typeface.DEFAULT);
-                medium.setTypeface(Typeface.DEFAULT);
-                hard.setTypeface(Typeface.DEFAULT);
-                deadly.setTypeface(Typeface.DEFAULT);
-                break;
-            case "Easy":
-                easy.setTypeface(Typeface.DEFAULT_BOLD);
-                medium.setTypeface(Typeface.DEFAULT);
-                hard.setTypeface(Typeface.DEFAULT);
-                deadly.setTypeface(Typeface.DEFAULT);
-                break;
-            case "Medium":
-                easy.setTypeface(Typeface.DEFAULT);
-                medium.setTypeface(Typeface.DEFAULT_BOLD);
-                hard.setTypeface(Typeface.DEFAULT);
-                deadly.setTypeface(Typeface.DEFAULT);
-                break;
-            case "Hard":
-                easy.setTypeface(Typeface.DEFAULT);
-                medium.setTypeface(Typeface.DEFAULT);
-                hard.setTypeface(Typeface.DEFAULT_BOLD);
-                deadly.setTypeface(Typeface.DEFAULT);
-                break;
-            case "Deadly":
-                easy.setTypeface(Typeface.DEFAULT);
-                medium.setTypeface(Typeface.DEFAULT);
-                hard.setTypeface(Typeface.DEFAULT);
-                deadly.setTypeface(Typeface.DEFAULT_BOLD);
-                break;
+        if (encounterXpTotal < easyThreshold) {
+            //trivial
+            easy.setTypeface(Typeface.DEFAULT);
+            medium.setTypeface(Typeface.DEFAULT);
+            hard.setTypeface(Typeface.DEFAULT);
+            deadly.setTypeface(Typeface.DEFAULT);
+        } else if (encounterXpTotal < mediumThreshold) {
+            //easy
+            easy.setTypeface(Typeface.DEFAULT_BOLD);
+            medium.setTypeface(Typeface.DEFAULT);
+            hard.setTypeface(Typeface.DEFAULT);
+            deadly.setTypeface(Typeface.DEFAULT);
+        }  else if (encounterXpTotal < hardThreshold) {
+            //medium
+            easy.setTypeface(Typeface.DEFAULT);
+            medium.setTypeface(Typeface.DEFAULT_BOLD);
+            hard.setTypeface(Typeface.DEFAULT);
+            deadly.setTypeface(Typeface.DEFAULT);
+        } else if (encounterXpTotal < deadlyThreshold) {
+            //hard
+            easy.setTypeface(Typeface.DEFAULT);
+            medium.setTypeface(Typeface.DEFAULT);
+            hard.setTypeface(Typeface.DEFAULT_BOLD);
+            deadly.setTypeface(Typeface.DEFAULT);
+        } else {
+            //deadly
+            easy.setTypeface(Typeface.DEFAULT);
+            medium.setTypeface(Typeface.DEFAULT);
+            hard.setTypeface(Typeface.DEFAULT);
+            deadly.setTypeface(Typeface.DEFAULT_BOLD);
         }
     }
 
-    private void musicLair() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, musicList);
+    private void calculateXpThresholds() {
+        for (int i = 0; i < playerCountList.size(); i++) {
+            int level = playerLevelList.get(i);
+            int count = playerCountList.get(i);
+
+            easyThreshold += xpThresholdsList.get(level - 1).getEasy() * count;
+            mediumThreshold += xpThresholdsList.get(level - 1).getMedium() * count;
+            hardThreshold += xpThresholdsList.get(level - 1).getHard() * count;
+            deadlyThreshold += xpThresholdsList.get(level - 1).getDeadly() * count;
+            dailyXpBudget += xpThresholdsList.get(level - 1).getBudget() * count;
+        }
+    }
+
+    private void musicLairActionView() {
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, musicNameList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         View musicLairView = view.findViewById(R.id.encounter_music_lair_layout);
         Spinner musicSpinner = musicLairView.findViewById(R.id.music);
         musicSpinner.setAdapter(adapter);
-        musicSpinner.setSelection(musicList.indexOf(encounter[0].getTheme()), false);
+        musicSpinner.setSelection(musicNameList.indexOf(encounter.getMusic().getName()), false);
         musicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                encounter[0].setTheme(musicSpinner.getSelectedItem().toString());
+                encounter.setMusic(musicList.get(position));
+                EncounterInterface.updateEncounter(encounter);
             }
 
             @Override
@@ -559,36 +412,31 @@ public class EncounterBuilder extends Fragment {
         });
 
         CheckBox lair = musicLairView.findViewById(R.id.lair_action);
-        lair.setChecked(encounter[0].hasLairAction());
-        lair.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                encounter[0].setLairAction(isChecked);
-            }
+        lair.setChecked(encounter.isLairAction());
+        lair.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            encounter.setLairAction(isChecked);
+            EncounterInterface.updateEncounter(encounter);
         });
     }
 
-    private void monsters() {
+    private void monsterListView() {
         if (monstersContainer.getChildCount() > 1)
             monstersContainer.removeViewsInLayout(1, monstersContainer.getChildCount() - 1);
 
-        ArrayList<MonsterData> monData = encounter[0].getMonsterData();
+        List<EncounterMonster> monsterList = encounter.getMonsterList();
 
-        /*TODO: finish this method, add music player to sound board, update ServerCombatScreen for music
-        player, update DNDClientProxy for playing any music*/
-
-        for (int i = 0; i < monData.size(); i++) {
+        for (int i = 0; i < monsterList.size(); i++) {
             final int index = i;
-            View monster = inflater.inflate(R.layout.encounter_monster_layout, monstersContainer);
-            TextView name = monster.findViewById(R.id.name);
+            View monsterView = inflater.inflate(R.layout.encounter_monster_layout, monstersContainer);
+            TextView name = monsterView.findViewById(R.id.name);
             name.setId(index);
             name.setTag(index);
-            name.setText(monData.get(index).getMonster());
+            name.setText(monsterList.get(index).getMonster().getName());
 
-            EditText quantity = monster.findViewById(R.id.quantity);
+            EditText quantity = monsterView.findViewById(R.id.quantity);
             quantity.setId(index);
             quantity.setTag(index);
-            quantity.setText(Integer.toString(monData.get(index).getQuantity()));
+            quantity.setText(String.valueOf(monsterList.get(index).getQuantity()));
             quantity.addTextChangedListener(new TextWatcher() {
                 Handler handler;
 
@@ -606,191 +454,126 @@ public class EncounterBuilder extends Fragment {
                 public void afterTextChanged(Editable s) {
                     handler = new Handler();
 
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            int monQuantity = Integer.parseInt(quantity.getText().toString());
+                    handler.postDelayed(() -> {
+                        int monQuantity = Integer.parseInt(quantity.getText().toString());
 
-                            if (monQuantity == 0) {
-                                encounter[0].deleteMonsterData(index);
-                                monsters();
-                            }
-
-                            else
-                                encounter[0].updateMonsterQuantity(index, monQuantity);
-
-                            difficulty();
+                        //pressed minus quickly in succession
+                        if (encounter.getMonsterList().size() == 0) {
+                            return;
                         }
+
+                        if (monQuantity <= 0) {
+                            encounter.getMonsterList().remove(index);
+                            monsterListView();
+                        } else {
+                            encounter.getMonsterList().get(index).setQuantity(monQuantity);
+                        }
+
+                        EncounterInterface.updateEncounter(encounter);
+
+                        difficultyView();
                     }, DELAY);
                 }
             });
 
-            Button plus = monster.findViewById(R.id.plus_quantity);
+            Button plus = monsterView.findViewById(R.id.plus_quantity);
             plus.setId(index);
             plus.setTag(index);
-            plus.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int monQuantity = monData.get(index).getQuantity() + 1;
-                    encounter[0].updateMonsterQuantity(index, monQuantity);
-                    quantity.setText(Integer.toString(monQuantity));
-                    difficulty();
-                }
+            plus.setOnClickListener(view -> {
+                quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) + 1));
             });
 
-            Button minus = monster.findViewById(R.id.minus_quantity);
+            Button minus = monsterView.findViewById(R.id.minus_quantity);
             minus.setId(index);
             minus.setTag(index);
-            minus.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int monQuantity = monData.get(index).getQuantity() - 1;
-
-                    if (monQuantity == 0) {
-                        encounter[0].deleteMonsterData(index);
-                        monsters();
-                    }
-
-                    else {
-                        encounter[0].updateMonsterQuantity(index, monQuantity);
-                        quantity.setText(Integer.toString(monQuantity));
-                    }
-
-                    difficulty();
-                }
+            minus.setOnClickListener(view -> {
+                quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) - 1));
             });
 
-            Spinner initiative = monster.findViewById(R.id.initiative);
+            Spinner initiative = monsterView.findViewById(R.id.initiative);
             initiative.setId(index);
             initiative.setTag(index);
-            initiative.setSelection(monData.get(index).getInitiative() - 1, false);
+            initiative.setSelection(monsterList.get(index).getInitiative() - 1, false);
             initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter[0].setInitiative(index,  initiative.getSelectedItemPosition() + 1);
+                    encounter.getMonsterList().get(index).setInitiative(initiative.getSelectedItemPosition() + 1);
+                    EncounterInterface.updateEncounter(encounter);
                 }
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) { }
             });
 
-            CheckBox reinforcement = monster.findViewById(R.id.reinforcement);
+            CheckBox reinforcement = monsterView.findViewById(R.id.reinforcement);
             reinforcement.setId(index);
             reinforcement.setTag(index);
-            reinforcement.setChecked(monData.get(i).isReinforcement());
-            reinforcement.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    encounter[0].setReinforcement(index, isChecked);
-                }
+            reinforcement.setChecked(monsterList.get(i).isReinforcement());
+            reinforcement.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                encounter.getMonsterList().get(index).setReinforcement(isChecked);
+                EncounterInterface.updateEncounter(encounter);
             });
 
-            CheckBox minion = monster.findViewById(R.id.minion);
+            CheckBox minion = monsterView.findViewById(R.id.minion);
             minion.setId(index);
             minion.setTag(index);
-            minion.setChecked(monData.get(i).isMinion());
-            minion.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    encounter[0].setMinion(index, isChecked);
-                    difficulty();
-                }
+            minion.setChecked(monsterList.get(i).isMinion());
+            minion.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                encounter.getMonsterList().get(index).setMinion(isChecked);
+                EncounterInterface.updateEncounter(encounter);
+                difficultyView();
             });
 
-            CheckBox invisible = monster.findViewById(R.id.invisible);
+            CheckBox invisible = monsterView.findViewById(R.id.invisible);
             invisible.setId(index);
             invisible.setTag(index);
-            invisible.setChecked(monData.get(i).isInvisible());
-            invisible.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    encounter[0].setInvisible(index, isChecked);
-                }
+            invisible.setChecked(monsterList.get(i).isInvisible());
+            invisible.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                encounter.getMonsterList().get(index).setInvisible(isChecked);
+                EncounterInterface.updateEncounter(encounter);
             });
         }
 
         inflater.inflate(R.layout.add_monster_in_encounter_button, monstersContainer);
-        Button add = view.findViewById(R.id.add_monster_in_encounter);
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final ArrayList<String>[] monList = new ArrayList[]{new ArrayList<String>()};
+        Button add = view.findViewById(R.id.add_monster_to_encounter);
+        add.setOnClickListener(v -> {
+            View addMonster = inflater.inflate(R.layout.add_monster_in_encounter_layout, null);
+            AutoCompleteTextView monName = addMonster.findViewById(R.id.monster_text);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                    android.R.layout.simple_dropdown_item_1line, Util.getMonsterNameList());
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            monName.setAdapter(adapter);
+            monName.setOnClickListener(view -> monName.showDropDown());
+            TextView invalidName = addMonster.findViewById(R.id.invalid_name);
 
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            monList[0] = proxy.getMonsterList();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+            final AlertDialog.Builder addMonDialog = new AlertDialog.Builder(getContext());
+            addMonDialog.setTitle("Add Monster to Encounter");
+            addMonDialog.setView(addMonster);
+            addMonDialog.setNegativeButton("Cancel", null);
+            addMonDialog.setPositiveButton("OK", null);
+
+            AlertDialog alert = addMonDialog.create();
+            alert.setOnShowListener(dialogInterface -> {
+                Button ok = alert.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
+                ok.setOnClickListener(view -> {
+                    String name = monName.getText().toString();
+
+                    if (!Util.getMonsterNameList().contains(name)) {
+                        invalidName.setVisibility(View.VISIBLE);
+                        return;
                     }
+
+                    int index = Util.getMonsterNameList().indexOf(name);
+                    Monster newMonster = MonsterInterface.getMonster(Util.getMonsterList().get(index).getId());
+                    encounter.getMonsterList().add(new EncounterMonster(newMonster));
+                    EncounterInterface.updateEncounter(encounter);
+
+                    monsterListView();
+                    difficultyView();
+                    alert.dismiss();
                 });
-
-                thread.start();
-
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                View addMonster = inflater.inflate(R.layout.add_monster_in_encounter_layout, null);
-                AutoCompleteTextView monName = addMonster.findViewById(R.id.monster_text);
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, monList[0]);
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                monName.setAdapter(adapter);
-
-                monName.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        monName.showDropDown();
-                    }
-                });
-
-                final AlertDialog.Builder addMonDialog = new AlertDialog.Builder(getContext());
-                addMonDialog.setTitle("Add Monster to Encounter");
-                addMonDialog.setView(addMonster);
-                addMonDialog.setNegativeButton("Cancel", null);
-                addMonDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String name = monName.getText().toString();
-                        if (!monList[0].contains(name)) {
-                            System.out.println("not contains");
-                            return;
-                        }
-
-                        int[] xp = new int[1];
-
-                        Thread thread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    xp[0] = proxy.getMonster(name).getXP();
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-
-                        thread.start();
-
-                        try {
-                            thread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        encounter[0].addMonsterData(name, xp[0]);
-                        monsters();
-                        difficulty();
-                    }
-                });
-
-                AlertDialog alert = addMonDialog.create();
-                alert.show();
-            }
+            });
+            alert.show();
         });
     }
 }

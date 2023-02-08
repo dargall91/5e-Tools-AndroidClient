@@ -1,10 +1,12 @@
 package com.DnD5eTools.entities.encounter;
 
 import com.DnD5eTools.entities.Music;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Encounter {
     private Integer id;
     private int campaignId;
@@ -13,13 +15,6 @@ public class Encounter {
     private boolean lairAction = false;
     private boolean archived = false;
     private List<EncounterMonster> monsterList = new ArrayList<>();
-
-    public Encounter() { }
-
-    public Encounter(String name, int campaignId) {
-        this.name = name;
-        this.campaignId = campaignId;
-    }
 
     public Integer getId() {
         return id;
@@ -51,6 +46,10 @@ public class Encounter {
 
     public void setMusic(Music music) {
         this.music = music;
+    }
+
+    public void setMusicId(int musicId) {
+        music.setId(musicId);
     }
 
     public boolean isLairAction() {
