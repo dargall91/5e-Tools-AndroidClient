@@ -27,6 +27,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.DnD5eTools.R;
+import com.DnD5eTools.interfaces.MonsterInterface;
+import com.DnD5eTools.models.projections.NameIdProjection;
 import com.DnD5eTools.monster.Ability;
 import com.DnD5eTools.monster.Action;
 import com.DnD5eTools.client.DNDClientProxy;
@@ -38,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Tab for creating and editing Monsters.
@@ -45,11 +48,13 @@ import java.util.List;
 public class MonsterBuilder extends Fragment {
     private DNDClientProxy proxy;
     private Monster[] monster;
+    private com.DnD5eTools.entities.monster.Monster[] newMonster = new com.DnD5eTools.entities.monster.Monster[1];
     private ArrayList<String> monList;
+    private List<NameIdProjection> monsterList;
+    private List<String> monsterNameList = new ArrayList<>();
     private LayoutInflater inflater;
     private ViewGroup container;
     private Bundle savedInstanceState;
-    private static MonsterBuilder builder;
     private ArrayList<Ability> abilityList;
     private ArrayList<Action> actionList;
     private ArrayList<LegendaryAction> legendaryList;
@@ -116,65 +121,24 @@ public class MonsterBuilder extends Fragment {
         abilities = view.findViewById(R.id.monster_abilities_layout);
         actions = view.findViewById(R.id.monster_actions_layout);
         legActions = view.findViewById(R.id.monster_legendary_actions_layout);
-        builder = this;
-
-        if (Util.isConnectedToServer()) {
-            monsterListView(null);
-            builderView();
-        }
 
         return view;
     }
 
-    public static MonsterBuilder getMonBuilder() {
-        return builder;
-    }
-
-    public void refresh() {
-        MonsterBuilder builder = this;
-        getFragmentManager().findFragmentById(builder.getId());
-
-        getFragmentManager().beginTransaction()
-                .detach(builder)
-                .attach(builder)
-                .commit();
-
-        onCreateView(inflater, container, savedInstanceState);
+    public void initViews() {
+        monsterListView();
+        builderView();
     }
 
     /**
      * Sets up the ListView that contains a list of all the monsters on the server
-     *
-     * @param name the name of the monster to load, null should be used to load the first monster in the monster lists
      */
-    private void monsterListView(String name) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    monList = proxy.getMonsterList();
-                    monList.add(ADD_MONSTER);
-                    Collections.sort(monList);
+    private void monsterListView() {
+        initMonsterList();
 
-                    //TODO: What happens if the list is empty? Should probably set monster[0] to null, then in onCreateView only call builderView() is monster != null
-                    if (name == null)
-                        monster[0] = proxy.getMonster(monList.get(1));
-
-                    else
-                        monster[0] = proxy.getMonster(name);
-
-                } catch (Exception e) {
-                    Log.i("MonList", e.getMessage());
-                }
-            }
-        });
-
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (monsterList.size() == 1) {
+            monsterList.add(MonsterInterface.addMonster("New Monster"));
+            initMonsterList();
         }
 
         ListView monListView = view.findViewById(R.id.monster_list);
@@ -276,6 +240,21 @@ public class MonsterBuilder extends Fragment {
                 builderView();
             }
         });
+    }
+
+    private void initMonsterList() {
+        //todo: make add monster/add encounter actual buttons
+        NameIdProjection addMonster = new NameIdProjection();
+        addMonster.setName(ADD_MONSTER);
+        addMonster.setId(0);
+
+        monsterList = new ArrayList<>();
+        monsterList.add(addMonster);
+        Util.setMonsterList();
+        monsterList.addAll(Util.getMonsterList());
+        monsterNameList = monsterList.stream()
+                .map(NameIdProjection::getName)
+                .collect(Collectors.toList());
     }
 
     /**

@@ -65,14 +65,14 @@ public class Util {
 
     public static List<NameIdProjection> getMonsterList() {
         if (monsterList == null) {
-            monsterList = MonsterInterface.getMonsterList();
+            setMonsterList();
         }
 
         return monsterList;
     }
 
-    public static void setMonsterList(List<NameIdProjection> monsterList) {
-        Util.monsterList = monsterList;
+    public static void setMonsterList() {
+        Util.monsterList = MonsterInterface.getMonsterList();
     }
 
     public static List<String> getMonsterNameList() {

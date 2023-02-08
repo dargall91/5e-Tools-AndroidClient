@@ -16,4 +16,8 @@ public class MonsterInterface extends AbstractInterface {
     public static Monster getMonster(int monsterId) {
         return getSingleResult(Monster.class, path + monsterId);
     }
+
+    public static NameIdProjection addMonster(String name) {
+        return putSingleResult(NameIdProjection.class, path + "add", null);
+    }
 }

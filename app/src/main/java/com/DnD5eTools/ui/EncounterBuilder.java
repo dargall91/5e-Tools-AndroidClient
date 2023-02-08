@@ -47,15 +47,12 @@ import java.util.stream.Collectors;
  * Tabs for creating and editing Encounters.
  */
 public class EncounterBuilder extends Fragment {
-    private DNDClientProxy proxy;
     private Encounter encounter;
     private List<String> encounterNameList;
     private List<NameIdProjection> encounterList;
     private List<String> musicNameList = new ArrayList<>();
     private List<Music> musicList;
     private LayoutInflater inflater;
-    private ViewGroup container;
-    private Bundle savedInstanceState;
     private View view;
     private LinearLayout playerLevelsContainer;
     private LinearLayout monstersContainer;
@@ -74,9 +71,6 @@ public class EncounterBuilder extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         this.inflater = inflater;
-        proxy = MainActivity.getProxy();
-        this.container = container;
-        this.savedInstanceState = savedInstanceState;
 
         view = inflater.inflate(R.layout.encounter_builder_layout, container, false);
         view.setId(View.generateViewId());
@@ -97,31 +91,24 @@ public class EncounterBuilder extends Fragment {
 
         xpThresholdsList = EncounterInterface.getXpThresholds();
 
-        encounterListView(0);
+        encounterListView();
         builderView();
     }
 
     /**
      * Sets up the ListView that contains a list of all the encounters on the server
-     *
-     * @param index the index of the encounter in the list to load
      */
-    private void encounterListView(int index) {
+    private void encounterListView() {
         initEncounterList();
 
-        int encounterId;
-
         //get default encounter to display
-        if (index == 0 && encounterList.size() == 1) {
+        if (encounterList.size() == 1) {
             //no encounters in list, make a new encounter and add it to the list
             encounterList.add(EncounterInterface.addEncounter("New Encounter"));
             encounterNameList.add(encounterList.get(1).getName());
-            encounterId = encounterList.get(1).getId();
-        } else if (index == 0) {
-            encounterId = encounterList.get(1).getId();
-        } else {
-            encounterId = encounterList.get(index).getId();
         }
+
+        int encounterId = encounterList.get(1).getId();
 
         encounter = EncounterInterface.getEncounter(encounterId);
 
@@ -183,7 +170,6 @@ public class EncounterBuilder extends Fragment {
 
         encounterList = new ArrayList<>();
         encounterList.add(addEncounter);
-        List<NameIdProjection> list = EncounterInterface.getEncounterList();
         encounterList.addAll(EncounterInterface.getEncounterList());
         encounterNameList = encounterList.stream()
                 .map(NameIdProjection::getName)
@@ -220,7 +206,7 @@ public class EncounterBuilder extends Fragment {
                 .setMessage("Delete " + encounter.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     EncounterInterface.archiveEncounter(encounter.getId());
-                    encounterListView(0);
+                    encounterListView();
                     builderView();
                 })
                 .setNegativeButton("No", null)
