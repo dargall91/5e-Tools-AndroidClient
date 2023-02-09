@@ -18,6 +18,18 @@ public class MonsterInterface extends AbstractInterface {
     }
 
     public static NameIdProjection addMonster(String name) {
-        return putSingleResult(NameIdProjection.class, path + "add", null);
+        return putSingleResult(NameIdProjection.class, path + "add?name=" + name, null);
+    }
+
+    public static void updateMonster(Monster monster) {
+        postNoResult(path + "update", monster);
+    }
+
+    public static void archiveMonster(int monsterId) {
+        postNoResult(path + monsterId + "/archive", null);
+    }
+
+    public static Monster copyMonster(int monsterId, String name) {
+        return putSingleResult(Monster.class, path + monsterId + "copy?name=" + name, null);
     }
 }

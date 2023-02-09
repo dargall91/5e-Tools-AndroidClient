@@ -109,7 +109,6 @@ public class EncounterBuilder extends Fragment {
         }
 
         int encounterId = encounterList.get(1).getId();
-
         encounter = EncounterInterface.getEncounter(encounterId);
 
         ListView encListView = view.findViewById(R.id.encounter_list);
@@ -127,7 +126,7 @@ public class EncounterBuilder extends Fragment {
                 renameEncounterDialog.setView(addView);
                 renameEncounterDialog.setTitle("Add Encounter");
                 renameEncounterDialog.setPositiveButton("OK", null);
-                renameEncounterDialog.setNegativeButton("Cancel", (dialog, id1) -> Log.i("CANCEL", "cancel"));
+                renameEncounterDialog.setNegativeButton("Cancel", null);
 
                 AlertDialog add = renameEncounterDialog.create();
                 add.setOnShowListener(dialogInterface -> {
@@ -153,6 +152,7 @@ public class EncounterBuilder extends Fragment {
             }
 
             //update encounter on server, get new encounter, display in builder
+            //todo: is it necessary to update? should be updating on every action now
             EncounterInterface.updateEncounter(encounter);
             encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
             builderView();
@@ -223,7 +223,7 @@ public class EncounterBuilder extends Fragment {
             renameEncounterDialog.setView(renameView);
             renameEncounterDialog.setTitle("Rename " + encounter.getName());
             renameEncounterDialog.setPositiveButton("OK", null);
-            renameEncounterDialog.setNegativeButton("Cancel", (dialog, id) -> Log.i("CANCEL", "cancel"));
+            renameEncounterDialog.setNegativeButton("Cancel", null);
 
             AlertDialog renameDialog = renameEncounterDialog.create();
             renameDialog.setOnShowListener(dialogInterface -> {
@@ -427,13 +427,13 @@ public class EncounterBuilder extends Fragment {
                 Handler handler;
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null)
+                    if (handler != null) {
                         handler.removeCallbacks(null);
+                    }
                 }
 
                 @Override
