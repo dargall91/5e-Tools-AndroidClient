@@ -1,13 +1,13 @@
 package com.DnD5eTools.entities.monster;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ChallengeRating {
     private Integer id;
     private String cr;
     private int xp;
     private int proficiencyBonus;
-    List<Monster> monsterList;
 
     public Integer getId() {
         return id;

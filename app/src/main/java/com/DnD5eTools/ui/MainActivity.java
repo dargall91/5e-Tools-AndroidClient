@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadAllTabs() {
         sectionsPagerAdapter.getCombatTracker().initViews();
-//        sectionsPagerAdapter.getMonsterBuilder().initViews();
+        sectionsPagerAdapter.getMonsterBuilder().initViews();
         sectionsPagerAdapter.getEncounterBuilder().initViews();
     }
 

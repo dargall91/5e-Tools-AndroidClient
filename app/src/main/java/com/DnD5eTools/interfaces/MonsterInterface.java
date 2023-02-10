@@ -1,5 +1,6 @@
 package com.DnD5eTools.interfaces;
 
+import com.DnD5eTools.entities.monster.ChallengeRating;
 import com.DnD5eTools.entities.monster.Monster;
 import com.DnD5eTools.models.projections.NameIdProjection;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -30,6 +31,10 @@ public class MonsterInterface extends AbstractInterface {
     }
 
     public static Monster copyMonster(int monsterId, String name) {
-        return putSingleResult(Monster.class, path + monsterId + "copy?name=" + name, null);
+        return putSingleResult(Monster.class, path + monsterId + "/copy?name=" + name, null);
+    }
+
+    public static List<ChallengeRating> getChallengeRatings() {
+        return getListResult(new TypeReference<List<ChallengeRating>>() {}, path + "crList");
     }
 }

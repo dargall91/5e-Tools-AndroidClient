@@ -91,14 +91,16 @@ public class EncounterBuilder extends Fragment {
 
         xpThresholdsList = EncounterInterface.getXpThresholds();
 
-        encounterListView();
+        encounterListView(true);
         builderView();
     }
 
     /**
      * Sets up the ListView that contains a list of all the encounters on the server
+     *
+     * @param loadNewEncounter true if the encounter should be set automatically, false if one is set elsewhere
      */
-    private void encounterListView() {
+    private void encounterListView(boolean loadNewEncounter) {
         initEncounterList();
 
         //get default encounter to display
@@ -108,8 +110,10 @@ public class EncounterBuilder extends Fragment {
             encounterNameList.add(encounterList.get(1).getName());
         }
 
-        int encounterId = encounterList.get(1).getId();
-        encounter = EncounterInterface.getEncounter(encounterId);
+        if (loadNewEncounter) {
+            int encounterId = encounterList.get(1).getId();
+            encounter = EncounterInterface.getEncounter(encounterId);
+        }
 
         ListView encListView = view.findViewById(R.id.encounter_list);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.simple_list_view, encounterNameList);
@@ -137,8 +141,8 @@ public class EncounterBuilder extends Fragment {
                         NameIdProjection addedEncounter = EncounterInterface.addEncounter(name);
 
                         //reload list then display new encounter in builder
-                        initEncounterList();
                         encounter = EncounterInterface.getEncounter(addedEncounter.getId());
+                        encounterListView(false);
                         builderView();
                     });
                 });
@@ -206,7 +210,7 @@ public class EncounterBuilder extends Fragment {
                 .setMessage("Delete " + encounter.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     EncounterInterface.archiveEncounter(encounter.getId());
-                    encounterListView();
+                    encounterListView(true);
                     builderView();
                 })
                 .setNegativeButton("No", null)
@@ -231,6 +235,7 @@ public class EncounterBuilder extends Fragment {
                 ok.setOnClickListener(v -> {
                     encounter.setName(newName.getText().toString());
                     name.setText(encounter.getName());
+                    encounterListView(false);
                     EncounterInterface.updateEncounter(encounter);
                     renameDialog.dismiss();
                 });
