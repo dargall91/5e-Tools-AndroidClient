@@ -416,8 +416,8 @@ public class MonsterBuilder extends Fragment {
         Button archive = basicInfo.findViewById(R.id.archive_monster);
         archive.setOnClickListener(view -> new AlertDialog.Builder(getContext())
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Delete Monster")
-                .setMessage("Delete " + monster.getName() + "?")
+                .setTitle("Archive Monster")
+                .setMessage("Archive " + monster.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     MonsterInterface.archiveMonster(monster.getId());
                     monsterListView(true);

@@ -1,11 +1,9 @@
 package com.DnD5eTools.interfaces;
 
 import com.DnD5eTools.entities.PlayerCharacter;
-import com.DnD5eTools.models.projections.NameIdProjection;
 import com.DnD5eTools.util.Util;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class PlayerInterface extends AbstractInterface {
@@ -20,11 +18,11 @@ public class PlayerInterface extends AbstractInterface {
         postNoResult(path + "update", playerCharacter);
     }
 
-    public static void deletePlayerCharacter(int id) {
-        deleteNoResult(path + "delete?id=" + id);
+    public static void killPlayerCharacter(int pcId) {
+        postNoResult(path + pcId + "/kill", null);
     }
 
     public static void addPlayerCharacter(String name) {
-        postNoResult(path + "add", new PlayerCharacter(name));
+        putNoResult(path + "add", new PlayerCharacter(name));
     }
 }

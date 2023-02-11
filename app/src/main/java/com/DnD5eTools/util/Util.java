@@ -6,6 +6,7 @@ import com.DnD5eTools.entities.encounter.Encounter;
 import com.DnD5eTools.entities.monster.ChallengeRating;
 import com.DnD5eTools.interfaces.CampaignInterface;
 import com.DnD5eTools.interfaces.MonsterInterface;
+import com.DnD5eTools.interfaces.MusicInterface;
 import com.DnD5eTools.models.ServerConnection;
 import com.DnD5eTools.models.projections.NameIdProjection;
 
@@ -57,6 +58,10 @@ public class Util {
 
     public static void loadEncounter(Encounter encounter) {
         loadedEncounter = encounter;
+
+        if (loadedEncounter != null) {
+            MusicInterface.playMusic(loadedEncounter.getMusic().getId());
+        }
     }
 
     public static boolean isEncounterLoaded() {

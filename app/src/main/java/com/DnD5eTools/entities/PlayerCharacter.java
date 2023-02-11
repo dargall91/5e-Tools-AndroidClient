@@ -8,14 +8,15 @@ public class PlayerCharacter {
     private int ac;
     private int initiativeBonus;
     private int rolledInitiative;
-    private Campaign campaign;
+    private int campaignId;
+    private boolean dead = false;
     private boolean combatant = false;
 
     public PlayerCharacter() { }
 
     public PlayerCharacter(String name) {
         this.name = name;
-        campaign = Util.getCampaign();
+        campaignId = Util.getCampaign().getId();
     }
 
     public Integer getId() {
@@ -58,12 +59,12 @@ public class PlayerCharacter {
         this.rolledInitiative = rolledInitiative;
     }
 
-    public Campaign getCampaign() {
-        return campaign;
+    public void setDead(boolean dead) {
+        this.dead = dead;
     }
 
-    public void setCampaign(Campaign campaign) {
-        this.campaign = campaign;
+    public boolean isDead() {
+        return dead;
     }
 
     public boolean isCombatant() {
@@ -72,5 +73,9 @@ public class PlayerCharacter {
 
     public void setCombatant(boolean combatant) {
         this.combatant = combatant;
+    }
+
+    public int getCampaignId() {
+        return campaignId;
     }
 }

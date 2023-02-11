@@ -206,15 +206,16 @@ public class EncounterBuilder extends Fragment {
         Button archive = nameView.findViewById(R.id.archive);
         archive.setOnClickListener(view -> new AlertDialog.Builder(getContext())
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Delete Encounter")
-                .setMessage("Delete " + encounter.getName() + "?")
+                .setTitle("Archive Encounter")
+                .setMessage("Archive " + encounter.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     EncounterInterface.archiveEncounter(encounter.getId());
                     encounterListView(true);
                     builderView();
                 })
                 .setNegativeButton("No", null)
-                .show());
+                .show()
+        );
 
         Button rename = nameView.findViewById(R.id.rename);
         rename.setOnClickListener(view -> {
@@ -412,8 +413,9 @@ public class EncounterBuilder extends Fragment {
     }
 
     private void monsterListView() {
-        if (monstersContainer.getChildCount() > 1)
+        if (monstersContainer.getChildCount() > 1) {
             monstersContainer.removeViewsInLayout(1, monstersContainer.getChildCount() - 1);
+        }
 
         List<EncounterMonster> monsterList = encounter.getMonsterList();
 
