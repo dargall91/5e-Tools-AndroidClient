@@ -76,9 +76,6 @@ public class CombatTracker extends Fragment {
     private List<Music> musicList;
     private View view;
     private LayoutInflater inflater;
-    private ViewGroup container;
-    private Bundle savedInstanceState;
-    private static CombatTracker tracker;
     private LinearLayout leftView;
 
     private final String PLAYER_CRIT = "Data/player_crit.dat";
@@ -110,10 +107,7 @@ public class CombatTracker extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         this.inflater = inflater;
         encounter = new Encounter[1];
-        this.container = container;
-        this.savedInstanceState = savedInstanceState;
         proxy = MainActivity.getProxy();
-        tracker = this;
 
         view = inflater.inflate(R.layout.combat_tracker_layout, container, false);
         view.setTag("CombatTracker");

@@ -3,6 +3,7 @@ package com.DnD5eTools.util;
 import com.DnD5eTools.entities.Campaign;
 import com.DnD5eTools.entities.Music;
 import com.DnD5eTools.entities.encounter.Encounter;
+import com.DnD5eTools.entities.monster.ChallengeRating;
 import com.DnD5eTools.interfaces.CampaignInterface;
 import com.DnD5eTools.interfaces.MonsterInterface;
 import com.DnD5eTools.models.ServerConnection;
@@ -21,6 +22,9 @@ public class Util {
     private static Encounter loadedEncounter;
     private static List<NameIdProjection> monsterList;
     private static List<String> monsterNameList;
+    private static List<ChallengeRating> challengeRatingList;
+    private static List<String> challengeRatingCrList;
+    private static List<Integer> challengeRatingXpList;
 
     public static ServerConnection getServerConnection() {
         return serverConnection;
@@ -65,14 +69,14 @@ public class Util {
 
     public static List<NameIdProjection> getMonsterList() {
         if (monsterList == null) {
-            monsterList = MonsterInterface.getMonsterList();
+            setMonsterList();
         }
 
         return monsterList;
     }
 
-    public static void setMonsterList(List<NameIdProjection> monsterList) {
-        Util.monsterList = monsterList;
+    public static void setMonsterList() {
+        Util.monsterList = MonsterInterface.getMonsterList();
     }
 
     public static List<String> getMonsterNameList() {
@@ -86,5 +90,25 @@ public class Util {
         return monsterNameList;
     }
 
+    private static List<ChallengeRating> getChallengeRatingList() {
+        if (challengeRatingList == null) {
+            challengeRatingList = MonsterInterface.getChallengeRatings();
+        }
 
+        return challengeRatingList;
+    }
+
+    public static String[] getChallengeRatingCrList() {
+        if (challengeRatingCrList == null) {
+            challengeRatingCrList = getChallengeRatingList().stream()
+                    .map(ChallengeRating::getCr)
+                    .collect(Collectors.toList());
+        }
+
+        return challengeRatingCrList.toArray(new String[0]);
+    }
+
+    public static ChallengeRating getChallengeRating(int index) {
+        return getChallengeRatingList().get(index);
+    }
 }

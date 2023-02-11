@@ -47,15 +47,12 @@ import java.util.stream.Collectors;
  * Tabs for creating and editing Encounters.
  */
 public class EncounterBuilder extends Fragment {
-    private DNDClientProxy proxy;
     private Encounter encounter;
     private List<String> encounterNameList;
     private List<NameIdProjection> encounterList;
     private List<String> musicNameList = new ArrayList<>();
     private List<Music> musicList;
     private LayoutInflater inflater;
-    private ViewGroup container;
-    private Bundle savedInstanceState;
     private View view;
     private LinearLayout playerLevelsContainer;
     private LinearLayout monstersContainer;
@@ -74,9 +71,6 @@ public class EncounterBuilder extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         this.inflater = inflater;
-        proxy = MainActivity.getProxy();
-        this.container = container;
-        this.savedInstanceState = savedInstanceState;
 
         view = inflater.inflate(R.layout.encounter_builder_layout, container, false);
         view.setId(View.generateViewId());
@@ -97,33 +91,29 @@ public class EncounterBuilder extends Fragment {
 
         xpThresholdsList = EncounterInterface.getXpThresholds();
 
-        encounterListView(0);
+        encounterListView(true);
         builderView();
     }
 
     /**
      * Sets up the ListView that contains a list of all the encounters on the server
      *
-     * @param index the index of the encounter in the list to load
+     * @param loadNewEncounter true if the encounter should be set automatically, false if one is set elsewhere
      */
-    private void encounterListView(int index) {
+    private void encounterListView(boolean loadNewEncounter) {
         initEncounterList();
 
-        int encounterId;
-
         //get default encounter to display
-        if (index == 0 && encounterList.size() == 1) {
+        if (encounterList.size() == 1) {
             //no encounters in list, make a new encounter and add it to the list
             encounterList.add(EncounterInterface.addEncounter("New Encounter"));
             encounterNameList.add(encounterList.get(1).getName());
-            encounterId = encounterList.get(1).getId();
-        } else if (index == 0) {
-            encounterId = encounterList.get(1).getId();
-        } else {
-            encounterId = encounterList.get(index).getId();
         }
 
-        encounter = EncounterInterface.getEncounter(encounterId);
+        if (loadNewEncounter) {
+            int encounterId = encounterList.get(1).getId();
+            encounter = EncounterInterface.getEncounter(encounterId);
+        }
 
         ListView encListView = view.findViewById(R.id.encounter_list);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.simple_list_view, encounterNameList);
@@ -140,7 +130,7 @@ public class EncounterBuilder extends Fragment {
                 renameEncounterDialog.setView(addView);
                 renameEncounterDialog.setTitle("Add Encounter");
                 renameEncounterDialog.setPositiveButton("OK", null);
-                renameEncounterDialog.setNegativeButton("Cancel", (dialog, id1) -> Log.i("CANCEL", "cancel"));
+                renameEncounterDialog.setNegativeButton("Cancel", null);
 
                 AlertDialog add = renameEncounterDialog.create();
                 add.setOnShowListener(dialogInterface -> {
@@ -151,8 +141,8 @@ public class EncounterBuilder extends Fragment {
                         NameIdProjection addedEncounter = EncounterInterface.addEncounter(name);
 
                         //reload list then display new encounter in builder
-                        initEncounterList();
                         encounter = EncounterInterface.getEncounter(addedEncounter.getId());
+                        encounterListView(false);
                         builderView();
                     });
                 });
@@ -166,6 +156,7 @@ public class EncounterBuilder extends Fragment {
             }
 
             //update encounter on server, get new encounter, display in builder
+            //todo: is it necessary to update? should be updating on every action now
             EncounterInterface.updateEncounter(encounter);
             encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
             builderView();
@@ -183,7 +174,6 @@ public class EncounterBuilder extends Fragment {
 
         encounterList = new ArrayList<>();
         encounterList.add(addEncounter);
-        List<NameIdProjection> list = EncounterInterface.getEncounterList();
         encounterList.addAll(EncounterInterface.getEncounterList());
         encounterNameList = encounterList.stream()
                 .map(NameIdProjection::getName)
@@ -220,7 +210,7 @@ public class EncounterBuilder extends Fragment {
                 .setMessage("Delete " + encounter.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     EncounterInterface.archiveEncounter(encounter.getId());
-                    encounterListView(0);
+                    encounterListView(true);
                     builderView();
                 })
                 .setNegativeButton("No", null)
@@ -237,7 +227,7 @@ public class EncounterBuilder extends Fragment {
             renameEncounterDialog.setView(renameView);
             renameEncounterDialog.setTitle("Rename " + encounter.getName());
             renameEncounterDialog.setPositiveButton("OK", null);
-            renameEncounterDialog.setNegativeButton("Cancel", (dialog, id) -> Log.i("CANCEL", "cancel"));
+            renameEncounterDialog.setNegativeButton("Cancel", null);
 
             AlertDialog renameDialog = renameEncounterDialog.create();
             renameDialog.setOnShowListener(dialogInterface -> {
@@ -245,6 +235,7 @@ public class EncounterBuilder extends Fragment {
                 ok.setOnClickListener(v -> {
                     encounter.setName(newName.getText().toString());
                     name.setText(encounter.getName());
+                    encounterListView(false);
                     EncounterInterface.updateEncounter(encounter);
                     renameDialog.dismiss();
                 });
@@ -270,8 +261,9 @@ public class EncounterBuilder extends Fragment {
         }
 
         //unload any previous entries
-        if (playerLevelsContainer.getChildCount() > 1)
+        if (playerLevelsContainer.getChildCount() > 1) {
             playerLevelsContainer.removeViewsInLayout(1, playerLevelsContainer.getChildCount() - 1);
+        }
 
         for (int i = 0; i < playerCountList.size(); i++) {
             final int index = i;
@@ -441,13 +433,13 @@ public class EncounterBuilder extends Fragment {
                 Handler handler;
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null)
+                    if (handler != null) {
                         handler.removeCallbacks(null);
+                    }
                 }
 
                 @Override
