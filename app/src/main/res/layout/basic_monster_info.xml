@@ -119,9 +119,10 @@
             android:textSize="20dp"/>
 
         <EditText
-            android:layout_width="200dp"
+            android:layout_width="75dp"
             android:layout_height="wrap_content"
             android:hint="AC"
+            android:inputType="number"
             android:id="@+id/ac"/>
 
         <TextView
@@ -131,9 +132,10 @@
             android:textSize="20dp"/>
 
         <EditText
-            android:layout_width="200dp"
+            android:layout_width="75dp"
             android:layout_height="wrap_content"
             android:hint="Hit Points"
+            android:inputType="number"
             android:id="@+id/hit_points"/>
 
         <TextView
@@ -143,10 +145,23 @@
             android:textSize="20dp"/>
 
         <EditText
-            android:layout_width="320dp"
+            android:layout_width="400dp"
             android:layout_height="wrap_content"
             android:hint="Speed"
             android:id="@+id/speed"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bonus Initiative:"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:hint="Bonus"
+            android:inputType="number"
+            android:id="@+id/bonus_initiative"/>
     </LinearLayout>
 
 </LinearLayout>

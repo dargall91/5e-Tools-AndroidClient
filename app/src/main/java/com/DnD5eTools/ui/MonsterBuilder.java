@@ -24,12 +24,11 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.DnD5eTools.R;
+import com.DnD5eTools.entities.monster.Ability;
+import com.DnD5eTools.entities.monster.Action;
+import com.DnD5eTools.entities.monster.LegendaryAction;
 import com.DnD5eTools.interfaces.MonsterInterface;
 import com.DnD5eTools.models.projections.NameIdProjection;
-import com.DnD5eTools.monster.Ability;
-import com.DnD5eTools.monster.Action;
-import com.DnD5eTools.monster.LegendaryAction;
-import com.DnD5eTools.monster.Monster;
 import com.DnD5eTools.util.Util;
 
 import java.text.MessageFormat;
@@ -41,22 +40,17 @@ import java.util.stream.Collectors;
  * Tab for creating and editing Monsters.
  */
 public class MonsterBuilder extends Fragment {
-    private Monster[] oldMonster;
     private com.DnD5eTools.entities.monster.Monster monster;
     private List<NameIdProjection> monsterList;
     private List<String> monsterNameList = new ArrayList<>();
     private LayoutInflater inflater;
-    private ArrayList<Ability> abilityList;
-    private ArrayList<Action> actionList;
-    private ArrayList<LegendaryAction> legendaryList;
-    private LinearLayout abilities;
-    private LinearLayout actions;
-    private LinearLayout legActions;
+    private LinearLayout abilityLayout;
+    private LinearLayout actionLayout;
+    private LinearLayout legendaryActionLayout;
     private boolean expertise = false;
     private boolean proficiency = false;
     private View view;
     private final int DELAY = 250;
-    private final String ADD_MONSTER = "Add Monster";
     private CheckBox strSave, dexSave, conSave, intSave, wisSave, chaSave, athleticsProficiency, acrobaticsProficiency, sleightOfHandProficiency, stealthProficiency, arcanaProficiency, historyProficiency, investigationProficiency, natureProficiency,
             religionProficiency, animalHandlingProficiency, insightProficiency, medicineProficiency, perceptionProficiency, survivalProficiency, deceptionProficiency, intimidationProficiency, performanceProficiency, persuasionProficiency;
 
@@ -69,9 +63,9 @@ public class MonsterBuilder extends Fragment {
         view.setId(View.generateViewId());
         view.setTag("MonsterBuilder");
 
-        abilities = view.findViewById(R.id.monster_abilities_layout);
-        actions = view.findViewById(R.id.monster_actions_layout);
-        legActions = view.findViewById(R.id.monster_legendary_actions_layout);
+        abilityLayout = view.findViewById(R.id.monster_abilities_layout);
+        actionLayout = view.findViewById(R.id.monster_actions_layout);
+        legendaryActionLayout = view.findViewById(R.id.monster_legendary_actions_layout);
 
         return view;
     }
@@ -150,6 +144,7 @@ public class MonsterBuilder extends Fragment {
     private void initMonsterList() {
         //todo: make add monster/add encounter actual buttons, eliminates the need for monster list scoped to this class
         NameIdProjection addMonster = new NameIdProjection();
+        String ADD_MONSTER = "Add Monster";
         addMonster.setName(ADD_MONSTER);
         addMonster.setId(0);
 
@@ -171,9 +166,9 @@ public class MonsterBuilder extends Fragment {
         basicMonsterInfo();
         initMonsterStats();
         monsterSensesLanguagesCR();
-//        monsterAbilities();
-//        monsterActions();
-//        monsterLegendaryActions();
+        monsterAbilities();
+        monsterActions();
+        monsterLegendaryActions();
     }
 
     /**
@@ -374,12 +369,40 @@ public class MonsterBuilder extends Fragment {
             public void afterTextChanged(Editable s) {
                 handler = new Handler();
 
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        monster.setSpeed(speed.getText().toString());
-                        MonsterInterface.updateMonster(monster);
+                handler.postDelayed(() -> {
+                    monster.setSpeed(speed.getText().toString());
+                    MonsterInterface.updateMonster(monster);
+                }, DELAY);
+            }
+        });
+
+        EditText bonusInitiative = basicInfo.findViewById(R.id.bonus_initiative);
+        bonusInitiative.setText(Integer.toString(monster.getBonusInitiative()));
+        bonusInitiative.addTextChangedListener(new TextWatcher() {
+            Handler handler;
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (handler != null) {
+                    handler.removeCallbacks(null);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                handler = new Handler();
+
+                handler.postDelayed(() -> {
+                    if (bonusInitiative.getText().toString().isBlank()) {
+                        bonusInitiative.setText("0");
                     }
+
+                    monster.setBonusInitiative(Integer.parseInt(bonusInitiative.getText().toString()));
+                    MonsterInterface.updateMonster(monster);
                 }, DELAY);
             }
         });
@@ -1549,16 +1572,18 @@ public class MonsterBuilder extends Fragment {
     }
 
     public void monsterAbilities() {
-        if (abilities.getChildCount() > 1)
-            abilities.removeViewsInLayout(1, abilities.getChildCount() - 1);
+        if (abilityLayout.getChildCount() > 1) {
+            abilityLayout.removeViewsInLayout(1, abilityLayout.getChildCount() - 1);
+        }
 
-        abilities.requestLayout();
+        //required to complete clear view after deleting last action
+        abilityLayout.requestLayout();
 
-        abilityList = oldMonster[0].getAbilities();
+        List<Ability> abilityList = monster.getAbilities();
 
-        for (int i = 0; i < abilityList.size(); i++) {
+        for (int i = 0; i < monster.getAbilities().size(); i++) {
             final int index = i;
-            View abilityView = inflater.inflate(R.layout.monster_action_ability, abilities);
+            View abilityView = inflater.inflate(R.layout.monster_action_ability, abilityLayout);
 
             EditText name = abilityView.findViewById(R.id.name);
             name.setId(index);
@@ -1581,12 +1606,9 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable s) {
                     handler = new Handler();
 
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            abilityList.get(index).setName(name.getText().toString());
-                            oldMonster[0].renameAbility(abilityList.get(index).getName(), index);
-                        }
+                    handler.postDelayed(() -> {
+                        monster.getAbilities().get(index).setName(name.getText().toString());
+                        MonsterInterface.updateMonster(monster);
                     }, DELAY);
                 }
             });
@@ -1612,12 +1634,9 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable s) {
                     handler = new Handler();
 
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            abilityList.get(index).setDescription(desc.getText().toString());
-                            oldMonster[0].setAbilityDescription(abilityList.get(index).getDescription(), index);
-                        }
+                    handler.postDelayed(() -> {
+                        monster.getAbilities().get(index).setDescription(desc.getText().toString());
+                        MonsterInterface.updateMonster(monster);
                     }, DELAY);
                 }
             });
@@ -1625,36 +1644,32 @@ public class MonsterBuilder extends Fragment {
             Button delete = abilityView.findViewById(R.id.delete_ability_action);
             delete.setId(index);
             delete.setTag(index);
-            delete.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    oldMonster[0].deleteAbility(index);
-                    monsterAbilities();
-                }
+            delete.setOnClickListener(view -> {
+                MonsterInterface.deleteAbility(monster.getId(), monster.getAbilities().get(index).getId());
+                monster.getAbilities().remove(index);
+                monsterAbilities();
             });
         }
 
         Button add = view.findViewById(R.id.add_ability);
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                oldMonster[0].addAbility(new Ability());
-                monsterAbilities();
-            }
+        add.setOnClickListener(view -> {
+            monster.getAbilities().add(MonsterInterface.addAbility(monster.getId()));
+            monsterAbilities();
         });
     }
 
     public void monsterActions() {
-        if (actions.getChildCount() > 1)
-            actions.removeViewsInLayout(1, actions.getChildCount() - 1);
+        if (actionLayout.getChildCount() > 1) {
+            actionLayout.removeViewsInLayout(1, actionLayout.getChildCount() - 1);
+        }
 
-        actions.requestLayout();
+        actionLayout.requestLayout();
 
-        actionList = oldMonster[0].getActions();
+        List<Action> actionList = monster.getActions();
 
         for (int i = 0; i < actionList.size(); i++) {
             final int index = i;
-            View actionView = inflater.inflate(R.layout.monster_action_ability, actions);
+            View actionView = inflater.inflate(R.layout.monster_action_ability, actionLayout);
 
             EditText name = actionView.findViewById(R.id.name);
             name.setId(index);
@@ -1677,12 +1692,9 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable s) {
                     handler = new Handler();
 
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            actionList.get(index).setName(name.getText().toString());
-                            oldMonster[0].renameAction(actionList.get(index).getName(), index);
-                        }
+                    handler.postDelayed(() -> {
+                        monster.getActions().get(index).setName(name.getText().toString());
+                        MonsterInterface.updateMonster(monster);
                     }, DELAY);
                 }
             });
@@ -1708,12 +1720,9 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable s) {
                     handler = new Handler();
 
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            actionList.get(index).setDescription(desc.getText().toString());
-                            oldMonster[0].setActionDescription(actionList.get(index).getDescription(), index);
-                        }
+                    handler.postDelayed(() -> {
+                        monster.getActions().get(index).setDescription(desc.getText().toString());
+                        MonsterInterface.updateMonster(monster);
                     }, DELAY);
                 }
             });
@@ -1721,57 +1730,50 @@ public class MonsterBuilder extends Fragment {
             Button delete = actionView.findViewById(R.id.delete_ability_action);
             delete.setId(index);
             delete.setTag(index);
-            delete.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    oldMonster[0].deleteAction(index);
-                    monsterActions();
-                }
+            delete.setOnClickListener(view -> {
+                MonsterInterface.deleteAction(monster.getId(), monster.getActions().get(index).getId());
+                monster.getActions().remove(index);
+                monsterActions();
             });
         }
 
         Button add = view.findViewById(R.id.add_action);
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                oldMonster[0].addAction(new Action());
-                monsterActions();
-            }
+        add.setOnClickListener(view -> {
+            monster.getActions().add(MonsterInterface.addAction(monster.getId()));
+            monsterActions();
         });
     }
 
     public void monsterLegendaryActions() {
-        LinearLayout countLayout = legActions.findViewById(R.id.legendary_count_layout);
+        LinearLayout countLayout = legendaryActionLayout.findViewById(R.id.legendary_count_layout);
 
-        if (legActions.getChildCount() > 2)
-            legActions.removeViewsInLayout(2, legActions.getChildCount() - 2);
+        if (legendaryActionLayout.getChildCount() > 2) {
+            legendaryActionLayout.removeViewsInLayout(2, legendaryActionLayout.getChildCount() - 2);
+        }
 
-        legActions.requestLayout();
-
-        legendaryList = oldMonster[0].getLegendaryActions();
+        List<LegendaryAction> legendaryList = monster.getLegendaryActions();
 
         if (legendaryList.size() > 0) {
             countLayout.setVisibility(View.VISIBLE);
 
             Spinner actionCount = countLayout.findViewById(R.id.legendary_count_spinner);
-            actionCount.setSelection(oldMonster[0].getLegendaryActionCount());
+            actionCount.setSelection(monster.getLegendaryActionCount());
             actionCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    oldMonster[0].setLegendaryActionCount(actionCount.getSelectedItemPosition());
+                    monster.setLegendaryActionCount(actionCount.getSelectedItemPosition());
                 }
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) { }
             });
-        }
-
-        else
+        } else {
             countLayout.setVisibility(View.GONE);
+        }
 
         for (int i = 0; i < legendaryList.size(); i++) {
             final int index = i;
-            View legView = inflater.inflate(R.layout.monster_legendary_action, legActions);
+            View legView = inflater.inflate(R.layout.monster_legendary_action, legendaryActionLayout);
 
             EditText name = legView.findViewById(R.id.name);
             name.setId(index);
@@ -1794,12 +1796,9 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable s) {
                     handler = new Handler();
 
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            legendaryList.get(index).setName(name.getText().toString());
-                            oldMonster[0].renameLegendaryAction(legendaryList.get(index).getName(), index);
-                        }
+                    handler.postDelayed(() -> {
+                        monster.getLegendaryActions().get(index).setName(name.getText().toString());
+                        MonsterInterface.updateMonster(monster);
                     }, DELAY);
                 }
             });
@@ -1825,12 +1824,9 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable s) {
                     handler = new Handler();
 
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            legendaryList.get(index).setDescription(desc.getText().toString());
-                            oldMonster[0].setLegendaryDescription(legendaryList.get(index).getDescription(), index);
-                        }
+                    handler.postDelayed(() -> {
+                        monster.getLegendaryActions().get(index).setDescription(desc.getText().toString());
+                        MonsterInterface.updateMonster(monster);
                     }, DELAY);
                 }
             });
@@ -1842,8 +1838,8 @@ public class MonsterBuilder extends Fragment {
             cost.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    legendaryList.get(index).setCost(cost.getSelectedItemPosition());
-                    oldMonster[0].setLegendaryActionCost(legendaryList.get(index).getCost(), index);
+                    monster.getLegendaryActions().get(index).setCost(position);
+                    MonsterInterface.updateMonster(monster);
                 }
 
                 @Override
@@ -1853,23 +1849,18 @@ public class MonsterBuilder extends Fragment {
             Button delete = legView.findViewById(R.id.delete_ability_action);
             delete.setId(index);
             delete.setTag(index);
-            delete.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    oldMonster[0].deleteLegendaryAction(index);
-                    monsterLegendaryActions();
-                }
+            delete.setOnClickListener(v -> {
+                MonsterInterface.deleteLegendaryAction(monster.getId(), monster.getLegendaryActions().get(index).getId());
+                monster.getLegendaryActions().remove(index);
+                monsterLegendaryActions();
             });
         }
 
 
         Button add = view.findViewById(R.id.add_legendary_action);
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                oldMonster[0].addLegendaryAction(new LegendaryAction());
-                monsterLegendaryActions();
-            }
+        add.setOnClickListener(v -> {
+            monster.getLegendaryActions().add(MonsterInterface.addLegendaryAction(monster.getId()));
+            monsterLegendaryActions();
         });
     }
 
@@ -1944,36 +1935,6 @@ public class MonsterBuilder extends Fragment {
         updateIntelligenceProficiencies();
         updateWisdomProficiencies();
         updateCharismaProficiencies();
-
-//        updateSavingThrowText(strSave, STAT[0]);
-//        updateSkillProficiencyText(athleticsProficiency, STAT[0], getString(R.string.athletics));
-//
-//        updateSavingThrowText(dexSave, STAT[1]);
-//        updateSkillProficiencyText(acrobaticsProficiency, STAT[1], ACRO);
-//        updateSkillProficiencyText(sleightofHandProficiency, STAT[1], SLEIGHT);
-//        updateSkillProficiencyText(stealthProfiency, STAT[1], STEALTH);
-//
-//        updateSavingThrowText(conSave, STAT[2]);
-//
-//        updateSavingThrowText(intSave, STAT[3]);
-//        updateSkillProficiencyText(arcanaProficiency, STAT[3], ARCANA);
-//        updateSkillProficiencyText(historyProficiency, STAT[3], HISTORY);
-//        updateSkillProficiencyText(investigationProficiency, STAT[3], INV);
-//        updateSkillProficiencyText(natureProficiency, STAT[3], NATURE);
-//        updateSkillProficiencyText(religionProficiency, STAT[3], RELIGION);
-//
-//        updateSavingThrowText(wisSave, STAT[4]);
-//        updateSkillProficiencyText(animalHandlingProficiency, STAT[4], ANIMAL);
-//        updateSkillProficiencyText(insightProficiency, STAT[4], INSIGHT);
-//        updateSkillProficiencyText(medicineProfiency, STAT[4], MEDICINE);
-//        updateSkillProficiencyText(perceptionProficiency, STAT[4], PERCEPTION);
-//        updateSkillProficiencyText(survivalProficiency, STAT[4], SURVIVAL);
-//
-//        updateSavingThrowText(chaSave, STAT[5]);
-//        updateSkillProficiencyText(deceptionProficiency, STAT[5], DEC);
-//        updateSkillProficiencyText(intimidationProficiency, STAT[5], INTIM);
-//        updateSkillProficiencyText(performanceProficiency, STAT[5], PERF);
-//        updateSkillProficiencyText(persuasionProficiency, STAT[5], PERSUASION);
     }
 
     /**

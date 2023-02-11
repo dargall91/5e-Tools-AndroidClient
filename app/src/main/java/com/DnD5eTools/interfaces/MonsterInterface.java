@@ -1,6 +1,9 @@
 package com.DnD5eTools.interfaces;
 
+import com.DnD5eTools.entities.monster.Ability;
+import com.DnD5eTools.entities.monster.Action;
 import com.DnD5eTools.entities.monster.ChallengeRating;
+import com.DnD5eTools.entities.monster.LegendaryAction;
 import com.DnD5eTools.entities.monster.Monster;
 import com.DnD5eTools.models.projections.NameIdProjection;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,5 +39,29 @@ public class MonsterInterface extends AbstractInterface {
 
     public static List<ChallengeRating> getChallengeRatings() {
         return getListResult(new TypeReference<List<ChallengeRating>>() {}, path + "crList");
+    }
+
+    public static Ability addAbility(int monsterId) {
+        return putSingleResult(Ability.class, path + monsterId + "/addAbility", null);
+    }
+
+    public static Action addAction(int monsterId) {
+        return putSingleResult(Action.class, path + monsterId + "/addAction", null);
+    }
+
+    public static LegendaryAction addLegendaryAction(int monsterId) {
+        return putSingleResult(LegendaryAction.class, path + monsterId + "/addLegendaryAction", null);
+    }
+
+    public static void deleteAbility(int monsterId, int index) {
+        deleteNoResult(path + monsterId + "/abilities/" + index);
+    }
+
+    public static void deleteAction(int monsterId, int actionId) {
+        deleteNoResult(path + monsterId + "/actions/" + actionId);
+    }
+
+    public static void deleteLegendaryAction(int monsterId, int legendaryActionId) {
+        deleteNoResult(path + monsterId + "/legendaryActions/" + legendaryActionId);
     }
 }

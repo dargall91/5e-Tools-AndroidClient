@@ -261,8 +261,9 @@ public class EncounterBuilder extends Fragment {
         }
 
         //unload any previous entries
-        if (playerLevelsContainer.getChildCount() > 1)
+        if (playerLevelsContainer.getChildCount() > 1) {
             playerLevelsContainer.removeViewsInLayout(1, playerLevelsContainer.getChildCount() - 1);
+        }
 
         for (int i = 0; i < playerCountList.size(); i++) {
             final int index = i;
