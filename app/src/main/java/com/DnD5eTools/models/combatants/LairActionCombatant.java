@@ -15,7 +15,7 @@ public class LairActionCombatant extends Combatant {
 
     @Override
     public boolean isInvisible() {
-        return false;
+        return true;
     }
 
     @Override
@@ -37,9 +37,7 @@ public class LairActionCombatant extends Combatant {
     }
 
     @Override
-    public void setAc(int ac) {
-
-    }
+    public void setAc(int ac) { }
 
     @Override
     public int getAc() {
@@ -47,9 +45,7 @@ public class LairActionCombatant extends Combatant {
     }
 
     @Override
-    public void setHitPoints(int hitPoints) {
-
-    }
+    public void setHitPoints(int hitPoints) { }
 
     @Override
     public int getHitPoints() {
@@ -58,17 +54,29 @@ public class LairActionCombatant extends Combatant {
 
     @Override
     public boolean isAlive() {
+        return false;
+    }
+
+    @Override
+    public void kill() { }
+
+    @Override
+    public void revive() { }
+
+    @Override
+    public void setRemoved(boolean removed) { }
+
+    @Override
+    public boolean isRemoved() {
+        return false;
+    }
+
+    @Override
+    public void setExpanded(boolean expanded) { }
+
+    @Override
+    public boolean isExpanded() {
         return true;
-    }
-
-    @Override
-    public void kill() {
-
-    }
-
-    @Override
-    public void revive() {
-
     }
 
     @Override

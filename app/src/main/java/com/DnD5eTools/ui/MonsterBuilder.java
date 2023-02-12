@@ -143,10 +143,7 @@ public class MonsterBuilder extends Fragment {
      */
     private void initMonsterList() {
         //todo: make add monster/add encounter actual buttons, eliminates the need for monster list scoped to this class
-        NameIdProjection addMonster = new NameIdProjection();
-        String ADD_MONSTER = "Add Monster";
-        addMonster.setName(ADD_MONSTER);
-        addMonster.setId(0);
+        NameIdProjection addMonster = new NameIdProjection(0, "Add Monster");
 
         monsterList = new ArrayList<>();
         monsterList.add(addMonster);

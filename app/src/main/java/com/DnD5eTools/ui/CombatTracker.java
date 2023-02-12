@@ -2,6 +2,7 @@ package com.DnD5eTools.ui;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Typeface;
@@ -32,11 +33,13 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.DnD5eTools.R;
-import com.DnD5eTools.client.DNDClientProxy;
 import com.DnD5eTools.entities.Music;
 import com.DnD5eTools.entities.PlayerCharacter;
 import com.DnD5eTools.entities.encounter.EncounterMonster;
+import com.DnD5eTools.entities.monster.Monster;
+import com.DnD5eTools.interfaces.CombatInterface;
 import com.DnD5eTools.interfaces.EncounterInterface;
+import com.DnD5eTools.interfaces.MonsterInterface;
 import com.DnD5eTools.interfaces.MusicInterface;
 import com.DnD5eTools.interfaces.PlayerInterface;
 import com.DnD5eTools.models.combatants.Combatant;
@@ -44,15 +47,12 @@ import com.DnD5eTools.models.combatants.LairActionCombatant;
 import com.DnD5eTools.models.combatants.MonsterCombatant;
 import com.DnD5eTools.models.combatants.PlayerCombatant;
 import com.DnD5eTools.models.projections.NameIdProjection;
-import com.DnD5eTools.monster.Monster;
 import com.DnD5eTools.util.Util;
-
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -70,10 +70,8 @@ import java.util.stream.Collectors;
  * to the list of players.
  */
 public class CombatTracker extends Fragment {
-    private DNDClientProxy proxy;
     private List<PlayerCharacter> playerList;
     private List<Combatant> combatantList = new ArrayList<>();
-    private List<String> serverCombatantList = new ArrayList<>();
     private List<Music> musicList;
     private View view;
     private LayoutInflater inflater;
@@ -105,7 +103,6 @@ public class CombatTracker extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         this.inflater = inflater;
-        proxy = MainActivity.getProxy();
 
         view = inflater.inflate(R.layout.combat_tracker_layout, container, false);
         view.setTag("CombatTracker");
@@ -145,7 +142,10 @@ public class CombatTracker extends Fragment {
             isCombatant.setChecked(false);
             isCombatant.setTag(index);
 
-            isCombatant.setOnCheckedChangeListener((buttonView, isChecked) -> playerList.get(index).setCombatant(isChecked));
+            isCombatant.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                playerList.get(index).setCombatant(isChecked);
+                PlayerInterface.updatePlayer(playerList.get(index));
+            });
 
             //index of ac = ac - 1
             Spinner ac = playerView.findViewById(R.id.ac_spinner);
@@ -296,7 +296,7 @@ public class CombatTracker extends Fragment {
                             initializeCombatantList();
                             combatView();
                         })
-                        .setPositiveButton("No", null)
+                        .setNegativeButton("No", null)
                         .show();
             }
         });
@@ -325,99 +325,140 @@ public class CombatTracker extends Fragment {
             combatantList.add(new MonsterCombatant(monster));
         }
 
-        weighInitialCombatants();
+        sortInitialCombatantList();
+    }
 
-        //split monster combatant groups into separate combatants
-        //weighing first ensures that tie breakers for groups can be resolved as a group instead of individually
+    /**
+     * Expands any groups that contain more than one monster into separate combatants, if that group is not a
+     * reinforcement and if it has not already been expanded
+     */
+    private void expandGroups() {
         for (int i = 0; i < combatantList.size(); i++) {
-            if (combatantList.get(i).getQuantity() > 1 && !combatantList.get(i).isReinforcement()) {
-                for (int j = 0; j < combatantList.get(i).getQuantity(); j++) {
-                    combatantList.add(i, combatantList.get(i));
+            if (combatantList.get(i).getQuantity() > 1 && !combatantList.get(i).isReinforcement() && !combatantList.get(i).isExpanded()) {
+                combatantList.get(i).setExpanded(true);
+                for (int j = 0; j < combatantList.get(i).getQuantity() - 1; j++) {
+                    combatantList.add(i, new MonsterCombatant((MonsterCombatant) combatantList.get(i)));
                 }
+
+                //skip past added monsters
+//                i += combatantList.get(i).getQuantity();
             }
         }
     }
 
     /**
-     * Weighing determines turn order; weight is the number of combatants with a higher initiative
+     * Weighs combatants then sorts them by initiative. Absolute ties are broken via user input
+     * Should only called once at the beginning of combat and before reinforcements are expanded
      */
-    private void weighInitialCombatants() {
+    private void sortInitialCombatantList() {
         for (int leftCombatant = 0; leftCombatant < combatantList.size() - 1; leftCombatant++) {
             for (int rightCombatant = leftCombatant + 1; rightCombatant < combatantList.size(); rightCombatant++) {
                 boolean tied = combatantList.get(leftCombatant).weighAndGetTied(combatantList.get(rightCombatant));
 
                 //if tied, run tie breaker alert
                 if (tied) {
-                    @SuppressLint("HandlerLeak") final Handler handler = new Handler() {
-                        @Override
-                        public void handleMessage(Message mesg)
-                        {
-                            throw new RuntimeException();
-                        }
-                    };
-
-                    View tieView = inflater.inflate(R.layout.tie_breaker_layout, null);
-                    TextView textOne = tieView.findViewById(R.id.combatant_1);
-                    textOne.setText(combatantList.get(leftCombatant).getName());
-                    TextView textTwo = tieView.findViewById(R.id.combatant_2);
-                    textTwo.setText(combatantList.get(rightCombatant).getName());
-                    Spinner spinOne = tieView.findViewById(R.id.tie_1);
-                    spinOne.setSelection(combatantList.get(leftCombatant).getTieBreaker());
-                    Spinner spinTwo = tieView.findViewById(R.id.tie_2);
-                    spinTwo.setSelection(combatantList.get(rightCombatant).getTieBreaker());
-
-                    final AlertDialog.Builder tieBreaker = new AlertDialog.Builder(getContext());
-                    tieBreaker.setTitle("Tie Breaker")
-                            .setView(tieView)
-                            .setCancelable(false)
-                            .setPositiveButton("OK", null);
-
-                    AlertDialog alert = tieBreaker.create();
-                    int leftCombatantIndex = leftCombatant;
-                    int rightCombatantIndex = rightCombatant;
-                    alert.setOnShowListener(dialog -> {
-                        Button button = alert.getButton(AlertDialog.BUTTON_POSITIVE);
-                        button.setOnClickListener(view -> {
-                            if (!spinOne.getSelectedItem().equals(spinTwo.getSelectedItem()) &&
-                                    !spinOne.getSelectedItem().equals("0") && !spinTwo.getSelectedItem().equals("0")) {
-                                combatantList.get(leftCombatantIndex).
-                                        setTieBreaker(Integer.parseInt((String) spinOne.getSelectedItem()));
-                                combatantList.get(rightCombatantIndex).
-                                        setTieBreaker(Integer.parseInt((String) spinTwo.getSelectedItem()));
-                                combatantList.get(leftCombatantIndex).
-                                        weighAndGetTied(combatantList.get(rightCombatantIndex));
-                                handler.sendMessage(handler.obtainMessage());
-                                alert.dismiss();
-                            }
-                        });
-                    });
-
-                    alert.show();
-
-                    try {
-                        Looper.loop();
-                    } catch(RuntimeException e) { }
+                    resolveTie(combatantList.get(leftCombatant), combatantList.get(rightCombatant));
                 }
             }
         }
+
+        Collections.sort(combatantList);
+        expandGroups();
+    }
+
+    private void sortNewReinforcement() {
+        //new reinforcement is at end of list by default, weigh all others against it
+        int newCombatant = combatantList.size() - 1;
+
+        for (int i = 0; i < newCombatant; i++) {
+            boolean tied = combatantList.get(i).weighAndGetTied(combatantList.get(newCombatant));
+
+            if (tied) {
+                resolveTie(combatantList.get(i), combatantList.get(newCombatant));
+            }
+
+            //combatant i should already be expanded, so if quantity > 1 then must update all of the
+            //expanded monsters tie breaker values and weights
+            for (int j = 1; j < combatantList.get(i).getQuantity(); j++) {
+                combatantList.get(i + j).setTieBreaker(combatantList.get(i).getTieBreaker());
+                combatantList.get(i + j).setWeight(combatantList.get(i).getWeight());
+            }
+
+            //after updating them, skip past the expanded monsters
+            i += combatantList.get(i).getQuantity() - 1;
+        }
+
+        Collections.sort(combatantList);
+    }
+
+    /**
+     * Resolves a tie between two combatants
+     * @param leftCombatant The combatant to display on the left side of the dialog
+     * @param rightCombatant The combatant to display on the right side of the dialog
+     */
+    private void resolveTie(Combatant leftCombatant, Combatant rightCombatant) {
+        @SuppressLint("HandlerLeak") final Handler handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                throw new RuntimeException();
+            }
+        };
+
+        View tieView = inflater.inflate(R.layout.tie_breaker_layout, null);
+        TextView leftName = tieView.findViewById(R.id.left_name);
+        leftName.setText(leftCombatant.getName());
+        TextView rightName = tieView.findViewById(R.id.right_name);
+        rightName.setText(rightCombatant.getName());
+        Spinner leftSpinner = tieView.findViewById(R.id.left_spinner);
+        leftSpinner.setSelection(leftCombatant.getTieBreaker());
+        Spinner rightSpinner = tieView.findViewById(R.id.right_spinner);
+        rightSpinner.setSelection(rightCombatant.getTieBreaker());
+
+        final AlertDialog.Builder tieBreaker = new AlertDialog.Builder(getContext());
+        tieBreaker.setTitle("Tie Breaker")
+                .setView(tieView)
+                .setCancelable(false)
+                .setPositiveButton("OK", null);
+
+        AlertDialog alert = tieBreaker.create();
+        alert.setOnShowListener(dialog -> {
+            Button button = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+            button.setOnClickListener(view -> {
+                if (!leftSpinner.getSelectedItem().equals(rightSpinner.getSelectedItem()) &&
+                        !leftSpinner.getSelectedItem().equals("0") && !rightSpinner.getSelectedItem().equals("0")) {
+                    leftCombatant.setTieBreaker(Integer.parseInt((String) leftSpinner.getSelectedItem()));
+                    rightCombatant.setTieBreaker(Integer.parseInt((String) rightSpinner.getSelectedItem()));
+                    leftCombatant.weighAndGetTied(rightCombatant);
+                    handler.sendMessage(handler.obtainMessage());
+                    alert.dismiss();
+                }
+            });
+        });
+
+        alert.show();
+
+        try {
+            Looper.loop();
+        } catch(RuntimeException e) { }
     }
 
     /**
      * Thew view for the combat
      */
     private void combatView() {
+        CombatInterface.updateCombatantList(combatantList);
         leftView.removeAllViewsInLayout();
 
         //used for ids and tags of view elements
         int tag_counter = 1;
 
         for (Combatant combatant : combatantList) {
-            if (combatant.isReinforcement()) {
+            //do not display reinforcements or removed combatants
+            if (combatant.isReinforcement() || combatant.isRemoved()) {
                 continue;
             }
 
 //            final int index = 1;
-
             int tag = tag_counter * 10;// + index;
 
             View combatantView = inflater.inflate(R.layout.combatant_layout, leftView);
@@ -432,6 +473,8 @@ public class CombatTracker extends Fragment {
             name.setTag(tag);
             tag++;
 
+            //todo: was it ever necessary to set tags on labels? is it for anything else now that things have been
+            // updated?
             TextView ac_label = combatantView.findViewById(R.id.ac_label);
             ac_label.setId(tag);
             ac_label.setTag(tag);
@@ -462,7 +505,7 @@ public class CombatTracker extends Fragment {
 
             initiative.setText(Integer.toString(combatant.getInitiative()));
             name.setText(combatant.getName());
-            ac_text.setText(combatant.getAc());
+            ac_text.setText(Integer.toString(combatant.getAc()));
             ac_text.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -481,6 +524,9 @@ public class CombatTracker extends Fragment {
             if (combatant.isLairAction()) {
                 ac_label.setVisibility(View.INVISIBLE);
                 ac_text.setVisibility(View.INVISIBLE);
+                hp_label.setVisibility(View.INVISIBLE);
+                hp_text.setVisibility(View.INVISIBLE);
+                kill.setVisibility(View.INVISIBLE);
                 name.setTextSize(22);
                 name.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
             } else if (!combatant.isMonster()) {
@@ -488,7 +534,8 @@ public class CombatTracker extends Fragment {
                 hp_text.setVisibility(View.INVISIBLE);
                 kill.setVisibility(View.INVISIBLE);
             } else {
-                hp_text.setText(combatant.getHitPoints());
+                remove.setVisibility(View.VISIBLE);
+                hp_text.setText(Integer.toString(combatant.getHitPoints()));
                 hp_text.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -524,8 +571,6 @@ public class CombatTracker extends Fragment {
                         kill.setText("Revive");
 
                         playSound(MONSTER_KILL, "OTHER");
-
-                        remove.setVisibility(View.VISIBLE);
                     } else {
                         combatant.revive();
                         kill.setText("Kill");
@@ -536,48 +581,11 @@ public class CombatTracker extends Fragment {
                     hp_text.setEnabled(combatant.isAlive());
 
                     //update server combat screen
-                    JSONArray combatArray = new JSONArray();
-
-                    for (Combatant c : combatantList) {
-                        for (int i = 0; i < c.getQuantity(); i++) {
-                            //only show something on server screen if it's not a monster,
-                            //it's alive, and its not invisible
-                            if (!c.isReinforcement() && c.isAlive() && !c.isInvisible()) {
-                                try {
-                                    combatArray.put(c.toSimpleJson());
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }
-
-                    Thread innerThread = new Thread(() -> {
-                        try {
-                            proxy.updateCombat(combatArray);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    });
-
-                    innerThread.start();
-
-                    try {
-                        innerThread.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    CombatInterface.updateCombatantList(combatantList);
                 });
 
                 remove.setOnClickListener(view -> {
-                    //if there's only 1 of this monster, get rid of it
-                    //otherwise only remove one of this specific monster instance
-                    if (combatant.getQuantity() == 1) {
-                        combatantList.remove(combatant);
-                    } else {
-                        combatant.remove(index);
-                    }
-
+                    combatant.setRemoved(true);
                     combatView();
                 });
             }
@@ -599,7 +607,7 @@ public class CombatTracker extends Fragment {
                     initiative.setId(View.generateViewId());
 
                     TextView monName = innerLayout.findViewById(R.id.reinforcement_name);
-                    monName.setText(combatant.getName() + " x" + combatant.getQuantity());
+                    monName.setText(MessageFormat.format("{0} x{1}", combatant.getName(), combatant.getQuantity()));
                     monName.setId(View.generateViewId());
 
                     CheckBox check = innerLayout.findViewById(R.id.reinforcement_checkbox);
@@ -611,145 +619,62 @@ public class CombatTracker extends Fragment {
                 }
             }
 
-            final AlertDialog.Builder reinDialog = new AlertDialog.Builder(getContext());
-            reinDialog.setTitle("Add Reinforcements");
-            reinDialog.setView(reinLayout);
-            reinDialog.setCancelable(false);
-            reinDialog.setPositiveButton("Done", (dialog, which) -> {
-                JSONArray combatArray = new JSONArray();
-                for (Combatant i : combatantList)
-                    for (int j = 0; j < i.getQuantity(); j++)
-                        if (!i.isReinforcement() && i.isAlive(j) && !i.isInvisible(j)) {
-                            try {
-                                combatArray.put(i.toSimpleJson());
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                Thread innerThread = new Thread(() -> {
-                    try {
-                        proxy.updateCombat(combatArray);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                });
-
-                innerThread.start();
-
-                try {
-                    innerThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
+            final AlertDialog.Builder reinforcementDialog = new AlertDialog.Builder(getContext());
+            reinforcementDialog.setTitle("Add Reinforcements");
+            reinforcementDialog.setView(reinLayout);
+            reinforcementDialog.setCancelable(false);
+            reinforcementDialog.setPositiveButton("Done", (dialog, which) -> {
+                expandGroups();
                 combatView();
             });
 
-            AlertDialog alert = reinDialog.create();
+            AlertDialog alert = reinforcementDialog.create();
             alert.show();
         });
 
         Button newRein = combatButtons.findViewById(R.id.new_reinforcements_button);
         newRein.setOnClickListener(view -> {
-            final ArrayList<String>[] monList = new ArrayList[]{new ArrayList<String>()};
-            Thread thread = new Thread(() -> {
-                try {
-                    monList[0] = proxy.getMonsterList();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            });
-
-            thread.start();
-
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            View outsideReinLayout = inflater.inflate(R.layout.outside_reinforcement_layout, null);
-            AutoCompleteTextView monName = outsideReinLayout.findViewById(R.id.monster_text);
+            View outsideReinforcementLayout = inflater.inflate(R.layout.outside_reinforcement_layout, null);
+            AutoCompleteTextView monName = outsideReinforcementLayout.findViewById(R.id.monster_text);
             ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
-                    android.R.layout.simple_dropdown_item_1line, monList[0]);
+                    android.R.layout.simple_dropdown_item_1line, Util.getMonsterNameList());
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             monName.setAdapter(adapter);
-
             monName.setOnClickListener(v -> monName.showDropDown());
+            TextView invalidName = outsideReinforcementLayout.findViewById(R.id.invalid_name);
 
-            Spinner quantity = outsideReinLayout.findViewById(R.id.quantity_spinner);
-            Spinner initiative = outsideReinLayout.findViewById(R.id.init_roll_spinner);
+            Spinner quantity = outsideReinforcementLayout.findViewById(R.id.quantity_spinner);
+            Spinner initiative = outsideReinforcementLayout.findViewById(R.id.init_roll_spinner);
 
-            final AlertDialog.Builder outsideRein = new AlertDialog.Builder(getContext());
-            outsideRein.setTitle("Add Reinforcements");
-            outsideRein.setView(outsideReinLayout);
-            outsideRein.setNegativeButton("Cancel", null);
-            outsideRein.setPositiveButton("OK", (dialog, which) -> {
-                //check that a name was entered, return if not
-                if (monName.getText().toString().equals(""))
-                    return;
+            final AlertDialog.Builder outsideReinforcementsDialog = new AlertDialog.Builder(getContext());
+            outsideReinforcementsDialog.setTitle("Add Reinforcements");
+            outsideReinforcementsDialog.setView(outsideReinforcementLayout);
+            outsideReinforcementsDialog.setNegativeButton("Cancel", null);
+            outsideReinforcementsDialog.setPositiveButton("OK", null);
 
-                Monster[] monster = new Monster[1];
-
-                Thread innerThread = new Thread(() -> {
-                    try {
-                        monster[0] = proxy.getMonster(monName.getText().toString());
-                    } catch (JSONException e) {
-                        //TODO: If this exception is thrown because of an invalid name, what happens? Should probably make it check that the monster exists here or just return
-                        e.printStackTrace();
+            AlertDialog alert = outsideReinforcementsDialog.create();
+            alert.setOnShowListener(dialogInterface -> {
+                Button ok = alert.getButton(DialogInterface.BUTTON_POSITIVE);
+                ok.setOnClickListener(v -> {
+                    String name = monName.getText().toString();
+                    if (!Util.getMonsterNameList().contains(name)) {
+                        invalidName.setVisibility(View.VISIBLE);
+                        return;
                     }
+
+                    int index = Util.getMonsterNameList().indexOf(name);
+                    Monster monster = MonsterInterface.getMonster(Util.getMonsterList().get(index).getId());
+                    EncounterMonster encounterMonster = new EncounterMonster(monster,
+                            quantity.getSelectedItemPosition() + 1, initiative.getSelectedItemPosition() + 1);
+                    Combatant newCombatant = new MonsterCombatant(encounterMonster);
+                    combatantList.add(newCombatant);
+
+                    alert.dismiss();
+                    sortNewReinforcement();
+                    expandGroups();
+                    combatView();
                 });
-
-                innerThread.start();
-
-                try {
-                    innerThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                combatantList.add(new Combatant(monster[0], Integer.parseInt((String) quantity.getSelectedItem()), Integer.parseInt((String) initiative.getSelectedItem())));
-                System.out.println(combatantList.get(combatantList.size() - 1).getName());
-
-                for (Combatant i : combatantList)
-                    i.reset();
-
-                weighInitialCombatants();
-
-                combatantList.sort(Collections.reverseOrder());
-                JSONArray combatArray = new JSONArray();
-                for (Combatant i : combatantList)
-                    for (int j = 0; j < i.getQuantity(); j++)
-                        if (!i.isReinforcement() && i.isAlive(j) && !i.isInvisible(j)) {
-                            try {
-                                System.out.println(i.getName());
-                                combatArray.put(i.toSimpleJson());
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                innerThread = new Thread(() -> {
-                    try {
-                        proxy.updateCombat(combatArray);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                });
-
-                innerThread.start();
-
-                try {
-                    innerThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                combatView();
             });
-
-            AlertDialog alert = outsideRein.create();
             alert.show();
         });
 
@@ -759,26 +684,8 @@ public class CombatTracker extends Fragment {
             final AlertDialog.Builder finishEnc = new AlertDialog.Builder(getContext());
             finishEnc.setTitle("End the Encounter?");
             finishEnc.setPositiveButton("Finish", (dialog, which) -> {
-                Thread innerThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            proxy.endCombat();
-                            proxy.stopMusic();
-                        } catch (Exception e) {
-                            Log.i("Combat", e.getMessage());
-                        }
-                    }
-                });
-
-                innerThread.start();
-
-                try {
-                    innerThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
+                MusicInterface.stopMusic();
+                CombatInterface.endCombat();
                 leftView.removeAllViewsInLayout();
                 preCombatView();
             });
@@ -795,21 +702,7 @@ public class CombatTracker extends Fragment {
             final AlertDialog.Builder finishEnc = new AlertDialog.Builder(getContext());
             finishEnc.setTitle("End the Encounter?");
             finishEnc.setPositiveButton("Finish", (dialog, which) -> {
-                Thread innerThread = new Thread(() -> {
-                    try {
-                        proxy.endCombat();
-                    } catch (Exception e) {
-                        Log.i("Combat", e.getMessage());
-                    }
-                });
-
-                innerThread.start();
-
-                try {
-                    innerThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                CombatInterface.endCombat();
 
                 leftView.removeAllViewsInLayout();
                 preCombatView();
@@ -896,19 +789,16 @@ public class CombatTracker extends Fragment {
 
         Button pause = musicPlayer.findViewById(R.id.pause);
         pause.setOnClickListener(view -> {
-            //todo: confirm
             MusicInterface.pauseMusic();
         });
 
         Button play = musicPlayer.findViewById(R.id.play);
         play.setOnClickListener(view -> {
-            //todo: confirm works
             MusicInterface.playMusic(musicList.get(title.getSelectedItemPosition()).getId());
         });
 
         Button stop = musicPlayer.findViewById(R.id.stop);
         stop.setOnClickListener(view -> {
-            //todo: confirm
             MusicInterface.stopMusic();
         });
     }

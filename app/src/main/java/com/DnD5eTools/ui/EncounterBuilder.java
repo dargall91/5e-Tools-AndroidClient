@@ -26,7 +26,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.DnD5eTools.R;
-import com.DnD5eTools.client.DNDClientProxy;
 import com.DnD5eTools.entities.Music;
 import com.DnD5eTools.entities.encounter.Encounter;
 import com.DnD5eTools.entities.encounter.EncounterMonster;
@@ -56,7 +55,6 @@ public class EncounterBuilder extends Fragment {
     private View view;
     private LinearLayout playerLevelsContainer;
     private LinearLayout monstersContainer;
-    private final String ADD_ENCOUNTER = "Add Encounter";
     private List<Integer> playerCountList;
     private List<Integer> playerLevelList;
     private List<XpThresholds> xpThresholdsList;
@@ -168,9 +166,7 @@ public class EncounterBuilder extends Fragment {
      */
     private void initEncounterList() {
         //setup add encounter
-        NameIdProjection addEncounter = new NameIdProjection();
-        addEncounter.setName(ADD_ENCOUNTER);
-        addEncounter.setId(0);
+        NameIdProjection addEncounter = new NameIdProjection(0, "Add Encounter");
 
         encounterList = new ArrayList<>();
         encounterList.add(addEncounter);
@@ -530,14 +526,14 @@ public class EncounterBuilder extends Fragment {
 
         inflater.inflate(R.layout.add_monster_in_encounter_button, monstersContainer);
         Button add = view.findViewById(R.id.add_monster_to_encounter);
-        add.setOnClickListener(v -> {
+        add.setOnClickListener(view -> {
             View addMonster = inflater.inflate(R.layout.add_monster_in_encounter_layout, null);
             AutoCompleteTextView monName = addMonster.findViewById(R.id.monster_text);
             ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
                     android.R.layout.simple_dropdown_item_1line, Util.getMonsterNameList());
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             monName.setAdapter(adapter);
-            monName.setOnClickListener(view -> monName.showDropDown());
+            monName.setOnClickListener(v -> monName.showDropDown());
             TextView invalidName = addMonster.findViewById(R.id.invalid_name);
 
             final AlertDialog.Builder addMonDialog = new AlertDialog.Builder(getContext());
@@ -549,7 +545,7 @@ public class EncounterBuilder extends Fragment {
             AlertDialog alert = addMonDialog.create();
             alert.setOnShowListener(dialogInterface -> {
                 Button ok = alert.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
-                ok.setOnClickListener(view -> {
+                ok.setOnClickListener(v -> {
                     String name = monName.getText().toString();
 
                     if (!Util.getMonsterNameList().contains(name)) {

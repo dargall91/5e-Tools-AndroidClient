@@ -9,16 +9,34 @@ public class MonsterCombatant extends Combatant {
     private int ac;
     private int hitPoints;
     private boolean alive;
+    private boolean removed;
+    boolean expanded;
 
     public MonsterCombatant(EncounterMonster monster) {
         setName(monster.getMonster().getDisplayName());
-        setInitiative(monster.getInitiative() + monster.getMonster().getBonusInitiative());
-        setInitiativeBonus(monster.getMonster().getBonusInitiative());
+        setInitiative(monster.getInitiative() + monster.getMonster().getTotalInitiativeBonus());
+        setInitiativeBonus(monster.getMonster().getTotalInitiativeBonus());
         invisible = monster.isInvisible();
         reinforcement = monster.isReinforcement();
         quantity = monster.getQuantity();
         ac = monster.getMonster().getArmorClass();
         hitPoints = monster.getMonster().getHitPoints();
+        alive = true;
+        expanded = quantity == 1;
+    }
+
+    public MonsterCombatant(MonsterCombatant combatant) {
+        setName(combatant.getName());
+        setInitiative(combatant.getInitiative());
+        setInitiativeBonus(combatant.getInitiativeBonus());
+        invisible = combatant.isInvisible();
+        reinforcement = combatant.isReinforcement();
+        quantity = combatant.getQuantity();
+        ac = combatant.getAc();
+        hitPoints = combatant.getHitPoints();
+        alive = true;
+        expanded = true;
+        setWeight(combatant.getWeight());
     }
 
     @Override
@@ -89,5 +107,31 @@ public class MonsterCombatant extends Combatant {
     @Override
     public void revive() {
         alive = true;
+    }
+
+    @Override
+    public void setRemoved(boolean removed) {
+        //remove combatants cannot return
+        if (this.removed) {
+            return;
+        }
+
+        alive = false;
+        this.removed = removed;
+    }
+
+    @Override
+    public boolean isRemoved() {
+        return removed;
+    }
+
+    @Override
+    public void setExpanded(boolean expanded) {
+        this.expanded = expanded;
+    }
+
+    @Override
+    public boolean isExpanded() {
+        return expanded;
     }
 }

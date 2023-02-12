@@ -1,12 +1,9 @@
 package com.DnD5eTools.ui;
 
-import android.app.FragmentTransaction;
-import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
 
 import com.DnD5eTools.R;
-import com.DnD5eTools.client.DNDClientProxy;
 
 import com.DnD5eTools.models.ServerConnection;
 import com.DnD5eTools.util.Util;
@@ -33,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private static DNDClientProxy proxy;
     SectionsPagerAdapter sectionsPagerAdapter;
 
     @Override
@@ -172,10 +168,6 @@ public class MainActivity extends AppCompatActivity {
         sectionsPagerAdapter.getCombatTracker().initViews();
         sectionsPagerAdapter.getMonsterBuilder().initViews();
         sectionsPagerAdapter.getEncounterBuilder().initViews();
-    }
-
-    public static DNDClientProxy getProxy() {
-        return proxy;
     }
 
     private List<ServerConnection> getServerConnections() {

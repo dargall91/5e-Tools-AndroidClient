@@ -7,8 +7,6 @@ public abstract class Combatant implements Comparable<Combatant> {
     private int weight;
     private int tieBreaker;
 
-    //TODO: have monsters pre-roll tie breakers
-
     public abstract boolean isReinforcement();
     public abstract void setReinforcement(boolean reinforcement);
     public abstract boolean isInvisible();
@@ -23,6 +21,10 @@ public abstract class Combatant implements Comparable<Combatant> {
     public abstract boolean isAlive();
     public abstract void kill();
     public abstract void revive();
+    public abstract void setRemoved(boolean removed);
+    public abstract boolean isRemoved();
+    public abstract void setExpanded(boolean expanded);
+    public abstract boolean isExpanded();
 
     public String getName() {
         return name;
@@ -56,32 +58,37 @@ public abstract class Combatant implements Comparable<Combatant> {
         weight++;
     }
 
+    public void setWeight(int weight) {
+        this.weight = weight;
+    }
+
     /**
-     * Weighs this combatant against another combatant and determines if its a tie
+     * Weighs this combatant against another combatant and determines if its a tie. Increases the weight of the
+     * combatant with the lower initiative
      * @param combatant
      * @return true if these combatants are tied, false if they are not
      */
     public boolean weighAndGetTied(Combatant combatant) {
         int initiativeCompare = Integer.compare(initiative, combatant.getInitiative());
 
-        if (initiativeCompare > 0) {
+        if (initiativeCompare < 0) {
             increaseWeight();
             return false;
         }
 
-        if (initiativeCompare < 0) {
+        if (initiativeCompare > 0) {
             combatant.increaseWeight();
             return false;
         }
 
         int bonusCompare = Integer.compare(initiativeBonus, combatant.getInitiativeBonus());
 
-        if (bonusCompare > 0) {
+        if (bonusCompare < 0) {
             increaseWeight();
             return false;
         }
 
-        if (bonusCompare < 0) {
+        if (bonusCompare > 0) {
             combatant.increaseWeight();
             return false;
         }
@@ -93,12 +100,12 @@ public abstract class Combatant implements Comparable<Combatant> {
 
         int tieBreakerCompare = Integer.compare(getTieBreaker(), combatant.getTieBreaker());
 
-        if (tieBreakerCompare > 0) {
+        if (tieBreakerCompare < 0) {
             increaseWeight();
             return false;
         }
 
-        if (tieBreakerCompare < 0) {
+        if (tieBreakerCompare > 0) {
             combatant.increaseWeight();
             return false;
         }
