@@ -26,7 +26,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.DnD5eTools.R;
-import com.DnD5eTools.client.DNDClientProxy;
 import com.DnD5eTools.entities.Music;
 import com.DnD5eTools.entities.encounter.Encounter;
 import com.DnD5eTools.entities.encounter.EncounterMonster;
@@ -56,7 +55,6 @@ public class EncounterBuilder extends Fragment {
     private View view;
     private LinearLayout playerLevelsContainer;
     private LinearLayout monstersContainer;
-    private final String ADD_ENCOUNTER = "Add Encounter";
     private List<Integer> playerCountList;
     private List<Integer> playerLevelList;
     private List<XpThresholds> xpThresholdsList;
@@ -155,9 +153,7 @@ public class EncounterBuilder extends Fragment {
                 return;
             }
 
-            //update encounter on server, get new encounter, display in builder
-            //todo: is it necessary to update? should be updating on every action now
-            EncounterInterface.updateEncounter(encounter);
+            //get new encounter, display in builder
             encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
             builderView();
         });
@@ -168,9 +164,7 @@ public class EncounterBuilder extends Fragment {
      */
     private void initEncounterList() {
         //setup add encounter
-        NameIdProjection addEncounter = new NameIdProjection();
-        addEncounter.setName(ADD_ENCOUNTER);
-        addEncounter.setId(0);
+        NameIdProjection addEncounter = new NameIdProjection(0, "Add Encounter");
 
         encounterList = new ArrayList<>();
         encounterList.add(addEncounter);
@@ -197,24 +191,20 @@ public class EncounterBuilder extends Fragment {
         View nameView = view.findViewById(R.id.encounter_name_buttons_layout);
         TextView name = nameView.findViewById(R.id.name);
         name.setText(encounter.getName());
-        //todo: can probably get rid of this button because update endpoint saves
-        Button save = nameView.findViewById(R.id.save);
-        save.setOnClickListener(view -> {
-            EncounterInterface.updateEncounter(encounter);
-        });
 
         Button archive = nameView.findViewById(R.id.archive);
         archive.setOnClickListener(view -> new AlertDialog.Builder(getContext())
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Delete Encounter")
-                .setMessage("Delete " + encounter.getName() + "?")
+                .setTitle("Archive Encounter")
+                .setMessage("Archive " + encounter.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     EncounterInterface.archiveEncounter(encounter.getId());
                     encounterListView(true);
                     builderView();
                 })
                 .setNegativeButton("No", null)
-                .show());
+                .show()
+        );
 
         Button rename = nameView.findViewById(R.id.rename);
         rename.setOnClickListener(view -> {
@@ -245,9 +235,7 @@ public class EncounterBuilder extends Fragment {
         });
 
         Button load = nameView.findViewById(R.id.load);
-        load.setOnClickListener(view -> {
-            Util.loadEncounter(encounter);
-        });
+        load.setOnClickListener(view -> Util.loadEncounter(encounter));
     }
 
     private void playerLevelsView() {
@@ -385,7 +373,7 @@ public class EncounterBuilder extends Fragment {
     }
 
     private void musicLairActionView() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, musicNameList);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, musicNameList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         View musicLairView = view.findViewById(R.id.encounter_music_lair_layout);
@@ -412,8 +400,9 @@ public class EncounterBuilder extends Fragment {
     }
 
     private void monsterListView() {
-        if (monstersContainer.getChildCount() > 1)
+        if (monstersContainer.getChildCount() > 1) {
             monstersContainer.removeViewsInLayout(1, monstersContainer.getChildCount() - 1);
+        }
 
         List<EncounterMonster> monsterList = encounter.getMonsterList();
 
@@ -471,16 +460,12 @@ public class EncounterBuilder extends Fragment {
             Button plus = monsterView.findViewById(R.id.plus_quantity);
             plus.setId(index);
             plus.setTag(index);
-            plus.setOnClickListener(view -> {
-                quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) + 1));
-            });
+            plus.setOnClickListener(view -> quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) + 1)));
 
             Button minus = monsterView.findViewById(R.id.minus_quantity);
             minus.setId(index);
             minus.setTag(index);
-            minus.setOnClickListener(view -> {
-                quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) - 1));
-            });
+            minus.setOnClickListener(view -> quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) - 1)));
 
             Spinner initiative = monsterView.findViewById(R.id.initiative);
             initiative.setId(index);
@@ -528,14 +513,14 @@ public class EncounterBuilder extends Fragment {
 
         inflater.inflate(R.layout.add_monster_in_encounter_button, monstersContainer);
         Button add = view.findViewById(R.id.add_monster_to_encounter);
-        add.setOnClickListener(v -> {
+        add.setOnClickListener(view -> {
             View addMonster = inflater.inflate(R.layout.add_monster_in_encounter_layout, null);
             AutoCompleteTextView monName = addMonster.findViewById(R.id.monster_text);
             ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
                     android.R.layout.simple_dropdown_item_1line, Util.getMonsterNameList());
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             monName.setAdapter(adapter);
-            monName.setOnClickListener(view -> monName.showDropDown());
+            monName.setOnClickListener(v -> monName.showDropDown());
             TextView invalidName = addMonster.findViewById(R.id.invalid_name);
 
             final AlertDialog.Builder addMonDialog = new AlertDialog.Builder(getContext());
@@ -547,7 +532,7 @@ public class EncounterBuilder extends Fragment {
             AlertDialog alert = addMonDialog.create();
             alert.setOnShowListener(dialogInterface -> {
                 Button ok = alert.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
-                ok.setOnClickListener(view -> {
+                ok.setOnClickListener(v -> {
                     String name = monName.getText().toString();
 
                     if (!Util.getMonsterNameList().contains(name)) {

@@ -1,15 +1,14 @@
 package com.DnD5eTools.util;
 
 import com.DnD5eTools.entities.Campaign;
-import com.DnD5eTools.entities.Music;
 import com.DnD5eTools.entities.encounter.Encounter;
 import com.DnD5eTools.entities.monster.ChallengeRating;
 import com.DnD5eTools.interfaces.CampaignInterface;
 import com.DnD5eTools.interfaces.MonsterInterface;
+import com.DnD5eTools.interfaces.MusicInterface;
 import com.DnD5eTools.models.ServerConnection;
 import com.DnD5eTools.models.projections.NameIdProjection;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +23,6 @@ public class Util {
     private static List<String> monsterNameList;
     private static List<ChallengeRating> challengeRatingList;
     private static List<String> challengeRatingCrList;
-    private static List<Integer> challengeRatingXpList;
 
     public static ServerConnection getServerConnection() {
         return serverConnection;
@@ -57,6 +55,10 @@ public class Util {
 
     public static void loadEncounter(Encounter encounter) {
         loadedEncounter = encounter;
+
+        if (loadedEncounter != null) {
+            MusicInterface.playMusic(loadedEncounter.getMusic().getId());
+        }
     }
 
     public static boolean isEncounterLoaded() {
@@ -73,6 +75,10 @@ public class Util {
         }
 
         return monsterList;
+    }
+
+    public static void unloadEncounter() {
+        loadedEncounter = null;
     }
 
     public static void setMonsterList() {

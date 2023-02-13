@@ -33,6 +33,7 @@
         android:id="@+id/ac_text"
         android:layout_width="70dp"
         android:layout_height="wrap_content"
+        android:inputType="number"
         android:layout_marginRight="10dp"/>
 
     <TextView
@@ -47,6 +48,7 @@
         android:id="@+id/hp_text"
         android:layout_width="70dp"
         android:layout_height="wrap_content"
+        android:inputType="number"
         android:layout_marginRight="10dp"/>
 
     <Button

@@ -51,8 +51,12 @@ public class MonsterBuilder extends Fragment {
     private boolean proficiency = false;
     private View view;
     private final int DELAY = 250;
-    private CheckBox strSave, dexSave, conSave, intSave, wisSave, chaSave, athleticsProficiency, acrobaticsProficiency, sleightOfHandProficiency, stealthProficiency, arcanaProficiency, historyProficiency, investigationProficiency, natureProficiency,
-            religionProficiency, animalHandlingProficiency, insightProficiency, medicineProficiency, perceptionProficiency, survivalProficiency, deceptionProficiency, intimidationProficiency, performanceProficiency, persuasionProficiency;
+    //proficiency checkboxes
+    private CheckBox strSave, dexSave, conSave, intSave, wisSave, chaSave, athleticsProficiency, acrobaticsProficiency,
+            sleightOfHandProficiency, stealthProficiency, arcanaProficiency, historyProficiency,
+            investigationProficiency, natureProficiency, religionProficiency, animalHandlingProficiency,
+            insightProficiency, medicineProficiency, perceptionProficiency, survivalProficiency, deceptionProficiency,
+            intimidationProficiency, performanceProficiency, persuasionProficiency;
 
     @Nullable
     @Override
@@ -143,10 +147,7 @@ public class MonsterBuilder extends Fragment {
      */
     private void initMonsterList() {
         //todo: make add monster/add encounter actual buttons, eliminates the need for monster list scoped to this class
-        NameIdProjection addMonster = new NameIdProjection();
-        String ADD_MONSTER = "Add Monster";
-        addMonster.setName(ADD_MONSTER);
-        addMonster.setId(0);
+        NameIdProjection addMonster = new NameIdProjection(0, "Add Monster");
 
         monsterList = new ArrayList<>();
         monsterList.add(addMonster);
@@ -175,7 +176,6 @@ public class MonsterBuilder extends Fragment {
      * Basic monster info is the monster's name, display name, size, type, alignment, ac, hp, and speed
      */
     private void basicMonsterInfo() {
-        //todo: add bonus initiative field
         View basicInfo = view.findViewById(R.id.basic_monster_info);
         TextView name = basicInfo.findViewById(R.id.name);
         name.setText(monster.getName());
@@ -288,7 +288,7 @@ public class MonsterBuilder extends Fragment {
         });
 
         EditText ac = basicInfo.findViewById(R.id.ac);
-        ac.setText(Integer.toString(monster.getArmorClass()));
+        ac.setText(String.valueOf(monster.getArmorClass()));
         ac.addTextChangedListener(new TextWatcher() {
             Handler handler;
 
@@ -310,6 +310,7 @@ public class MonsterBuilder extends Fragment {
                 handler.postDelayed(() -> {
                     if (ac.getText().toString().isBlank()) {
                         ac.setText("0");
+                        return;
                     }
 
                     monster.setArmorClass(Integer.parseInt(ac.getText().toString()));
@@ -319,7 +320,7 @@ public class MonsterBuilder extends Fragment {
         });
 
         EditText hitPoints = basicInfo.findViewById(R.id.hit_points);
-        hitPoints.setText(Integer.toString(monster.getHitPoints()));
+        hitPoints.setText(String.valueOf(monster.getHitPoints()));
         hitPoints.addTextChangedListener(new TextWatcher() {
             Handler handler;
 
@@ -341,6 +342,7 @@ public class MonsterBuilder extends Fragment {
                 handler.postDelayed(() -> {
                     if (hitPoints.getText().toString().isBlank()) {
                         hitPoints.setText("0");
+                        return;
                     }
 
                     monster.setHitPoints(Integer.parseInt(hitPoints.getText().toString()));
@@ -377,7 +379,7 @@ public class MonsterBuilder extends Fragment {
         });
 
         EditText bonusInitiative = basicInfo.findViewById(R.id.bonus_initiative);
-        bonusInitiative.setText(Integer.toString(monster.getBonusInitiative()));
+        bonusInitiative.setText(String.valueOf(monster.getBonusInitiative()));
         bonusInitiative.addTextChangedListener(new TextWatcher() {
             Handler handler;
 
@@ -399,6 +401,7 @@ public class MonsterBuilder extends Fragment {
                 handler.postDelayed(() -> {
                     if (bonusInitiative.getText().toString().isBlank()) {
                         bonusInitiative.setText("0");
+                        return;
                     }
 
                     monster.setBonusInitiative(Integer.parseInt(bonusInitiative.getText().toString()));
@@ -407,17 +410,11 @@ public class MonsterBuilder extends Fragment {
             }
         });
 
-        //todo: can probably get rid of this button because update endpoint saves
-        Button save = basicInfo.findViewById(R.id.save_monster);
-        save.setOnClickListener(view -> {
-            MonsterInterface.updateMonster(monster);
-        });
-
         Button archive = basicInfo.findViewById(R.id.archive_monster);
         archive.setOnClickListener(view -> new AlertDialog.Builder(getContext())
                 .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Delete Monster")
-                .setMessage("Delete " + monster.getName() + "?")
+                .setTitle("Archive Monster")
+                .setMessage("Archive " + monster.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     MonsterInterface.archiveMonster(monster.getId());
                     monsterListView(true);
@@ -1280,7 +1277,7 @@ public class MonsterBuilder extends Fragment {
     }
 
     private void monsterCHA(GridLayout stats) {
-        Boolean[] firstPass = { false };
+        Boolean[] firstPass = { true };
         Spinner charisma = stats.findViewById(R.id.charisma);
         TextView charismaModifier = stats.findViewById(R.id.cha_mod);
 
@@ -1757,7 +1754,7 @@ public class MonsterBuilder extends Fragment {
             countLayout.setVisibility(View.VISIBLE);
 
             Spinner actionCount = countLayout.findViewById(R.id.legendary_count_spinner);
-            actionCount.setSelection(monster.getLegendaryActionCount());
+            actionCount.setSelection(monster.getLegendaryActionCount(), false);
             actionCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -1834,7 +1831,7 @@ public class MonsterBuilder extends Fragment {
             Spinner cost = legView.findViewById(R.id.cost);
             cost.setId(index);
             cost.setTag(index);
-            cost.setSelection(legendaryList.get(index).getCost());
+            cost.setSelection(legendaryList.get(index).getCost(), false);
             cost.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -1924,7 +1921,6 @@ public class MonsterBuilder extends Fragment {
         updateSavingThrowText(chaSave, monster.getCharisma().getScoreModifier());
     }
 
-    //TODO: find more elegant solution, is redrawing monster_stats better? if so, why didn't it work before?
     /**
      * A monster's CR determines it's proficiency bonus. Therefore, when a monster's CR is changed, it's proficiencies must all be recalculated
      */

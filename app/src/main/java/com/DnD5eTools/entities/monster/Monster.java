@@ -1,6 +1,7 @@
 package com.DnD5eTools.entities.monster;
 
 import com.DnD5eTools.entities.abilityscore.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -163,6 +164,11 @@ public class Monster {
 
     public int getBonusInitiative() {
         return bonusInitiative;
+    }
+
+    @JsonIgnore
+    public int getTotalInitiativeBonus() {
+        return bonusInitiative + getDexterity().getScoreModifier();
     }
 
     public void setBonusInitiative(int bonusInitiative) {

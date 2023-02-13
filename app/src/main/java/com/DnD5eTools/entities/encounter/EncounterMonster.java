@@ -17,6 +17,12 @@ public class EncounterMonster {
         this.monster = monster;
     }
 
+    public EncounterMonster(Monster monster, int quantity, int initiative) {
+        this.monster = monster;
+        this.quantity = quantity;
+        this.initiative = initiative;
+    }
+
     public int getId() {
         return id;
     }

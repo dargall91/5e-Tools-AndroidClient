@@ -51,11 +51,11 @@
         android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
 
     <Button
-        android:id="@+id/delete_player"
+        android:id="@+id/kill_player"
         android:layout_width="110dp"
         android:layout_height="40dp"
         android:layout_marginLeft="50dp"
-        android:text="Delete"
+        android:text="Kill"
         android:textSize="14sp"/>
 
 </LinearLayout>

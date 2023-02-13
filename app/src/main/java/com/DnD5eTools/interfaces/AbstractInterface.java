@@ -116,7 +116,7 @@ public class AbstractInterface {
                         .delete()
                         .build();
 
-                Response response = client.newCall(request).execute();
+                client.newCall(request).execute();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -132,7 +132,7 @@ public class AbstractInterface {
     }
 
     /**
-     * executes a POST request with an optional payload
+     * executes a PUT request with an optional payload and expects a single object result
      * @param endpoint
      * @param payload
      * @param <T>
@@ -169,5 +169,42 @@ public class AbstractInterface {
         }
 
         return result.get();
+    }
+
+    /**
+     * executes a PUT request with an optional payload and expects no result
+     * @param endpoint
+     * @param payload
+     * @param <T>
+     */
+    public static <T> void putNoResult(String endpoint, T payload) {
+        Thread thread = new Thread(() -> {
+            try {
+                RequestBody body;
+                if (payload != null) {
+                    String payloadString = mapper.writer().writeValueAsString(payload);
+                    body = RequestBody.create(payloadString, MediaType.parse("application/json"));
+                } else {
+                    body = RequestBody.create("", null);
+                }
+
+                Request request = new Request.Builder()
+                        .url(getServerConnection().getUrl() + endpoint)
+                        .put(body)
+                        .build();
+
+                client.newCall(request).execute();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        thread.start();
+
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

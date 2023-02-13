@@ -4,6 +4,13 @@ public class NameIdProjection {
     private int id;
     private String name;
 
+    public NameIdProjection() { }
+
+    public NameIdProjection(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public int getId() {
         return id;
     }
