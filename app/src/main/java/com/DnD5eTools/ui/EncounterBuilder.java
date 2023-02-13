@@ -153,9 +153,7 @@ public class EncounterBuilder extends Fragment {
                 return;
             }
 
-            //update encounter on server, get new encounter, display in builder
-            //todo: is it necessary to update? should be updating on every action now
-            EncounterInterface.updateEncounter(encounter);
+            //get new encounter, display in builder
             encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
             builderView();
         });
@@ -193,11 +191,6 @@ public class EncounterBuilder extends Fragment {
         View nameView = view.findViewById(R.id.encounter_name_buttons_layout);
         TextView name = nameView.findViewById(R.id.name);
         name.setText(encounter.getName());
-        //todo: can probably get rid of this button because update endpoint saves
-        Button save = nameView.findViewById(R.id.save);
-        save.setOnClickListener(view -> {
-            EncounterInterface.updateEncounter(encounter);
-        });
 
         Button archive = nameView.findViewById(R.id.archive);
         archive.setOnClickListener(view -> new AlertDialog.Builder(getContext())
@@ -242,9 +235,7 @@ public class EncounterBuilder extends Fragment {
         });
 
         Button load = nameView.findViewById(R.id.load);
-        load.setOnClickListener(view -> {
-            Util.loadEncounter(encounter);
-        });
+        load.setOnClickListener(view -> Util.loadEncounter(encounter));
     }
 
     private void playerLevelsView() {
@@ -382,7 +373,7 @@ public class EncounterBuilder extends Fragment {
     }
 
     private void musicLairActionView() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, musicNameList);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, musicNameList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         View musicLairView = view.findViewById(R.id.encounter_music_lair_layout);
@@ -469,16 +460,12 @@ public class EncounterBuilder extends Fragment {
             Button plus = monsterView.findViewById(R.id.plus_quantity);
             plus.setId(index);
             plus.setTag(index);
-            plus.setOnClickListener(view -> {
-                quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) + 1));
-            });
+            plus.setOnClickListener(view -> quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) + 1)));
 
             Button minus = monsterView.findViewById(R.id.minus_quantity);
             minus.setId(index);
             minus.setTag(index);
-            minus.setOnClickListener(view -> {
-                quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) - 1));
-            });
+            minus.setOnClickListener(view -> quantity.setText(String.valueOf(Integer.parseInt(quantity.getText().toString()) - 1)));
 
             Spinner initiative = monsterView.findViewById(R.id.initiative);
             initiative.setId(index);

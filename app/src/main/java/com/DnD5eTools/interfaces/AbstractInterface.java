@@ -116,7 +116,7 @@ public class AbstractInterface {
                         .delete()
                         .build();
 
-                Response response = client.newCall(request).execute();
+                client.newCall(request).execute();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -193,8 +193,7 @@ public class AbstractInterface {
                         .put(body)
                         .build();
 
-                Response response = client.newCall(request).execute();
-                System.out.println("break");
+                client.newCall(request).execute();
             } catch (Exception e) {
                 e.printStackTrace();
             }

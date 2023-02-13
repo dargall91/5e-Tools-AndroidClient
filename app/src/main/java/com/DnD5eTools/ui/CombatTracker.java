@@ -124,7 +124,7 @@ public class CombatTracker extends Fragment {
     private void preCombatView() {
         playerList = PlayerInterface.getPlayerList();
 
-        View labels = inflater.inflate(R.layout.pre_combat_labels, leftView);
+        inflater.inflate(R.layout.pre_combat_labels, leftView);
 
         //loop and add layouts
         for (int i = 0; i < playerList.size(); i++) {
@@ -139,7 +139,7 @@ public class CombatTracker extends Fragment {
 
             CheckBox isCombatant = playerView.findViewById(R.id.combatant_checkbox);
             isCombatant.setId(index);
-            isCombatant.setChecked(false);
+            isCombatant.setChecked(playerList.get(index).isCombatant());
             isCombatant.setTag(index);
 
             isCombatant.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -339,9 +339,6 @@ public class CombatTracker extends Fragment {
                 for (int j = 0; j < combatantList.get(i).getQuantity() - 1; j++) {
                     combatantList.add(i, new MonsterCombatant((MonsterCombatant) combatantList.get(i)));
                 }
-
-                //skip past added monsters
-//                i += combatantList.get(i).getQuantity();
             }
         }
     }
@@ -439,7 +436,7 @@ public class CombatTracker extends Fragment {
 
         try {
             Looper.loop();
-        } catch(RuntimeException e) { }
+        } catch(RuntimeException ignored) { }
     }
 
     /**
@@ -450,7 +447,7 @@ public class CombatTracker extends Fragment {
         leftView.removeAllViewsInLayout();
 
         //used for ids and tags of view elements
-        int tag_counter = 1;
+        int tag = 1;
 
         for (Combatant combatant : combatantList) {
             //do not display reinforcements or removed combatants
@@ -458,42 +455,31 @@ public class CombatTracker extends Fragment {
                 continue;
             }
 
-//            final int index = 1;
-            int tag = tag_counter * 10;// + index;
-
             View combatantView = inflater.inflate(R.layout.combatant_layout, leftView);
 
             TextView initiative = combatantView.findViewById(R.id.initiative);
             initiative.setId(tag);
             initiative.setTag(tag);
-            tag++;
 
             TextView name = combatantView.findViewById(R.id.name);
             name.setId(tag);
             name.setTag(tag);
-            tag++;
 
-            //todo: was it ever necessary to set tags on labels? is it for anything else now that things have been
-            // updated?
             TextView ac_label = combatantView.findViewById(R.id.ac_label);
             ac_label.setId(tag);
             ac_label.setTag(tag);
-            tag++;
 
             EditText ac_text = combatantView.findViewById(R.id.ac_text);
             ac_text.setId(tag);
             ac_text.setTag(tag);
-            tag++;
 
             TextView hp_label = combatantView.findViewById(R.id.hp_label);
             hp_label.setId(tag);
             hp_label.setTag(tag);
-            tag++;
 
             EditText hp_text = combatantView.findViewById(R.id.hp_text);
             hp_text.setId(tag);
             hp_text.setTag(tag);
-            tag++;
 
             Button kill = combatantView.findViewById(R.id.kill_revive);
             kill.setId(tag);
@@ -503,16 +489,18 @@ public class CombatTracker extends Fragment {
             remove.setId(tag);
             remove.setTag(tag);
 
-            initiative.setText(Integer.toString(combatant.getInitiative()));
+            initiative.setText(String.valueOf(combatant.getInitiative()));
             name.setText(combatant.getName());
-            ac_text.setText(Integer.toString(combatant.getAc()));
+            ac_text.setText(String.valueOf(combatant.getAc()));
             ac_text.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    combatant.setAc(Integer.parseInt(ac_text.getText().toString()));
+                    if (ac_text.getText().toString().isBlank()) {
+                        ac_text.setText("0");
+                    }
                 }
 
                 @Override
@@ -535,13 +523,17 @@ public class CombatTracker extends Fragment {
                 kill.setVisibility(View.INVISIBLE);
             } else {
                 remove.setVisibility(View.VISIBLE);
-                hp_text.setText(Integer.toString(combatant.getHitPoints()));
+                hp_text.setText(String.valueOf(combatant.getHitPoints()));
                 hp_text.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                     @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) { }
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        if (hp_text.getText().toString().isBlank()) {
+                            hp_text.setText("0");
+                        }
+                    }
 
                     @Override
                     public void afterTextChanged(Editable s) {
@@ -590,7 +582,7 @@ public class CombatTracker extends Fragment {
                 });
             }
 
-            tag_counter++;
+            tag++;
         }
 
         View combatButtons = inflater.inflate(R.layout.combat_buttons, leftView);
@@ -603,7 +595,7 @@ public class CombatTracker extends Fragment {
                     View innerLayout = inflater.inflate(R.layout.reinforcement_layout, (ViewGroup) reinLayout);
 
                     TextView initiative = innerLayout.findViewById(R.id.initiative);
-                    initiative.setText(Integer.toString(combatant.getInitiative()));
+                    initiative.setText(String.valueOf(combatant.getInitiative()));
                     initiative.setId(View.generateViewId());
 
                     TextView monName = innerLayout.findViewById(R.id.reinforcement_name);
@@ -861,7 +853,7 @@ public class CombatTracker extends Fragment {
             if (reader != null) {
                 try {
                     reader.close();
-                } catch (IOException e) {
+                } catch (IOException ignored) {
 
                 }
             }
