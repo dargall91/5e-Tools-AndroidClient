@@ -142,20 +142,19 @@ public class EncounterBuilder extends Fragment {
                         encounter = EncounterInterface.getEncounter(addedEncounter.getId());
                         encounterListView(false);
                         builderView();
+                        add.dismiss();
                     });
                 });
 
                 add.show();
-            }
-
-            //if the selected encounter is the current one, do nothing and exit
-            if (encounterList.get(position).getId() == encounter.getId()) {
+            } else if (encounterList.get(position).getId() == encounter.getId()) {
+                //if the selected encounter is the current one, do nothing and exit
                 return;
+            } else {
+                //get new encounter, display in builder
+                encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
+                builderView();
             }
-
-            //get new encounter, display in builder
-            encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
-            builderView();
         });
     }
 

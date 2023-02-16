@@ -119,26 +119,26 @@ public class MonsterBuilder extends Fragment {
                     Button ok = add.getButton(AlertDialog.BUTTON_POSITIVE);
                     ok.setOnClickListener(v -> {
                         final String name = newName.getText().toString();
+
                         NameIdProjection addedMonster = MonsterInterface.addMonster(name);
 
                         //reload list then display new monster in builder
                         monster = MonsterInterface.getMonster(addedMonster.getId());
                         monsterListView(false);
                         builderView();
+                        add.dismiss();
                     });
                 });
 
                 add.show();
-            }
-
-            //if the selected monster is the current one, do nothing and exit
-            if (monsterList.get(position).getId() == monster.getId()) {
+            } else if (monsterList.get(position).getId() == monster.getId()) {
+                //if the selected monster is the current one, do nothing and exit
                 return;
+            } else {
+                //get new monster and display in builder
+                monster = MonsterInterface.getMonster(monsterList.get(position).getId());
+                builderView();
             }
-
-            //get new monster and display in builder
-            monster = MonsterInterface.getMonster(monsterList.get(position).getId());
-            builderView();
         });
     }
 
