@@ -25,16 +25,10 @@ public abstract class AbilityScore {
         this.score = score;
     }
 
+    @JsonIgnore
     public int getScoreModifier() {
         return (int) Math.floor((score - 10) / 2.0);
     }
-
-    /**
-     * THis method does nothing because the bonus is a calculated value, it cannot be set. But JPA complains if this
-     * method is not here, so here it is
-     * @param scoreModifier
-     */
-    public void setScoreModifier(int scoreModifier) { }
 
     public boolean isProficient() {
         return proficient;
