@@ -6,7 +6,6 @@ public class MonsterCombatant extends Combatant {
     private boolean invisible;
     private boolean reinforcement;
     private int quantity;
-    private int ac;
     private int hitPoints;
     private boolean alive;
     private boolean removed;
@@ -19,7 +18,7 @@ public class MonsterCombatant extends Combatant {
         invisible = monster.isInvisible();
         reinforcement = monster.isReinforcement();
         quantity = monster.getQuantity();
-        ac = monster.getMonster().getArmorClass();
+        setAc(monster.getMonster().getArmorClass());
         hitPoints = monster.getMonster().getHitPoints();
         alive = true;
         expanded = quantity == 1;
@@ -32,11 +31,12 @@ public class MonsterCombatant extends Combatant {
         invisible = combatant.isInvisible();
         reinforcement = combatant.isReinforcement();
         quantity = combatant.getQuantity();
-        ac = combatant.getAc();
+        setAc(combatant.getAc());
         hitPoints = combatant.getHitPoints();
         alive = true;
         expanded = true;
         setWeight(combatant.getWeight());
+        removed = false;
     }
 
     @Override
@@ -72,16 +72,6 @@ public class MonsterCombatant extends Combatant {
     @Override
     public int getQuantity() {
         return quantity;
-    }
-
-    @Override
-    public void setAc(int ac) {
-        this.ac = ac;
-    }
-
-    @Override
-    public int getAc() {
-        return ac;
     }
 
     @Override

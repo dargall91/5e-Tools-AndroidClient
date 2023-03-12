@@ -1,22 +1,18 @@
 package com.DnD5eTools.entities;
 
-import com.DnD5eTools.util.Util;
-
 public class PlayerCharacter {
     private Integer id;
     private String name;
     private int ac;
+    private int acBonus;
     private int initiativeBonus;
     private int rolledInitiative;
-    private int campaignId;
-    private boolean dead = false;
-    private boolean combatant = false;
+    private boolean combatant;
 
     public PlayerCharacter() { }
 
     public PlayerCharacter(String name) {
         this.name = name;
-        campaignId = Util.getCampaign().getId();
     }
 
     public Integer getId() {
@@ -43,6 +39,14 @@ public class PlayerCharacter {
         this.ac = ac;
     }
 
+    public int getAcBonus() {
+        return acBonus;
+    }
+
+    public void setAcBonus(int acBonus) {
+        this.acBonus = acBonus;
+    }
+
     public int getInitiativeBonus() {
         return initiativeBonus;
     }
@@ -59,14 +63,6 @@ public class PlayerCharacter {
         this.rolledInitiative = rolledInitiative;
     }
 
-    public void setDead(boolean dead) {
-        this.dead = dead;
-    }
-
-    public boolean isDead() {
-        return dead;
-    }
-
     public boolean isCombatant() {
         return combatant;
     }
@@ -74,8 +70,7 @@ public class PlayerCharacter {
     public void setCombatant(boolean combatant) {
         this.combatant = combatant;
     }
-
-    public int getCampaignId() {
-        return campaignId;
+    public int getTotalAc() {
+        return ac + acBonus;
     }
 }

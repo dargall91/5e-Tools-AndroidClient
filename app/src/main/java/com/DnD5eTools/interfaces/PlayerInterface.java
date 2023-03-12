@@ -15,14 +15,10 @@ public class PlayerInterface extends AbstractInterface {
     }
 
     public static void updatePlayer(PlayerCharacter playerCharacter) {
-        postNoResult(path + "update", playerCharacter);
-    }
-
-    public static void killPlayerCharacter(int pcId) {
-        postNoResult(path + pcId + "/kill", null);
-    }
-
-    public static void addPlayerCharacter(String name) {
-        putNoResult(path + "add", new PlayerCharacter(name));
+        postNoResult(path + playerCharacter.getId() +
+                        "?rolledInitiative=" + playerCharacter.getRolledInitiative() +
+                        "&initiativeBonus=" + playerCharacter.getInitiativeBonus() +
+                        "&combatant=" + playerCharacter.isCombatant(),
+                playerCharacter);
     }
 }
