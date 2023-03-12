@@ -82,7 +82,7 @@ public class AbstractInterface {
                 RequestBody body;
                 if (payload != null) {
                     String payloadString = mapper.writer().writeValueAsString(payload);
-                     body = RequestBody.create(payloadString, MediaType.parse("application/json"));
+                    body = RequestBody.create(payloadString, MediaType.parse("application/json"));
                 } else {
                     body = RequestBody.create("", null);
                 }

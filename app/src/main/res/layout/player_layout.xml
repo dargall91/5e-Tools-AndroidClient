@@ -17,16 +17,12 @@
         android:layout_height="wrap_content"
         android:textSize="20sp"/>
 
-    <Spinner
-        android:id="@+id/ac_spinner"
+    <TextView
+        android:id="@+id/ac"
         android:layout_width="75dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
         android:layout_marginLeft="20dp"
-        android:dropDownWidth="85dp"
-        android:entries="@array/ac_list"
-        android:spinnerMode="dropdown"
-        android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
+        android:layout_height="wrap_content"
+        android:textSize="20sp"/>
 
     <Spinner
         android:id="@+id/bonus_spinner"
@@ -49,13 +45,5 @@
         android:entries="@array/d20_roll"
         android:spinnerMode="dropdown"
         android:theme="@style/Widget.AppCompat.DropDownItem.Spinner"/>
-
-    <Button
-        android:id="@+id/kill_player"
-        android:layout_width="110dp"
-        android:layout_height="40dp"
-        android:layout_marginLeft="50dp"
-        android:text="Kill"
-        android:textSize="14sp"/>
 
 </LinearLayout>

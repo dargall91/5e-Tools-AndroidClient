@@ -7,6 +7,7 @@ public class PlayerCombatant extends Combatant {
         setName(pc.getName());
         setInitiative(pc.getRolledInitiative() + pc.getInitiativeBonus());
         setInitiativeBonus(pc.getInitiativeBonus());
+        setAc(pc.getTotalAc());
     }
 
     @Override
@@ -38,14 +39,6 @@ public class PlayerCombatant extends Combatant {
     @Override
     public int getQuantity() {
         return 1;
-    }
-
-    @Override
-    public void setAc(int ac) { }
-
-    @Override
-    public int getAc() {
-        return 0;
     }
 
     @Override

@@ -148,22 +148,10 @@ public class CombatTracker extends Fragment {
             });
 
             //index of ac = ac - 1
-            Spinner ac = playerView.findViewById(R.id.ac_spinner);
+            TextView ac = playerView.findViewById(R.id.ac);
             ac.setId(index);
-            ac.setSelection(playerList.get(index).getAc() - 1, false);
+            ac.setText(String.valueOf(playerList.get(index).getTotalAc()));
             ac.setTag(index);
-
-            ac.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    playerList.get(index).setAc(Integer.parseInt(ac.getSelectedItem().toString()));
-                    PlayerInterface.updatePlayer(playerList.get(index));
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-                }
-            });
 
             //index of bonus = bonus + 5
             Spinner bonus = playerView.findViewById(R.id.bonus_spinner);
@@ -200,52 +188,14 @@ public class CombatTracker extends Fragment {
                 public void onNothingSelected(AdapterView<?> parent) {
                 }
             });
-
-            Button kill = playerView.findViewById((R.id.kill_player));
-            kill.setId(index);
-            kill.setOnClickListener(view -> new AlertDialog.Builder(getContext())
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setTitle("Kill Player")
-                    .setMessage("Kill " + playerList.get(index).getName() + "?")
-                    .setPositiveButton("Yes", (dialog, which) -> {
-                        PlayerInterface.killPlayerCharacter(playerList.get(index).getId());
-                        leftView.removeAllViewsInLayout();
-                        preCombatView();
-                    })
-                    .setNegativeButton("No", null)
-                    .show()
-            );
         }
 
         View buttonLayout = inflater.inflate(R.layout.pre_combat_buttons, leftView);
 
-        Button addPlayer = buttonLayout.findViewById((R.id.add_player));
-        addPlayer.setOnClickListener(view -> {
-            View addView = inflater.inflate(R.layout.add_player_dialog, null);
-            EditText nameEntry = addView.findViewById((R.id.name_entry));
-
-            final AlertDialog.Builder addPlayerDialog = new AlertDialog.Builder(getContext());
-            addPlayerDialog.setView(addView);
-            addPlayerDialog.setTitle("Add New PC");
-            addPlayerDialog.setPositiveButton("OK", null);
-            addPlayerDialog.setNegativeButton("Cancel", null);
-
-            AlertDialog add = addPlayerDialog.create();
-            add.setOnShowListener(dialogInterface -> {
-                Button ok = add.getButton(AlertDialog.BUTTON_POSITIVE);
-                ok.setOnClickListener(v -> {
-                    String entry = nameEntry.getText().toString();
-
-                    if (!entry.trim().isEmpty()) {
-                        PlayerInterface.addPlayerCharacter(entry);
-                        add.dismiss();
-                        leftView.removeAllViewsInLayout();
-                        preCombatView();
-                    }
-                });
-            });
-
-            add.show();
+        Button refreshPcList = buttonLayout.findViewById((R.id.refresh));
+        refreshPcList.setOnClickListener(view -> {
+            leftView.removeAllViewsInLayout();
+            preCombatView();
         });
 
         Button loadButton = buttonLayout.findViewById((R.id.load_encounter));

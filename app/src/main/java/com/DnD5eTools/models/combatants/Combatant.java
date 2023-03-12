@@ -6,6 +6,7 @@ public abstract class Combatant implements Comparable<Combatant> {
     private int initiativeBonus;
     private int weight;
     private int tieBreaker;
+    private int ac;
 
     public abstract boolean isReinforcement();
     public abstract void setReinforcement(boolean reinforcement);
@@ -14,8 +15,6 @@ public abstract class Combatant implements Comparable<Combatant> {
     public abstract boolean isMonster();
     public abstract boolean isLairAction();
     public abstract int getQuantity();
-    public abstract void setAc(int ac);
-    public abstract int getAc();
     public abstract void setHitPoints(int hitPoints);
     public abstract int getHitPoints();
     public abstract boolean isAlive();
@@ -48,6 +47,14 @@ public abstract class Combatant implements Comparable<Combatant> {
 
     public void setInitiativeBonus(int initiativeBonus) {
         this.initiativeBonus = initiativeBonus;
+    }
+
+    public void setAc(int ac) {
+        this.ac = ac;
+    }
+
+    public int getAc() {
+        return ac;
     }
 
     public int getWeight() {
