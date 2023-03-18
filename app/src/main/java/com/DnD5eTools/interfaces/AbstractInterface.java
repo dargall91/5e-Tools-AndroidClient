@@ -5,20 +5,61 @@ import static com.DnD5eTools.util.Util.getServerConnection;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.ConnectionSpec;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 public class AbstractInterface {
-    private static final ObjectMapper mapper = new ObjectMapper();
-    private static final OkHttpClient client = new OkHttpClient();
+    private static ObjectMapper mapper;
+    private static OkHttpClient client;
+
+    public static void init() {
+        if (client != null) {
+            return;
+        }
+
+        X509TrustManager TRUST_ALL_CERTS = new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return new java.security.cert.X509Certificate[] {};
+            }
+        };
+
+        try {
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, new TrustManager[] { TRUST_ALL_CERTS }, new java.security.SecureRandom());
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.sslSocketFactory(sslContext.getSocketFactory(), TRUST_ALL_CERTS);
+
+            mapper = new ObjectMapper();
+            client = new OkHttpClient.Builder().connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS,
+                            ConnectionSpec.COMPATIBLE_TLS))
+                    .sslSocketFactory(sslContext.getSocketFactory(), TRUST_ALL_CERTS)
+                    .hostnameVerifier((hostname, session) -> true)
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public static <T> T getSingleResult(Class<T> classType, String endpoint) {
         AtomicReference<T> result = new AtomicReference<>();
@@ -52,8 +93,12 @@ public class AbstractInterface {
 
         Thread thread = new Thread(() -> {
             try {
-                URL url = new URL(getServerConnection().getUrl() + endpoint);
-                result.set(mapper.readValue(url, typeReference));
+                Request request = new Request.Builder()
+                        .url(getServerConnection().getUrl() + endpoint)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                result.set(mapper.readValue(response.body().string(), typeReference));
             } catch (Exception e) {
                 e.printStackTrace();
             }

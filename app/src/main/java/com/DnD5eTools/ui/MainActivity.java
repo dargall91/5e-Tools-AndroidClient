@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import com.DnD5eTools.R;
 
+import com.DnD5eTools.interfaces.AbstractInterface;
 import com.DnD5eTools.models.ServerConnection;
 import com.DnD5eTools.util.Util;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -44,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
         tabs.setupWithViewPager(viewPager);
         viewPager.setOffscreenPageLimit(3);
 
+        AbstractInterface.init();
+
         displaySelectConnectionDialog();
     }
 
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 connectionNames);
 
         View serverSelect = LayoutInflater.from(this).inflate(R.layout.select_server_dialog,
-                (ViewGroup) findViewById(R.id.main_activity), false);
+                findViewById(R.id.main_activity), false);
         TextView invalidCon = serverSelect.findViewById(R.id.invalid_connection);
         Spinner select = serverSelect.findViewById(R.id.select);
         select.setAdapter(conNameAdapter);
@@ -134,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
             Button cancel = custom.getButton(android.app.AlertDialog.BUTTON_NEGATIVE);
 
             set.setOnClickListener(view -> {
-                String url = "http://" + host.getText() + ":" + port.getText() + "/";
+                String url = "https://" + host.getText() + ":" + port.getText() + "/";
                 Util.getServerConnection().setUrl(url);
                 connected[0] = Util.isConnectedToServer();
 
