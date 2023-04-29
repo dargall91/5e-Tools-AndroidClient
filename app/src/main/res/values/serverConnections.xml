@@ -3,7 +3,7 @@
     <array name="serverConnections">
         <item>{\"name\": \"PC\", \"url\": \"https://192.168.0.180:8080/\"}</item>
         <item>{\"name\": \"RPi - Home\", \"url\": \"https://192.168.0.129:8080/\"}</item>
-        <item>{\"name\": \"Chris\'s House\", \"url\": \"https://192.168.0.24:8080/\"}</item>
+        <item>{\"name\": \"Chris\'s House\", \"url\": \"https://192.168.0.106:8080/\"}</item>
         <item>{\"name\": \"Custom\", \"url\": \"\"}</item>
     </array>
 </resources>
