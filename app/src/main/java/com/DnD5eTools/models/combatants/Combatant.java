@@ -1,7 +1,8 @@
 package com.DnD5eTools.models.combatants;
 
 public abstract class Combatant implements Comparable<Combatant> {
-    private String name;
+    private String serverName;
+    private String localName;
     private int initiative;
     private int initiativeBonus;
     private int weight;
@@ -25,12 +26,20 @@ public abstract class Combatant implements Comparable<Combatant> {
     public abstract void setExpanded(boolean expanded);
     public abstract boolean isExpanded();
 
-    public String getName() {
-        return name;
+    public String getServerName() {
+        return serverName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getLocalName() {
+        return localName;
+    }
+
+    public void setServerName(String name) {
+        serverName = name;
+    }
+
+    public void setLocalName(String name) {
+        localName = name;
     }
 
     public int getInitiative() {

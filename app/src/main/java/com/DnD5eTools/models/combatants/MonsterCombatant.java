@@ -12,7 +12,8 @@ public class MonsterCombatant extends Combatant {
     boolean expanded;
 
     public MonsterCombatant(EncounterMonster monster) {
-        setName(monster.getMonster().getDisplayName());
+        setServerName(monster.getMonster().getDisplayName());
+        setLocalName(monster.getMonster().getName());
         setInitiative(monster.getInitiative() + monster.getMonster().getTotalInitiativeBonus());
         setInitiativeBonus(monster.getMonster().getTotalInitiativeBonus());
         invisible = monster.isInvisible();
@@ -25,7 +26,8 @@ public class MonsterCombatant extends Combatant {
     }
 
     public MonsterCombatant(MonsterCombatant combatant) {
-        setName(combatant.getName());
+        setServerName(combatant.getServerName());
+        setLocalName(combatant.getLocalName());
         setInitiative(combatant.getInitiative());
         setInitiativeBonus(combatant.getInitiativeBonus());
         invisible = combatant.isInvisible();

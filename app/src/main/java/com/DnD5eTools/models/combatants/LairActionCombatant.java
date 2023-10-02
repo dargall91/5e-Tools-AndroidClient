@@ -2,7 +2,8 @@ package com.DnD5eTools.models.combatants;
 
 public class LairActionCombatant extends Combatant {
     public LairActionCombatant() {
-        setName("Lair Action");
+        setServerName("Lair Action");
+        setLocalName("Lair Action");
         setInitiative(20);
     }
     @Override

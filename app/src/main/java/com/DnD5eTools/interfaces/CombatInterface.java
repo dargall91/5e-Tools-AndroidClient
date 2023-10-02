@@ -13,10 +13,13 @@ public class CombatInterface extends AbstractInterface {
     public static void updateCombatantList(List<Combatant> combatantList) {
         List<NameIdProjection> serverCombatantList = new ArrayList<>();
         for (int i = 0; i < combatantList.size(); i++) {
-            //add to list if: alive, not reinforcement, not invisible
-            if (combatantList.get(i).isAlive() && !combatantList.get(i).isReinforcement() && !combatantList.get(i).isInvisible()) {
+            //add to list if: alive, not reinforcement, not invisible, not a lair action
+            if (combatantList.get(i).isAlive()
+                    && !combatantList.get(i).isReinforcement()
+                    && !combatantList.get(i).isInvisible()
+                    && !combatantList.get(i).isLairAction()) {
                 serverCombatantList.add(new NameIdProjection(serverCombatantList.size() + 1,
-                        combatantList.get(i).getName()));
+                        combatantList.get(i).getServerName()));
             }
         }
 

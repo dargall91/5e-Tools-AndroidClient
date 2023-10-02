@@ -353,9 +353,9 @@ public class CombatTracker extends Fragment {
 
         View tieView = inflater.inflate(R.layout.tie_breaker_layout, null);
         TextView leftName = tieView.findViewById(R.id.left_name);
-        leftName.setText(leftCombatant.getName());
+        leftName.setText(leftCombatant.getLocalName());
         TextView rightName = tieView.findViewById(R.id.right_name);
-        rightName.setText(rightCombatant.getName());
+        rightName.setText(rightCombatant.getLocalName());
         Spinner leftSpinner = tieView.findViewById(R.id.left_spinner);
         leftSpinner.setSelection(leftCombatant.getTieBreaker());
         Spinner rightSpinner = tieView.findViewById(R.id.right_spinner);
@@ -440,7 +440,7 @@ public class CombatTracker extends Fragment {
             remove.setTag(tag);
 
             initiative.setText(String.valueOf(combatant.getInitiative()));
-            name.setText(combatant.getName());
+            name.setText(combatant.getLocalName());
             ac_text.setText(String.valueOf(combatant.getAc()));
             ac_text.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -549,7 +549,7 @@ public class CombatTracker extends Fragment {
                     initiative.setId(View.generateViewId());
 
                     TextView monName = innerLayout.findViewById(R.id.reinforcement_name);
-                    monName.setText(MessageFormat.format("{0} x{1}", combatant.getName(), combatant.getQuantity()));
+                    monName.setText(MessageFormat.format("{0} x{1}", combatant.getLocalName(), combatant.getQuantity()));
                     monName.setId(View.generateViewId());
 
                     CheckBox check = innerLayout.findViewById(R.id.reinforcement_checkbox);
