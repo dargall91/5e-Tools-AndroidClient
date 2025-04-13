@@ -1,10 +1,8 @@
 package com.DnD5eTools.interfaces;
 
-import com.DnD5eTools.entities.monster.Ability;
-import com.DnD5eTools.entities.monster.Action;
 import com.DnD5eTools.entities.monster.ChallengeRating;
-import com.DnD5eTools.entities.monster.LegendaryAction;
 import com.DnD5eTools.entities.monster.Monster;
+import com.DnD5eTools.models.ResponseWrapper;
 import com.DnD5eTools.models.projections.NameIdProjection;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -14,19 +12,19 @@ public class MonsterInterface extends AbstractInterface {
     private static final String path = "/monster";
 
     public static List<NameIdProjection> getMonsterList() {
-        return getListResult(new TypeReference<List<NameIdProjection>>() {}, path + "/all?archived=false");
+        return getListResult(new TypeReference<ResponseWrapper<List<NameIdProjection>>>() {}, path + "/all?archived=false");
     }
 
     public static Monster getMonster(int monsterId) {
-        return getSingleResult(Monster.class, path + "/" + monsterId);
+        return getSingleResult(new TypeReference<ResponseWrapper<Monster>>() {}, path + "/" + monsterId);
     }
 
     public static NameIdProjection addMonster(String name) {
-        return putSingleResult(NameIdProjection.class, path + "?name=" + name, null);
+        return putSingleResult(new TypeReference<ResponseWrapper<NameIdProjection>>() {}, path + "?name=" + name, null);
     }
 
     public static void updateMonster(Monster monster) {
-        postNoResult(path + "update", monster);
+        postNoResult(path, monster);
     }
 
     public static void archiveMonster(int monsterId) {
@@ -34,10 +32,10 @@ public class MonsterInterface extends AbstractInterface {
     }
 
     public static Monster copyMonster(int monsterId, String name) {
-        return putSingleResult(Monster.class, path + "/" + monsterId + "/copy?name=" + name, null);
+        return putSingleResult(new TypeReference<ResponseWrapper<Monster>>() {}, path + "/" + monsterId + "/copy?name=" + name, null);
     }
 
     public static List<ChallengeRating> getChallengeRatings() {
-        return getListResult(new TypeReference<List<ChallengeRating>>() {}, path + "challenge-ratings");
+        return getListResult(new TypeReference<ResponseWrapper<List<ChallengeRating>>>() {}, path + "/challenge-ratings");
     }
 }
