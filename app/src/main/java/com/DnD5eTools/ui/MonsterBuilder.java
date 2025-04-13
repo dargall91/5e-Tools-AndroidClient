@@ -27,6 +27,7 @@ import com.DnD5eTools.R;
 import com.DnD5eTools.entities.monster.Ability;
 import com.DnD5eTools.entities.monster.Action;
 import com.DnD5eTools.entities.monster.LegendaryAction;
+import com.DnD5eTools.entities.monster.Monster;
 import com.DnD5eTools.interfaces.MonsterInterface;
 import com.DnD5eTools.models.projections.NameIdProjection;
 import com.DnD5eTools.util.Util;
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
  * Tab for creating and editing Monsters.
  */
 public class MonsterBuilder extends Fragment {
-    private com.DnD5eTools.entities.monster.Monster monster;
+    private Monster monster;
     private List<NameIdProjection> monsterList;
     private List<String> monsterNameList = new ArrayList<>();
     private LayoutInflater inflater;
@@ -131,7 +132,7 @@ public class MonsterBuilder extends Fragment {
                 });
 
                 add.show();
-            } else if (monsterList.get(position).getId() == monster.getId()) {
+            } else if (monsterList.get(position).getId() == monster.getMonsterId()) {
                 //if the selected monster is the current one, do nothing and exit
                 return;
             } else {
@@ -416,7 +417,7 @@ public class MonsterBuilder extends Fragment {
                 .setTitle("Archive Monster")
                 .setMessage("Archive " + monster.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    MonsterInterface.archiveMonster(monster.getId());
+                    MonsterInterface.archiveMonster(monster.getMonsterId());
                     monsterListView(true);
                     builderView();
                 })
@@ -469,7 +470,7 @@ public class MonsterBuilder extends Fragment {
                 Button ok = copyDialog.getButton(AlertDialog.BUTTON_POSITIVE);
                 ok.setOnClickListener(v -> {
                     //get copy and display in builder
-                    monster = MonsterInterface.copyMonster(monster.getId(), newName.getText().toString());
+                    monster = MonsterInterface.copyMonster(monster.getMonsterId(), newName.getText().toString());
                     monsterListView(false);
                     builderView();
                 });
@@ -1642,7 +1643,6 @@ public class MonsterBuilder extends Fragment {
             delete.setId(index);
             delete.setTag(index);
             delete.setOnClickListener(view -> {
-                MonsterInterface.deleteAbility(monster.getId(), monster.getAbilities().get(index).getId());
                 monster.getAbilities().remove(index);
                 monsterAbilities();
             });
@@ -1650,7 +1650,6 @@ public class MonsterBuilder extends Fragment {
 
         Button add = view.findViewById(R.id.add_ability);
         add.setOnClickListener(view -> {
-            monster.getAbilities().add(MonsterInterface.addAbility(monster.getId()));
             monsterAbilities();
         });
     }
@@ -1728,7 +1727,6 @@ public class MonsterBuilder extends Fragment {
             delete.setId(index);
             delete.setTag(index);
             delete.setOnClickListener(view -> {
-                MonsterInterface.deleteAction(monster.getId(), monster.getActions().get(index).getId());
                 monster.getActions().remove(index);
                 monsterActions();
             });
@@ -1736,7 +1734,6 @@ public class MonsterBuilder extends Fragment {
 
         Button add = view.findViewById(R.id.add_action);
         add.setOnClickListener(view -> {
-            monster.getActions().add(MonsterInterface.addAction(monster.getId()));
             monsterActions();
         });
     }
@@ -1847,7 +1844,6 @@ public class MonsterBuilder extends Fragment {
             delete.setId(index);
             delete.setTag(index);
             delete.setOnClickListener(v -> {
-                MonsterInterface.deleteLegendaryAction(monster.getId(), monster.getLegendaryActions().get(index).getId());
                 monster.getLegendaryActions().remove(index);
                 monsterLegendaryActions();
             });
@@ -1856,7 +1852,6 @@ public class MonsterBuilder extends Fragment {
 
         Button add = view.findViewById(R.id.add_legendary_action);
         add.setOnClickListener(v -> {
-            monster.getLegendaryActions().add(MonsterInterface.addLegendaryAction(monster.getId()));
             monsterLegendaryActions();
         });
     }
