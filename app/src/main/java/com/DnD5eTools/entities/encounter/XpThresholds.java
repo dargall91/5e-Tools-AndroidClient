@@ -1,15 +1,15 @@
 package com.DnD5eTools.entities.encounter;
 
 public class XpThresholds {
-    private int level;
+    private int id;
     private int easy;
     private int medium;
     private int hard;
     private int deadly;
     private int budget;
 
-    public int getLevel() {
-        return level;
+    public int getId() {
+        return id;
     }
 
     public int getEasy() {

@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -147,7 +146,7 @@ public class EncounterBuilder extends Fragment {
                 });
 
                 add.show();
-            } else if (encounterList.get(position).getId() == encounter.getId()) {
+            } else if (encounterList.get(position).getId() == encounter.getEncounterId()) {
                 //if the selected encounter is the current one, do nothing and exit
                 return;
             } else {
@@ -197,7 +196,7 @@ public class EncounterBuilder extends Fragment {
                 .setTitle("Archive Encounter")
                 .setMessage("Archive " + encounter.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    EncounterInterface.archiveEncounter(encounter.getId());
+                    EncounterInterface.archiveEncounter(encounter.getEncounterId());
                     encounterListView(true);
                     builderView();
                 })
@@ -469,11 +468,11 @@ public class EncounterBuilder extends Fragment {
             Spinner initiative = monsterView.findViewById(R.id.initiative);
             initiative.setId(index);
             initiative.setTag(index);
-            initiative.setSelection(monsterList.get(index).getInitiative() - 1, false);
+            initiative.setSelection(monsterList.get(index).getInitiativeRoll() - 1, false);
             initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter.getMonsterList().get(index).setInitiative(initiative.getSelectedItemPosition() + 1);
+                    encounter.getMonsterList().get(index).setInitiativeRoll(initiative.getSelectedItemPosition() + 1);
                     EncounterInterface.updateEncounter(encounter);
                 }
 

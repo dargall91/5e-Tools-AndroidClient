@@ -8,7 +8,7 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Encounter {
-    private Integer id;
+    private Integer encounterId;
     private int campaignId;
     private String name;
     private Music music;
@@ -16,12 +16,12 @@ public class Encounter {
     private boolean archived = false;
     private List<EncounterMonster> monsterList = new ArrayList<>();
 
-    public Integer getId() {
-        return id;
+    public Integer getEncounterId() {
+        return encounterId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setEncounterId(int encounterId) {
+        this.encounterId = encounterId;
     }
 
     public int getCampaignId() {

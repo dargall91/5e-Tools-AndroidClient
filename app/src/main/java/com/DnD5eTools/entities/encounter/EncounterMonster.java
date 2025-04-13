@@ -3,32 +3,37 @@ package com.DnD5eTools.entities.encounter;
 import com.DnD5eTools.entities.monster.Monster;
 
 public class EncounterMonster {
-    private int id;
+    private int monsterId;
     private Monster monster;
+    private String name;
     private int quantity = 1;
-    private int initiative = 1;
-    private boolean invisible = false;
-    private boolean reinforcement = false;
-    private boolean minion = false;
+    private int initiativeRoll = 1;
+    private boolean isInvisible = false;
+    private boolean isReinforcement = false;
+    private boolean isMinion = false;
 
     public EncounterMonster() { }
 
     public EncounterMonster(Monster monster) {
         this.monster = monster;
+        this.name = monster.getName();
+        this.monsterId = monster.getMonsterId();
     }
 
-    public EncounterMonster(Monster monster, int quantity, int initiative) {
+    public EncounterMonster(Monster monster, int quantity, int initiativeRoll) {
         this.monster = monster;
+        this.name = monster.getName();
+        this.monsterId = monster.getMonsterId();
         this.quantity = quantity;
-        this.initiative = initiative;
+        this.initiativeRoll = initiativeRoll;
     }
 
-    public int getId() {
-        return id;
+    public int getMonsterId() {
+        return monsterId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setMonsterId(int monsterId) {
+        this.monsterId = monsterId;
     }
 
     public Monster getMonster() {
@@ -39,6 +44,14 @@ public class EncounterMonster {
         this.monster = monster;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public int getQuantity() {
         return quantity;
     }
@@ -47,35 +60,35 @@ public class EncounterMonster {
         this.quantity = quantity;
     }
 
-    public int getInitiative() {
-        return initiative;
+    public int getInitiativeRoll() {
+        return initiativeRoll;
     }
 
-    public void setInitiative(int initiative) {
-        this.initiative = initiative;
+    public void setInitiativeRoll(int initiativeRoll) {
+        this.initiativeRoll = initiativeRoll;
     }
 
     public boolean isInvisible() {
-        return invisible;
+        return isInvisible;
     }
 
     public void setInvisible(boolean invisible) {
-        this.invisible = invisible;
+        this.isInvisible = invisible;
     }
 
     public boolean isReinforcement() {
-        return reinforcement;
+        return isReinforcement;
     }
 
     public void setReinforcement(boolean reinforcement) {
-        this.reinforcement = reinforcement;
+        this.isReinforcement = reinforcement;
     }
 
     public boolean isMinion() {
-        return minion;
+        return isMinion;
     }
 
     public void setMinion(boolean minion) {
-        this.minion = minion;
+        this.isMinion = minion;
     }
 }
