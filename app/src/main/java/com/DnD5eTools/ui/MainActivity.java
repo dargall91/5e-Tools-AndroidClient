@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
             Button cancel = custom.getButton(android.app.AlertDialog.BUTTON_NEGATIVE);
 
             set.setOnClickListener(view -> {
-                String url = "https://" + host.getText() + ":" + port.getText() + "/api/v1/";
+                String url = "https://" + host.getText() + ":" + port.getText() + "/api/v1";
                 Util.getServerConnection().setUrl(url);
                 connected[0] = Util.isConnectedToServer();
 

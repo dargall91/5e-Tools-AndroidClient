@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Campaign {
-    private Integer id;
+    private Integer campaignId;
     private String name;
 
-    public Integer getId() {
-        return id;
+    public Integer getCampaignId() {
+        return campaignId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setCampaignId(int campaignId) {
+        this.campaignId = campaignId;
     }
 
     public String getName() {

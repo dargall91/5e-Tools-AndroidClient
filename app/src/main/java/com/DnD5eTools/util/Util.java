@@ -42,7 +42,7 @@ public class Util {
     }
 
     public static int getCampaignId() {
-        return campaign.getId();
+        return campaign.getCampaignId();
     }
 
     public static void setCampaign(Campaign campaign) {
