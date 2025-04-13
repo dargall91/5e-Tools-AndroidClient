@@ -134,7 +134,7 @@ public class CombatTracker extends Fragment {
 
             TextView name = playerView.findViewById(R.id.player_name);
             name.setId(index);
-            name.setText(playerList.get(index).getName());
+            name.setText(playerList.get(index).getPlayerCharacterName());
             name.setTag(index);
 
             CheckBox isCombatant = playerView.findViewById(R.id.combatant_checkbox);
@@ -150,7 +150,7 @@ public class CombatTracker extends Fragment {
             //index of ac = ac - 1
             TextView ac = playerView.findViewById(R.id.ac);
             ac.setId(index);
-            ac.setText(String.valueOf(playerList.get(index).getTotalAc()));
+            ac.setText(String.valueOf(playerList.get(index).getTotalArmorClass()));
             ac.setTag(index);
 
             //index of bonus = bonus + 5
@@ -174,13 +174,13 @@ public class CombatTracker extends Fragment {
             //index of initiative = initiative - 1
             Spinner initiative = playerView.findViewById(R.id.init_roll_spinner);
             initiative.setId(index);
-            initiative.setSelection(playerList.get(index).getRolledInitiative() - 1, false);
+            initiative.setSelection(playerList.get(index).getInitiativeRoll() - 1, false);
             initiative.setTag(index);
 
             initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    playerList.get(index).setRolledInitiative(position + 1);
+                    playerList.get(index).setInitiativeRoll(position + 1);
                     PlayerInterface.updatePlayer(playerList.get(index));
                 }
 
@@ -363,9 +363,9 @@ public class CombatTracker extends Fragment {
 
         final AlertDialog.Builder tieBreaker = new AlertDialog.Builder(getContext());
         tieBreaker.setTitle("Tie Breaker")
-                .setView(tieView)
-                .setCancelable(false)
-                .setPositiveButton("OK", null);
+            .setView(tieView)
+            .setCancelable(false)
+            .setPositiveButton("OK", null);
 
         AlertDialog alert = tieBreaker.create();
         alert.setOnShowListener(dialog -> {

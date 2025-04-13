@@ -4,11 +4,11 @@ import com.DnD5eTools.entities.PlayerCharacter;
 
 public class PlayerCombatant extends Combatant {
     public PlayerCombatant(PlayerCharacter pc) {
-        setServerName(pc.getName());
-        setLocalName(pc.getName());
-        setInitiative(pc.getRolledInitiative() + pc.getInitiativeBonus());
+        setServerName(pc.getPlayerCharacterName());
+        setLocalName(pc.getPlayerCharacterName());
+        setInitiative(pc.getInitiativeRoll() + pc.getInitiativeBonus());
         setInitiativeBonus(pc.getInitiativeBonus());
-        setAc(pc.getTotalAc());
+        setAc(pc.getTotalArmorClass());
     }
 
     @Override
