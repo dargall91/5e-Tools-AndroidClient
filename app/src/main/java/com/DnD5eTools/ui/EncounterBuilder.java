@@ -377,11 +377,12 @@ public class EncounterBuilder extends Fragment {
         View musicLairView = view.findViewById(R.id.encounter_music_lair_layout);
         Spinner musicSpinner = musicLairView.findViewById(R.id.music);
         musicSpinner.setAdapter(adapter);
-        musicSpinner.setSelection(musicNameList.indexOf(encounter.getMusic().getName()), false);
+        var musicIndex = musicList.stream().filter(x -> x.getId() == encounter.getMusicId()).mapToInt(Music::getId).findFirst().orElse(1);
+        musicSpinner.setSelection(musicIndex, false);
         musicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                encounter.setMusic(musicList.get(position));
+                encounter.setMusicId(musicList.get(position).getId());
                 EncounterInterface.updateEncounter(encounter);
             }
 

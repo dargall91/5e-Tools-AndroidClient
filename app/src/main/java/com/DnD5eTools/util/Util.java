@@ -57,7 +57,7 @@ public class Util {
         loadedEncounter = encounter;
 
         if (loadedEncounter != null) {
-            MusicInterface.playMusic(loadedEncounter.getMusic().getId());
+            MusicInterface.playMusic(loadedEncounter.getMusicId());
         }
     }
 

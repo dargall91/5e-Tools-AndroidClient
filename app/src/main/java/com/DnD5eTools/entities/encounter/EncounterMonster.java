@@ -1,7 +1,9 @@
 package com.DnD5eTools.entities.encounter;
 
 import com.DnD5eTools.entities.monster.Monster;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EncounterMonster {
     private int monsterId;
     private Monster monster;

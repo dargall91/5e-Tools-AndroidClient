@@ -11,7 +11,7 @@ public class Encounter {
     private Integer encounterId;
     private int campaignId;
     private String name;
-    private Music music;
+    private int musicId;
     private boolean lairAction = false;
     private boolean archived = false;
     private List<EncounterMonster> monsterList = new ArrayList<>();
@@ -40,16 +40,13 @@ public class Encounter {
         this.name = name;
     }
 
-    public Music getMusic() {
-        return music;
-    }
 
-    public void setMusic(Music music) {
-        this.music = music;
+    public int getMusicId() {
+        return musicId;
     }
 
     public void setMusicId(int musicId) {
-        music.setId(musicId);
+        this.musicId = musicId;
     }
 
     public boolean isLairAction() {

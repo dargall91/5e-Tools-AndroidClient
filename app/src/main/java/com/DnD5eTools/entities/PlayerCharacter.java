@@ -54,11 +54,11 @@ public class PlayerCharacter {
         this.initiativeRoll = initiativeRoll;
     }
 
-    public boolean isCombatant() {
+    public boolean getIsCombatant() {
         return isCombatant;
     }
 
-    public void setCombatant(boolean combatant) {
+    public void setIsCombatant(boolean combatant) {
         this.isCombatant = combatant;
     }
 }

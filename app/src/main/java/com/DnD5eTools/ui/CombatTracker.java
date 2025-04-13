@@ -139,11 +139,11 @@ public class CombatTracker extends Fragment {
 
             CheckBox isCombatant = playerView.findViewById(R.id.combatant_checkbox);
             isCombatant.setId(index);
-            isCombatant.setChecked(playerList.get(index).isCombatant());
+            isCombatant.setChecked(playerList.get(index).getIsCombatant());
             isCombatant.setTag(index);
 
             isCombatant.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                playerList.get(index).setCombatant(isChecked);
+                playerList.get(index).setIsCombatant(isChecked);
                 PlayerInterface.updatePlayer(playerList.get(index));
             });
 
@@ -260,7 +260,7 @@ public class CombatTracker extends Fragment {
 
         //check for players marked as combatants
         for (PlayerCharacter pc : playerList) {
-            if(pc.isCombatant()) {
+            if(pc.getIsCombatant()) {
                 combatantList.add(new PlayerCombatant(pc));
             }
         }
