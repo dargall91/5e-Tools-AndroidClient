@@ -52,7 +52,7 @@ public class AbstractInterface {
 
             mapper = new ObjectMapper();
             client = new OkHttpClient.Builder().connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS,
-                            ConnectionSpec.COMPATIBLE_TLS))
+                            ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
                     .sslSocketFactory(sslContext.getSocketFactory(), TRUST_ALL_CERTS)
                     .hostnameVerifier((hostname, session) -> true)
                     .build();

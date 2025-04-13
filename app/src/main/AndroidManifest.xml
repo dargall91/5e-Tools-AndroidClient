@@ -13,7 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.5eTools"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
+
         <activity
             android:name=".ui.MainActivity"
             android:theme="@style/Theme.5eTools.NoActionBar"
