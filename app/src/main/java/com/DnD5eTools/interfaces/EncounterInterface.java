@@ -23,8 +23,8 @@ public class EncounterInterface extends AbstractInterface {
         return getSingleResult(new TypeReference<ResponseWrapper<Encounter>>() {}, path + "/" + encounterId);
     }
 
-    public static void updateEncounter(Encounter encounter) {
-        postNoResult(path, encounter);
+    public static Encounter updateEncounter(Encounter encounter) {
+        return postSingleResult(new TypeReference<ResponseWrapper<Encounter>>() {}, path, encounter);
     }
 
     public static void archiveEncounter(int encounterId) {

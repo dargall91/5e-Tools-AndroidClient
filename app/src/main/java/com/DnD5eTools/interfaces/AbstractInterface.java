@@ -219,6 +219,46 @@ public class AbstractInterface {
     }
 
     /**
+     * executes a POST request with an optional payload and expects a single object result
+     * @param endpoint
+     * @param payload
+     * @param <T>
+     */
+    public static <T> T postSingleResult(TypeReference<ResponseWrapper<T>> classType, String endpoint, T payload) {
+        AtomicReference<ResponseWrapper<T>> result = new AtomicReference<>();
+        Thread thread = new Thread(() -> {
+            try {
+                RequestBody body;
+                if (payload != null) {
+                    String payloadString = mapper.writer().writeValueAsString(payload);
+                    body = RequestBody.create(payloadString, MediaType.parse("application/json"));
+                } else {
+                    body = RequestBody.create("", null);
+                }
+                Request request = new Request.Builder()
+                        .url(getServerConnection().getUrl() + endpoint)
+                        .post(body)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                result.set(mapper.readValue(response.body().string(), classType));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        thread.start();
+
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return result.get().getData();
+    }
+
+    /**
      * executes a PUT request with an optional payload and expects no result
      * @param endpoint
      * @param payload

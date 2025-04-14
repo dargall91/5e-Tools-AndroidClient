@@ -265,11 +265,11 @@ public class CombatTracker extends Fragment {
             }
         }
 
-        if (Util.getLoadedEncounter().isLairAction()) {
+        if (Util.getLoadedEncounter().getHasLairAction()) {
             combatantList.add(new LairActionCombatant());
         }
 
-        List<EncounterMonster> encounterMonsterList = Util.getLoadedEncounter().getMonsterList();
+        List<EncounterMonster> encounterMonsterList = Util.getLoadedEncounter().getEncounterMonsters();
 
         for(EncounterMonster monster : encounterMonsterList) {
             combatantList.add(new MonsterCombatant(monster));

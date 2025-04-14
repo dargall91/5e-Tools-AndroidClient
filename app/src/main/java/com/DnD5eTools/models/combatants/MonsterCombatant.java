@@ -12,15 +12,16 @@ public class MonsterCombatant extends Combatant {
     boolean expanded;
 
     public MonsterCombatant(EncounterMonster monster) {
-        setServerName(monster.getMonster().getDisplayName());
-        setLocalName(monster.getMonster().getName());
-        setInitiative(monster.getInitiativeRoll() + monster.getMonster().getTotalInitiativeBonus());
-        setInitiativeBonus(monster.getMonster().getTotalInitiativeBonus());
-        invisible = monster.isInvisible();
-        reinforcement = monster.isReinforcement();
+        setServerName(monster.getDisplayName());
+        setLocalName(monster.getName());
+        var dexterityModifier = (int) Math.floor((monster.getDexterity() - 10) / 2.0);
+        setInitiative(monster.getInitiativeRoll() + dexterityModifier + monster.getInitiativeBonus());
+        setInitiativeBonus(dexterityModifier + monster.getInitiativeBonus());
+        invisible = monster.getIsInvisible();
+        reinforcement = monster.getIsReinforcement();
         quantity = monster.getQuantity();
-        setAc(monster.getMonster().getArmorClass());
-        hitPoints = monster.getMonster().getHitPoints();
+        setAc(monster.getArmorClass());
+        hitPoints = monster.getHitPoints();
         alive = true;
         expanded = quantity == 1;
     }

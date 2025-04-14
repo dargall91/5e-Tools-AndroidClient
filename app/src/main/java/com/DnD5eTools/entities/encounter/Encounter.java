@@ -1,6 +1,5 @@
 package com.DnD5eTools.entities.encounter;
 
-import com.DnD5eTools.entities.Music;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
@@ -9,12 +8,10 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Encounter {
     private Integer encounterId;
-    private int campaignId;
     private String name;
     private int musicId;
-    private boolean lairAction = false;
-    private boolean archived = false;
-    private List<EncounterMonster> monsterList = new ArrayList<>();
+    private boolean hasLairAction = false;
+    private List<EncounterMonster> encounterMonsters = new ArrayList<>();
 
     public Integer getEncounterId() {
         return encounterId;
@@ -22,14 +19,6 @@ public class Encounter {
 
     public void setEncounterId(int encounterId) {
         this.encounterId = encounterId;
-    }
-
-    public int getCampaignId() {
-        return campaignId;
-    }
-
-    public void setCampaignId(int campaignId) {
-        this.campaignId = campaignId;
     }
 
     public String getName() {
@@ -49,37 +38,29 @@ public class Encounter {
         this.musicId = musicId;
     }
 
-    public boolean isLairAction() {
-        return lairAction;
+    public boolean getHasLairAction() {
+        return hasLairAction;
     }
 
-    public void setLairAction(boolean lairAction) {
-        this.lairAction = lairAction;
+    public void setHasLairAction(boolean hasLairAction) {
+        this.hasLairAction = hasLairAction;
     }
 
-    public boolean isArchived() {
-        return archived;
+    public List<EncounterMonster> getEncounterMonsters() {
+        return encounterMonsters;
     }
 
-    public void setArchived(boolean archived) {
-        this.archived = archived;
-    }
-
-    public List<EncounterMonster> getMonsterList() {
-        return monsterList;
-    }
-
-    public void setMonsterList(List<EncounterMonster> monsterList) {
-        this.monsterList = monsterList;
+    public void setEncounterMonsters(List<EncounterMonster> encounterMonsters) {
+        this.encounterMonsters = encounterMonsters;
     }
 
     public int getXpTotal() {
         int rawTotal = 0;
         int quanity = 0;
 
-        for (EncounterMonster monster : monsterList) {
-            if (!monster.isMinion()) {
-                rawTotal += monster.getMonster().getChallengeRating().getXp() * monster.getQuantity();
+        for (EncounterMonster monster : encounterMonsters) {
+            if (!monster.getIsMinion()) {
+                rawTotal += monster.getXp() * monster.getQuantity();
                 quanity += monster.getQuantity();
             }
         }

@@ -6,24 +6,29 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EncounterMonster {
     private int monsterId;
-    private Monster monster;
     private String name;
     private int quantity = 1;
     private int initiativeRoll = 1;
     private boolean isInvisible = false;
     private boolean isReinforcement = false;
     private boolean isMinion = false;
+    private int xp;
+    private String displayName;
+    private int initiativeBonus;
+    private int dexterity;
+    private int armorClass;
+    private int hitPoints;
 
     public EncounterMonster() { }
 
     public EncounterMonster(Monster monster) {
-        this.monster = monster;
         this.name = monster.getName();
         this.monsterId = monster.getMonsterId();
+        quantity = 1;
+        initiativeRoll = 1;
     }
 
     public EncounterMonster(Monster monster, int quantity, int initiativeRoll) {
-        this.monster = monster;
         this.name = monster.getName();
         this.monsterId = monster.getMonsterId();
         this.quantity = quantity;
@@ -36,14 +41,6 @@ public class EncounterMonster {
 
     public void setMonsterId(int monsterId) {
         this.monsterId = monsterId;
-    }
-
-    public Monster getMonster() {
-        return monster;
-    }
-
-    public void setMonster(Monster monster) {
-        this.monster = monster;
     }
 
     public String getName() {
@@ -70,27 +67,75 @@ public class EncounterMonster {
         this.initiativeRoll = initiativeRoll;
     }
 
-    public boolean isInvisible() {
+    public boolean getIsInvisible() {
         return isInvisible;
     }
 
-    public void setInvisible(boolean invisible) {
+    public void getIsInvisible(boolean invisible) {
         this.isInvisible = invisible;
     }
 
-    public boolean isReinforcement() {
+    public boolean getIsReinforcement() {
         return isReinforcement;
     }
 
-    public void setReinforcement(boolean reinforcement) {
+    public void setIsReinforcement(boolean reinforcement) {
         this.isReinforcement = reinforcement;
     }
 
-    public boolean isMinion() {
+    public boolean getIsMinion() {
         return isMinion;
     }
 
-    public void setMinion(boolean minion) {
+    public void setIsMinion(boolean minion) {
         this.isMinion = minion;
+    }
+
+    public int getXp() {
+        return xp;
+    }
+
+    public void setXp(int xp) {
+        this.xp = xp;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public int getDexterity() {
+        return dexterity;
+    }
+
+    public void setDexterity(int dexterity) {
+        this.dexterity = dexterity;
+    }
+
+    public int getInitiativeBonus() {
+        return initiativeBonus;
+    }
+
+    public void setInitiativeBonus(int initiativeBonus) {
+        this.initiativeBonus = initiativeBonus;
+    }
+
+    public int getArmorClass() {
+        return armorClass;
+    }
+
+    public void setArmorClass(int armorClass) {
+        this.armorClass = armorClass;
+    }
+
+    public int getHitPoints() {
+        return hitPoints;
+    }
+
+    public void setHitPoints(int hitPoints) {
+        this.hitPoints = hitPoints;
     }
 }

@@ -40,6 +40,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Tabs for creating and editing Encounters.
@@ -224,7 +225,7 @@ public class EncounterBuilder extends Fragment {
                     encounter.setName(newName.getText().toString());
                     name.setText(encounter.getName());
                     encounterListView(false);
-                    EncounterInterface.updateEncounter(encounter);
+                    encounter = EncounterInterface.updateEncounter(encounter);
                     renameDialog.dismiss();
                 });
             });
@@ -358,6 +359,13 @@ public class EncounterBuilder extends Fragment {
     }
 
     private void calculateXpThresholds() {
+        //reset previous calculations
+        easyThreshold = 0;
+        mediumThreshold = 0;
+        hardThreshold = 0;
+        deadlyThreshold = 0;
+        dailyXpBudget = 0;
+
         for (int i = 0; i < playerCountList.size(); i++) {
             int level = playerLevelList.get(i);
             int count = playerCountList.get(i);
@@ -377,13 +385,13 @@ public class EncounterBuilder extends Fragment {
         View musicLairView = view.findViewById(R.id.encounter_music_lair_layout);
         Spinner musicSpinner = musicLairView.findViewById(R.id.music);
         musicSpinner.setAdapter(adapter);
-        var musicIndex = musicList.stream().filter(x -> x.getId() == encounter.getMusicId()).mapToInt(Music::getId).findFirst().orElse(1);
+        var musicIndex = IntStream.range(0, musicList.size()).filter(x -> musicList.get(x).getId() == encounter.getMusicId()).findFirst().orElse(1);
         musicSpinner.setSelection(musicIndex, false);
         musicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 encounter.setMusicId(musicList.get(position).getId());
-                EncounterInterface.updateEncounter(encounter);
+                encounter = EncounterInterface.updateEncounter(encounter);
             }
 
             @Override
@@ -391,10 +399,10 @@ public class EncounterBuilder extends Fragment {
         });
 
         CheckBox lair = musicLairView.findViewById(R.id.lair_action);
-        lair.setChecked(encounter.isLairAction());
+        lair.setChecked(encounter.getHasLairAction());
         lair.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            encounter.setLairAction(isChecked);
-            EncounterInterface.updateEncounter(encounter);
+            encounter.setHasLairAction(isChecked);
+            encounter = EncounterInterface.updateEncounter(encounter);
         });
     }
 
@@ -403,7 +411,7 @@ public class EncounterBuilder extends Fragment {
             monstersContainer.removeViewsInLayout(1, monstersContainer.getChildCount() - 1);
         }
 
-        List<EncounterMonster> monsterList = encounter.getMonsterList();
+        List<EncounterMonster> monsterList = encounter.getEncounterMonsters();
 
         for (int i = 0; i < monsterList.size(); i++) {
             final int index = i;
@@ -411,7 +419,7 @@ public class EncounterBuilder extends Fragment {
             TextView name = monsterView.findViewById(R.id.name);
             name.setId(index);
             name.setTag(index);
-            name.setText(monsterList.get(index).getMonster().getName());
+            name.setText(monsterList.get(index).getName());
 
             EditText quantity = monsterView.findViewById(R.id.quantity);
             quantity.setId(index);
@@ -438,18 +446,18 @@ public class EncounterBuilder extends Fragment {
                         int monQuantity = Integer.parseInt(quantity.getText().toString());
 
                         //pressed minus quickly in succession
-                        if (encounter.getMonsterList().size() == 0) {
+                        if (encounter.getEncounterMonsters().size() == 0) {
                             return;
                         }
 
                         if (monQuantity <= 0) {
-                            encounter.getMonsterList().remove(index);
+                            encounter.getEncounterMonsters().remove(index);
                             monsterListView();
                         } else {
-                            encounter.getMonsterList().get(index).setQuantity(monQuantity);
+                            encounter.getEncounterMonsters().get(index).setQuantity(monQuantity);
                         }
 
-                        EncounterInterface.updateEncounter(encounter);
+                        encounter = EncounterInterface.updateEncounter(encounter);
 
                         difficultyView();
                     }, DELAY);
@@ -473,8 +481,8 @@ public class EncounterBuilder extends Fragment {
             initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter.getMonsterList().get(index).setInitiativeRoll(initiative.getSelectedItemPosition() + 1);
-                    EncounterInterface.updateEncounter(encounter);
+                    encounter.getEncounterMonsters().get(index).setInitiativeRoll(initiative.getSelectedItemPosition() + 1);
+                    encounter = EncounterInterface.updateEncounter(encounter);
                 }
 
                 @Override
@@ -484,29 +492,29 @@ public class EncounterBuilder extends Fragment {
             CheckBox reinforcement = monsterView.findViewById(R.id.reinforcement);
             reinforcement.setId(index);
             reinforcement.setTag(index);
-            reinforcement.setChecked(monsterList.get(i).isReinforcement());
+            reinforcement.setChecked(monsterList.get(i).getIsReinforcement());
             reinforcement.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getMonsterList().get(index).setReinforcement(isChecked);
-                EncounterInterface.updateEncounter(encounter);
+                encounter.getEncounterMonsters().get(index).setIsReinforcement(isChecked);
+                encounter = EncounterInterface.updateEncounter(encounter);
             });
 
             CheckBox minion = monsterView.findViewById(R.id.minion);
             minion.setId(index);
             minion.setTag(index);
-            minion.setChecked(monsterList.get(i).isMinion());
+            minion.setChecked(monsterList.get(i).getIsMinion());
             minion.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getMonsterList().get(index).setMinion(isChecked);
-                EncounterInterface.updateEncounter(encounter);
+                encounter.getEncounterMonsters().get(index).setIsMinion(isChecked);
+                encounter = EncounterInterface.updateEncounter(encounter);
                 difficultyView();
             });
 
             CheckBox invisible = monsterView.findViewById(R.id.invisible);
             invisible.setId(index);
             invisible.setTag(index);
-            invisible.setChecked(monsterList.get(i).isInvisible());
+            invisible.setChecked(monsterList.get(i).getIsInvisible());
             invisible.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getMonsterList().get(index).setInvisible(isChecked);
-                EncounterInterface.updateEncounter(encounter);
+                encounter.getEncounterMonsters().get(index).getIsInvisible(isChecked);
+                encounter = EncounterInterface.updateEncounter(encounter);
             });
         }
 
@@ -541,8 +549,8 @@ public class EncounterBuilder extends Fragment {
 
                     int index = Util.getMonsterNameList().indexOf(name);
                     Monster newMonster = MonsterInterface.getMonster(Util.getMonsterList().get(index).getId());
-                    encounter.getMonsterList().add(new EncounterMonster(newMonster));
-                    EncounterInterface.updateEncounter(encounter);
+                    encounter.getEncounterMonsters().add(new EncounterMonster(newMonster));
+                    encounter = EncounterInterface.updateEncounter(encounter);
 
                     monsterListView();
                     difficultyView();
