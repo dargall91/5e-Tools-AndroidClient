@@ -491,7 +491,7 @@ public class MonsterBuilder extends Fragment {
     }
 
     private void monsterSTR(GridLayout stats) {
-        Boolean[] firstPass = { true };
+        Boolean[] initialLoad = { true };
         Spinner strengthSpinner = stats.findViewById(R.id.strength);
         TextView strengthModifier = stats.findViewById(R.id.str_mod);
 
@@ -552,11 +552,11 @@ public class MonsterBuilder extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 //prevents unnecessary api call on init/refresh
-                if (!firstPass[0]) {
+                if (!initialLoad[0]) {
                     monster.getStrength().setScore(position);
                     MonsterInterface.updateMonster(monster);
                 } else {
-                    firstPass[0] = false;
+                    initialLoad[0] = false;
                 }
 
                 updateStrengthProficiencies();
@@ -567,10 +567,17 @@ public class MonsterBuilder extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) { }
         });
         strengthSpinner.setSelection(monster.getStrength().getScore());
+
+        //on initial load, if the score is 0 the listener won't be triggered because 0 is already selected by default
+        if (initialLoad[0] && monster.getStrength().getScore() == 0) {
+            updateStrengthProficiencies();
+            updateAbilityModifier(strengthModifier, monster.getStrength().getScoreModifier());
+            initialLoad[0] = false;
+        }
     }
 
     private void monsterDEX(GridLayout stats) {
-        Boolean[] firstPass = { true };
+        Boolean[] initialLoad = { true };
         Spinner dexteritySpinner = stats.findViewById(R.id.dexterity);
         TextView dexterityModifier = stats.findViewById(R.id.dex_mod);
 
@@ -721,11 +728,11 @@ public class MonsterBuilder extends Fragment {
         dexteritySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (!initialLoad[0]) {
                     monster.getDexterity().setScore(position);
                     MonsterInterface.updateMonster(monster);
                 } else {
-                    firstPass[0] = false;
+                    initialLoad[0] = false;
                 }
 
                 updateDexterityProficiencies();
@@ -736,10 +743,17 @@ public class MonsterBuilder extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) { }
         });
         dexteritySpinner.setSelection(monster.getDexterity().getScore());
+
+        //on initial load, if the score is 0 the listener won't be triggered because 0 is selected by default
+        if (initialLoad[0] && monster.getDexterity().getScore() == 0) {
+            updateDexterityProficiencies();
+            updateAbilityModifier(dexterityModifier, monster.getDexterity().getScoreModifier());
+            initialLoad[0] = false;
+        }
     }
 
     private void monsterCON(GridLayout stats) {
-        Boolean[] firstPass = { true };
+        Boolean[] initialLoad = { true };
         Spinner constitution = stats.findViewById(R.id.constitution);
         TextView constitutionModifier = stats.findViewById(R.id.con_mod);
 
@@ -754,11 +768,11 @@ public class MonsterBuilder extends Fragment {
         constitution.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (!initialLoad[0]) {
                     monster.getConstitution().setScore(position);
                     MonsterInterface.updateMonster(monster);
                 } else {
-                    firstPass[0] = false;
+                    initialLoad[0] = false;
                 }
 
                 updateConstitutionProficiencies();
@@ -769,10 +783,17 @@ public class MonsterBuilder extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) { }
         });
         constitution.setSelection(monster.getConstitution().getScore());
+
+        //on initial load, if the score is 0 the listener won't be triggered because 0 is selected by default
+        if (initialLoad[0] && monster.getConstitution().getScore() == 0) {
+            updateConstitutionProficiencies();
+            updateAbilityModifier(constitutionModifier, monster.getConstitution().getScoreModifier());
+            initialLoad[0] = false;
+        }
     }
 
     private void monsterINT(GridLayout stats) {
-        Boolean[] firstPass = { true };
+        Boolean[] initialLoad = { true };
         Spinner intelligence = stats.findViewById(R.id.intelligence);
         TextView intelligenceModifier = stats.findViewById(R.id.int_mod);
 
@@ -1007,11 +1028,11 @@ public class MonsterBuilder extends Fragment {
         intelligence.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (!initialLoad[0]) {
                     monster.getIntelligence().setScore(position);
                     MonsterInterface.updateMonster(monster);
                 } else {
-                    firstPass[0] = false;
+                    initialLoad[0] = false;
                 }
 
                 updateIntelligenceProficiencies();
@@ -1022,10 +1043,17 @@ public class MonsterBuilder extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) { }
         });
         intelligence.setSelection(monster.getIntelligence().getScore());
+
+        //on initial load, if the score is 0 the listener won't be triggered because 0 is selected by default
+        if (initialLoad[0] && monster.getIntelligence().getScore() == 0) {
+            updateIntelligenceProficiencies();
+            updateAbilityModifier(intelligenceModifier, monster.getIntelligence().getScoreModifier());
+            initialLoad[0] = false;
+        }
     }
 
     private void monsterWIS(GridLayout stats) {
-        Boolean[] firstPass = { true };
+        Boolean[] initialLoad = { true };
         Spinner wisdom = stats.findViewById(R.id.wisdom);
         TextView wisdomModifier = stats.findViewById(R.id.wis_mod);
 
@@ -1260,11 +1288,11 @@ public class MonsterBuilder extends Fragment {
         wisdom.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (!initialLoad[0]) {
                     monster.getWisdom().setScore(position);
                     MonsterInterface.updateMonster(monster);
                 } else {
-                    firstPass[0] = false;
+                    initialLoad[0] = false;
                 }
 
                 updateWisdomProficiencies();
@@ -1275,10 +1303,17 @@ public class MonsterBuilder extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) { }
         });
         wisdom.setSelection(monster.getWisdom().getScore());
+
+        //on initial load, if the score is 0 the listener won't be triggered because 0 is selected by default
+        if (initialLoad[0] && monster.getWisdom().getScore() == 0) {
+            updateWisdomProficiencies();
+            updateAbilityModifier(wisdomModifier, monster.getWisdom().getScoreModifier());
+            initialLoad[0] = false;
+        }
     }
 
     private void monsterCHA(GridLayout stats) {
-        Boolean[] firstPass = { true };
+        Boolean[] initialLoad = { true };
         Spinner charisma = stats.findViewById(R.id.charisma);
         TextView charismaModifier = stats.findViewById(R.id.cha_mod);
 
@@ -1469,11 +1504,11 @@ public class MonsterBuilder extends Fragment {
         charisma.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (!initialLoad[0]) {
                     monster.getCharisma().setScore(position);
                     MonsterInterface.updateMonster(monster);
                 } else {
-                    firstPass[0] = false;
+                    initialLoad[0] = false;
                 }
 
                 updateCharismaProficiencies();
@@ -1484,6 +1519,13 @@ public class MonsterBuilder extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) { }
         });
         charisma.setSelection(monster.getCharisma().getScore());
+
+        //on initial load, if the score is 0 the listener won't be triggered because 0 is selected by default
+        if (initialLoad[0] && monster.getCharisma().getScore() == 0) {
+            updateCharismaProficiencies();
+            updateAbilityModifier(charismaModifier, monster.getCharisma().getScoreModifier());
+            initialLoad[0] = false;
+        }
     }
 
     private void monsterSensesLanguagesCR() {
