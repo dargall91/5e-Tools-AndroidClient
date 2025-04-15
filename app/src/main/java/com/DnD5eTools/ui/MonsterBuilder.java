@@ -1692,6 +1692,7 @@ public class MonsterBuilder extends Fragment {
 
         Button add = view.findViewById(R.id.add_ability);
         add.setOnClickListener(view -> {
+            monster.getAbilities().add(new Ability());
             monsterAbilities();
         });
     }
@@ -1776,6 +1777,7 @@ public class MonsterBuilder extends Fragment {
 
         Button add = view.findViewById(R.id.add_action);
         add.setOnClickListener(view -> {
+            monster.getActions().add(new Action());
             monsterActions();
         });
     }
@@ -1894,6 +1896,7 @@ public class MonsterBuilder extends Fragment {
 
         Button add = view.findViewById(R.id.add_legendary_action);
         add.setOnClickListener(v -> {
+            monster.getLegendaryActions().add(new LegendaryAction());
             monsterLegendaryActions();
         });
     }
