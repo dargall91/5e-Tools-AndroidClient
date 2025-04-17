@@ -49,8 +49,6 @@ public class MonsterBuilder extends Fragment {
     private LinearLayout abilityLayout;
     private LinearLayout actionLayout;
     private LinearLayout legendaryActionLayout;
-    private boolean expertise = false;
-    private boolean proficiency = false;
     private View view;
     private final int UPDATE_DELAY = 1000;
     //proficiency checkboxes
@@ -483,12 +481,6 @@ public class MonsterBuilder extends Fragment {
 
         athleticsExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     athleticsProficiency.setChecked(true);
                     monster.getStrength().setAthletics(2);
@@ -499,18 +491,11 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
                         monster.getStrength().getScoreModifier(), getString(R.string.athletics));
-                expertise = false;
             }
         });
 
         athleticsProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     athleticsExpertise.setChecked(false);
                     monster.getStrength().setAthletics(0);
@@ -521,7 +506,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
                         monster.getStrength().getScoreModifier(), getString(R.string.athletics));
-                proficiency = false;
             }
         });
 
@@ -567,12 +551,6 @@ public class MonsterBuilder extends Fragment {
 
         acrobaticsExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     acrobaticsProficiency.setChecked(true);
                     monster.getDexterity().setAcrobatics(2);
@@ -583,18 +561,11 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
-                expertise = false;
             }
         });
 
         acrobaticsProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     acrobaticsExpertise.setChecked(false);
                     monster.getDexterity().setAcrobatics(0);
@@ -605,7 +576,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
-                proficiency = false;
             }
         });
 
@@ -619,12 +589,6 @@ public class MonsterBuilder extends Fragment {
 
         sleightOfHandExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     sleightOfHandProficiency.setChecked(true);
                     monster.getDexterity().setSleightOfHand(2);
@@ -635,17 +599,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
-                expertise = false;
             }
         });
         sleightOfHandProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     sleightOfHandExpertise.setChecked(false);
                     monster.getDexterity().setSleightOfHand(0);
@@ -656,7 +613,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
-                proficiency = false;
             }
         });
 
@@ -667,12 +623,6 @@ public class MonsterBuilder extends Fragment {
 
         stealthExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     stealthProficiency.setChecked(true);
                     monster.getDexterity().setStealth(2);
@@ -683,17 +633,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
-                expertise = false;
             }
         });
         stealthProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     stealthExpertise.setChecked(false);
                     monster.getDexterity().setStealth(0);
@@ -704,7 +647,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
-                proficiency = false;
             }
         });
 
@@ -785,12 +727,6 @@ public class MonsterBuilder extends Fragment {
 
         arcanaExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     arcanaProficiency.setChecked(true);
                     monster.getIntelligence().setArcana(2);
@@ -801,17 +737,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
-                expertise = false;
             }
         });
         arcanaProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     arcanaExpertise.setChecked(false);
                     monster.getIntelligence().setArcana(0);
@@ -822,7 +751,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
-                proficiency = false;
             }
         });
 
@@ -833,12 +761,6 @@ public class MonsterBuilder extends Fragment {
 
         historyExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     historyProficiency.setChecked(true);
                     monster.getIntelligence().setHistory(2);
@@ -849,17 +771,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.history));
-                expertise = false;
             }
         });
         historyProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     historyExpertise.setChecked(false);
                     monster.getIntelligence().setHistory(0);
@@ -870,7 +785,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.history));
-                proficiency = false;
             }
         });
 
@@ -881,12 +795,6 @@ public class MonsterBuilder extends Fragment {
 
         investigationExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     investigationProficiency.setChecked(true);
                     monster.getIntelligence().setInvestigation(2);
@@ -897,17 +805,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
-                expertise = false;
             }
         });
         investigationProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     investigationExpertise.setChecked(false);
                     monster.getIntelligence().setInvestigation(0);
@@ -918,7 +819,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
-                proficiency = false;
             }
         });
 
@@ -929,12 +829,6 @@ public class MonsterBuilder extends Fragment {
 
         natureExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     natureProficiency.setChecked(true);
                     monster.getIntelligence().setNature(2);
@@ -945,17 +839,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
-                expertise = false;
             }
         });
         natureProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     natureExpertise.setChecked(false);
                     monster.getIntelligence().setNature(0);
@@ -966,7 +853,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
-                proficiency = false;
             }
         });
 
@@ -977,12 +863,6 @@ public class MonsterBuilder extends Fragment {
 
         religionExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     religionProficiency.setChecked(true);
                     monster.getIntelligence().setReligion(2);
@@ -993,17 +873,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
-                expertise = false;
             }
         });
         religionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     religionExpertise.setChecked(false);
                     monster.getIntelligence().setReligion(0);
@@ -1014,7 +887,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
-                proficiency = false;
             }
         });
 
@@ -1060,12 +932,6 @@ public class MonsterBuilder extends Fragment {
 
         animalHandlingExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     animalHandlingProficiency.setChecked(true);
                     monster.getWisdom().setAnimalHandling(2);
@@ -1076,17 +942,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
-                expertise = false;
             }
         });
         animalHandlingProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     animalHandlingExpertise.setChecked(false);
                     monster.getWisdom().setAnimalHandling(0);
@@ -1097,7 +956,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
-                proficiency = false;
             }
         });
 
@@ -1108,12 +966,6 @@ public class MonsterBuilder extends Fragment {
 
         insightExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     insightProficiency.setChecked(true);
                     monster.getWisdom().setInsight(2);
@@ -1124,17 +976,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.insight));
-                expertise = false;
             }
         });
         insightProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     insightExpertise.setChecked(false);
                     monster.getWisdom().setInsight(0);
@@ -1145,7 +990,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.insight));
-                proficiency = false;
             }
         });
 
@@ -1156,12 +1000,6 @@ public class MonsterBuilder extends Fragment {
 
         medicineExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     medicineProficiency.setChecked(true);
                     monster.getWisdom().setMedicine(2);
@@ -1172,17 +1010,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
-                expertise = false;
             }
         });
         medicineProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     medicineExpertise.setChecked(false);
                     monster.getWisdom().setMedicine(0);
@@ -1193,7 +1024,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
-                proficiency = false;
             }
         });
 
@@ -1204,12 +1034,6 @@ public class MonsterBuilder extends Fragment {
 
         perceptionExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     perceptionProficiency.setChecked(true);
                     monster.getWisdom().setPerception(2);
@@ -1220,17 +1044,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.perception));
-                expertise = false;
             }
         });
         perceptionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     perceptionExpertise.setChecked(false);
                     monster.getWisdom().setPerception(0);
@@ -1241,7 +1058,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.perception));
-                proficiency = false;
             }
         });
 
@@ -1252,12 +1068,6 @@ public class MonsterBuilder extends Fragment {
 
         survivalExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     survivalProficiency.setChecked(true);
                     monster.getWisdom().setSurvival(2);
@@ -1268,17 +1078,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.survival));
-                expertise = false;
             }
         });
         survivalProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     survivalExpertise.setChecked(false);
                     monster.getWisdom().setSurvival(0);
@@ -1289,7 +1092,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.survival));
-                proficiency = false;
             }
         });
 
@@ -1335,12 +1137,6 @@ public class MonsterBuilder extends Fragment {
 
         deceptionExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     deceptionProficiency.setChecked(true);
                     monster.getCharisma().setDeception(2);
@@ -1351,18 +1147,11 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.deception));
-                expertise = false;
             }
 
         });
         deceptionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     deceptionExpertise.setChecked(false);
                     monster.getCharisma().setDeception(0);
@@ -1373,7 +1162,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.deception));
-                proficiency = false;
             }
         });
 
@@ -1384,12 +1172,6 @@ public class MonsterBuilder extends Fragment {
 
         intimidationExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     intimidationProficiency.setChecked(true);
                     monster.getCharisma().setIntimidation(2);
@@ -1400,17 +1182,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
-                expertise = false;
             }
         });
         intimidationProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     intimidationExpertise.setChecked(false);
                     monster.getCharisma().setIntimidation(0);
@@ -1421,7 +1196,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
-                proficiency = false;
             }
         });
 
@@ -1432,12 +1206,6 @@ public class MonsterBuilder extends Fragment {
 
         performanceExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     performanceProficiency.setChecked(true);
                     monster.getCharisma().setPerformance(2);
@@ -1448,17 +1216,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.performance));
-                expertise = false;
             }
         });
         performanceProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     performanceExpertise.setChecked(false);
                     monster.getCharisma().setPerformance(0);
@@ -1469,7 +1230,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.performance));
-                proficiency = false;
             }
         });
 
@@ -1480,12 +1240,6 @@ public class MonsterBuilder extends Fragment {
 
         persuasionExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (proficiency) {
-                    return;
-                }
-
-                expertise = true;
-
                 if (isChecked) {
                     persuasionProficiency.setChecked(true);
                     monster.getCharisma().setPersuasion(2);
@@ -1496,17 +1250,10 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
-                expertise = false;
             }
         });
         persuasionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
-                if (expertise) {
-                    return;
-                }
-
-                proficiency = true;
-
                 if (!isChecked) {
                     persuasionExpertise.setChecked(false);
                     monster.getCharisma().setPersuasion(0);
@@ -1517,7 +1264,6 @@ public class MonsterBuilder extends Fragment {
                 prepareInstantUpdate();
                 updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
-                proficiency = false;
             }
         });
 
