@@ -89,7 +89,8 @@ public class MonsterBuilder extends Fragment {
         initMonsterList();
 
         if (monsterList.size() == 1) {
-            monsterList.add(MonsterInterface.addMonster("New Monster"));
+            var newMonster = MonsterInterface.addMonster("New Monster");
+            monsterList.add(new NameIdProjection(newMonster.getMonsterId(), newMonster.getName()));
             initMonsterList();
         }
 
@@ -106,6 +107,7 @@ public class MonsterBuilder extends Fragment {
             if (position == 0) {
                 View addView = inflater.inflate(R.layout.rename_add_monster_dialog, null);
                 TextView text = addView.findViewById(R.id.name_textview);
+                TextView errorText = addView.findViewById(R.id.add_rename_error_text);
                 text.setText("Enter the new monster's name:");
                 EditText newName = addView.findViewById(R.id.name_entry);
 
@@ -121,13 +123,18 @@ public class MonsterBuilder extends Fragment {
                     ok.setOnClickListener(v -> {
                         final String name = newName.getText().toString();
 
-                        NameIdProjection addedMonster = MonsterInterface.addMonster(name);
-
                         //reload list then display new monster in builder
-                        monster = MonsterInterface.getMonster(addedMonster.getId());
-                        monsterListView(false);
-                        builderView();
-                        add.dismiss();
+                        var newMonster = MonsterInterface.addMonster(name);
+
+                        if (newMonster == null) {
+                            errorText.setText("A monster with the name " + name + " already exists on this campaign");
+                            errorText.setVisibility(View.VISIBLE);
+                        } else {
+                            monster = newMonster;
+                            monsterListView(false);
+                            builderView();
+                            add.dismiss();
+                        }
                     });
                 });
 
@@ -456,6 +463,7 @@ public class MonsterBuilder extends Fragment {
         copy.setOnClickListener(view -> {
             View renameView = inflater.inflate(R.layout.rename_add_monster_dialog, null);
             TextView text = renameView.findViewById(R.id.name_textview);
+            TextView errorText = renameView.findViewById(R.id.add_rename_error_text);
             text.setText(MessageFormat.format("Enter a name for the copy of {0}", monster.getName()));
             EditText newName = renameView.findViewById(R.id.name_entry);
 
@@ -469,10 +477,19 @@ public class MonsterBuilder extends Fragment {
             copyDialog.setOnShowListener(dialogInterface -> {
                 Button ok = copyDialog.getButton(AlertDialog.BUTTON_POSITIVE);
                 ok.setOnClickListener(v -> {
-                    //get copy and display in builder
-                    monster = MonsterInterface.copyMonster(monster.getMonsterId(), newName.getText().toString());
-                    monsterListView(false);
-                    builderView();
+                    final String newNameString = newName.getText().toString();
+
+                    Monster newMonster = MonsterInterface.copyMonster(monster.getMonsterId(), newNameString);
+
+                    if (newMonster == null) {
+                        errorText.setText("A monster with the name " + newNameString + " already exists on this campaign");
+                        errorText.setVisibility(View.VISIBLE);
+                    } else {
+                        monster = newMonster;
+                        monsterListView(false);
+                        builderView();
+                        copyDialog.dismiss();
+                    }
                 });
             });
 

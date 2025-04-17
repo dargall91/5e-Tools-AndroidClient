@@ -19,8 +19,8 @@ public class MonsterInterface extends AbstractInterface {
         return getSingleResult(new TypeReference<ResponseWrapper<Monster>>() {}, path + "/" + monsterId);
     }
 
-    public static NameIdProjection addMonster(String name) {
-        return putSingleResult(new TypeReference<ResponseWrapper<NameIdProjection>>() {}, path + "?name=" + name, null);
+    public static Monster addMonster(String name) {
+        return putSingleResult(new TypeReference<ResponseWrapper<Monster>>() {}, path + "?name=" + name, null);
     }
 
     public static void updateMonster(Monster monster) {
