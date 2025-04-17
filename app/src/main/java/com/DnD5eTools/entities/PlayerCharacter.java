@@ -1,50 +1,41 @@
 package com.DnD5eTools.entities;
 
 public class PlayerCharacter {
-    private Integer id;
-    private String name;
-    private int ac;
-    private int acBonus;
+    private Integer playerCharacterId;
+    private String playerCharacterName;
+    private int totalArmorClass;
     private int initiativeBonus;
-    private int rolledInitiative;
-    private boolean combatant;
+    private int initiativeRoll;
+    private boolean isCombatant;
 
     public PlayerCharacter() { }
 
-    public PlayerCharacter(String name) {
-        this.name = name;
+    public PlayerCharacter(String playerCharacterName) {
+        this.playerCharacterName = playerCharacterName;
     }
 
-    public Integer getId() {
-        return id;
+    public Integer getPlayerCharacterId() {
+        return playerCharacterId;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setPlayerCharacterId(Integer playerCharacterId) {
+        this.playerCharacterId = playerCharacterId;
     }
 
-    public String getName() {
-        return name;
+    public String getPlayerCharacterName() {
+        return playerCharacterName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setPlayerCharacterName(String playerCharacterName) {
+        this.playerCharacterName = playerCharacterName;
     }
 
-    public int getAc() {
-        return ac;
+    public int getTotalArmorClass() {
+        return totalArmorClass;
     }
 
-    public void setAc(int ac) {
-        this.ac = ac;
-    }
-
-    public int getAcBonus() {
-        return acBonus;
-    }
-
-    public void setAcBonus(int acBonus) {
-        this.acBonus = acBonus;
+    public void setTotalArmorClass(int totalArmorClass) {
+        this.totalArmorClass = totalArmorClass;
     }
 
     public int getInitiativeBonus() {
@@ -55,22 +46,19 @@ public class PlayerCharacter {
         this.initiativeBonus = initiativeBonus;
     }
 
-    public int getRolledInitiative() {
-        return rolledInitiative;
+    public int getInitiativeRoll() {
+        return initiativeRoll;
     }
 
-    public void setRolledInitiative(int rolledInitiative) {
-        this.rolledInitiative = rolledInitiative;
+    public void setInitiativeRoll(int initiativeRoll) {
+        this.initiativeRoll = initiativeRoll;
     }
 
-    public boolean isCombatant() {
-        return combatant;
+    public boolean getIsCombatant() {
+        return isCombatant;
     }
 
-    public void setCombatant(boolean combatant) {
-        this.combatant = combatant;
-    }
-    public int getTotalAc() {
-        return ac + acBonus;
+    public void setIsCombatant(boolean combatant) {
+        this.isCombatant = combatant;
     }
 }

@@ -27,6 +27,7 @@ import com.DnD5eTools.R;
 import com.DnD5eTools.entities.monster.Ability;
 import com.DnD5eTools.entities.monster.Action;
 import com.DnD5eTools.entities.monster.LegendaryAction;
+import com.DnD5eTools.entities.monster.Monster;
 import com.DnD5eTools.interfaces.MonsterInterface;
 import com.DnD5eTools.models.projections.NameIdProjection;
 import com.DnD5eTools.util.Util;
@@ -34,29 +35,38 @@ import com.DnD5eTools.util.Util;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
  * Tab for creating and editing Monsters.
  */
 public class MonsterBuilder extends Fragment {
-    private com.DnD5eTools.entities.monster.Monster monster;
+    private Monster monster;
     private List<NameIdProjection> monsterList;
     private List<String> monsterNameList = new ArrayList<>();
     private LayoutInflater inflater;
     private LinearLayout abilityLayout;
     private LinearLayout actionLayout;
     private LinearLayout legendaryActionLayout;
-    private boolean expertise = false;
-    private boolean proficiency = false;
     private View view;
-    private final int DELAY = 250;
     //proficiency checkboxes
     private CheckBox strSave, dexSave, conSave, intSave, wisSave, chaSave, athleticsProficiency, acrobaticsProficiency,
             sleightOfHandProficiency, stealthProficiency, arcanaProficiency, historyProficiency,
             investigationProficiency, natureProficiency, religionProficiency, animalHandlingProficiency,
             insightProficiency, medicineProficiency, perceptionProficiency, survivalProficiency, deceptionProficiency,
             intimidationProficiency, performanceProficiency, persuasionProficiency;
+
+    private final int UPDATE_DELAY = 3000;
+
+    private final Handler updateHandler = new Handler();
+
+    private final Runnable updateMonster = new Runnable() {
+        @Override
+        public void run() {
+            MonsterInterface.updateMonster(monster);
+        }
+    };
 
     @Nullable
     @Override
@@ -88,7 +98,9 @@ public class MonsterBuilder extends Fragment {
         initMonsterList();
 
         if (monsterList.size() == 1) {
-            monsterList.add(MonsterInterface.addMonster("New Monster"));
+            //no monsters in the campaign yet, make a new default monster and add it to the list
+            Monster newMonster = MonsterInterface.addMonster("New Monster");
+            monsterList.add(new NameIdProjection(newMonster.getMonsterId(), newMonster.getName()));
             initMonsterList();
         }
 
@@ -105,6 +117,7 @@ public class MonsterBuilder extends Fragment {
             if (position == 0) {
                 View addView = inflater.inflate(R.layout.rename_add_monster_dialog, null);
                 TextView text = addView.findViewById(R.id.name_textview);
+                TextView errorText = addView.findViewById(R.id.add_rename_error_text);
                 text.setText("Enter the new monster's name:");
                 EditText newName = addView.findViewById(R.id.name_entry);
 
@@ -120,21 +133,36 @@ public class MonsterBuilder extends Fragment {
                     ok.setOnClickListener(v -> {
                         final String name = newName.getText().toString();
 
-                        NameIdProjection addedMonster = MonsterInterface.addMonster(name);
-
                         //reload list then display new monster in builder
-                        monster = MonsterInterface.getMonster(addedMonster.getId());
-                        monsterListView(false);
-                        builderView();
-                        add.dismiss();
+                        var newMonster = MonsterInterface.addMonster(name);
+
+                        if (newMonster == null) {
+                            errorText.setText("A monster with the name " + name + " already exists on this campaign");
+                            errorText.setVisibility(View.VISIBLE);
+                        } else {
+                            //push any pending updates before loading the new monster
+                            if (updateHandler.hasCallbacks(null)) {
+                                prepareInstantUpdate();
+                            }
+
+                            monster = newMonster;
+                            monsterListView(false);
+                            builderView();
+                            add.dismiss();
+                        }
                     });
                 });
 
                 add.show();
-            } else if (monsterList.get(position).getId() == monster.getId()) {
+            } else if (monsterList.get(position).getId() == monster.getMonsterId()) {
                 //if the selected monster is the current one, do nothing and exit
                 return;
             } else {
+                //push any pending updates before loading the new monster
+                if (updateHandler.hasCallbacks(null)) {
+                    prepareInstantUpdate();
+                }
+
                 //get new monster and display in builder
                 monster = MonsterInterface.getMonster(monsterList.get(position).getId());
                 builderView();
@@ -183,230 +211,155 @@ public class MonsterBuilder extends Fragment {
         EditText displayName = basicInfo.findViewById(R.id.display_name);
         displayName.setText(monster.getDisplayName());
         displayName.addTextChangedListener(new TextWatcher() {
-            Handler handler;
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null) {
-                    handler.removeCallbacks(null);
-                }
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    monster.setDisplayName(displayName.getText().toString());
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
+            public void afterTextChanged(Editable text) {
+                String newText = text.toString();
+                if (displayName.hasFocus() && !Objects.equals(monster.getDisplayName(), newText)) {
+                    monster.setDisplayName(newText);
+                    prepareDelayedUpdate();
+                }
             }
         });
 
         EditText size = basicInfo.findViewById(R.id.size);
         size.setText(monster.getSize());
         size.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null) {
-                    handler.removeCallbacks(null);
+            public void afterTextChanged(Editable text) {
+                String newText = text.toString();
+                if (size.hasFocus() && !Objects.equals(monster.getSize(), newText)) {
+                    monster.setSize(newText);
+                    prepareDelayedUpdate();
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    monster.setSize(size.getText().toString());
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
             }
         });
 
         EditText type = basicInfo.findViewById(R.id.type);
         type.setText(monster.getType());
         type.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null) {
-                    handler.removeCallbacks(null);
+            public void afterTextChanged(Editable text) {
+                String newText = text.toString();
+                if (type.hasFocus() && !Objects.equals(monster.getType(), newText)) {
+                    monster.setType(newText);
+                    prepareDelayedUpdate();
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    monster.setType(type.getText().toString());
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
             }
         });
 
         EditText alignment = basicInfo.findViewById(R.id.alignment);
         alignment.setText(monster.getAlignment());
         alignment.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null) {
-                    handler.removeCallbacks(null);
+            public void afterTextChanged(Editable text) {
+                String newText = text.toString();
+                if (alignment.hasFocus() && !Objects.equals(monster.getAlignment(), newText)) {
+                    monster.setAlignment(newText);
+                    prepareDelayedUpdate();
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    monster.setAlignment(alignment.getText().toString());
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
             }
         });
 
         EditText ac = basicInfo.findViewById(R.id.ac);
         ac.setText(String.valueOf(monster.getArmorClass()));
         ac.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null) {
-                    handler.removeCallbacks(null);
+            public void afterTextChanged(Editable text) {
+                String newAcString = text.toString();
+                int newAc = newAcString.isBlank() ? 0 : Integer.parseInt(newAcString);
+                if (ac.hasFocus() && monster.getArmorClass() != newAc) {
+                    monster.setArmorClass(newAc);
+                    prepareDelayedUpdate();
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    if (ac.getText().toString().isBlank()) {
-                        ac.setText("0");
-                        return;
-                    }
-
-                    monster.setArmorClass(Integer.parseInt(ac.getText().toString()));
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
             }
         });
 
         EditText hitPoints = basicInfo.findViewById(R.id.hit_points);
         hitPoints.setText(String.valueOf(monster.getHitPoints()));
         hitPoints.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null) {
-                    handler.removeCallbacks(null);
+            public void afterTextChanged(Editable text) {
+                String newHpString = text.toString();
+                int newHitPoints = newHpString.isBlank() ? 0 : Integer.parseInt(newHpString);
+                if (hitPoints.hasFocus() && monster.getHitPoints() != newHitPoints) {
+                    monster.setHitPoints(newHitPoints);
+                    prepareDelayedUpdate();
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    if (hitPoints.getText().toString().isBlank()) {
-                        hitPoints.setText("0");
-                        return;
-                    }
-
-                    monster.setHitPoints(Integer.parseInt(hitPoints.getText().toString()));
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
             }
         });
 
         EditText speed = basicInfo.findViewById(R.id.speed);
         speed.setText(monster.getSpeed());
         speed.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null) {
-                    handler.removeCallbacks(null);
+            public void afterTextChanged(Editable text) {
+                String newText = text.toString();
+                if (speed.hasFocus() && !Objects.equals(monster.getSpeed(), newText)) {
+                    monster.setSpeed(newText);
+                    prepareDelayedUpdate();
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    monster.setSpeed(speed.getText().toString());
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
             }
         });
 
         EditText bonusInitiative = basicInfo.findViewById(R.id.bonus_initiative);
         bonusInitiative.setText(String.valueOf(monster.getBonusInitiative()));
         bonusInitiative.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null) {
-                    handler.removeCallbacks(null);
+            public void afterTextChanged(Editable text) {
+                String bonusString = text.toString();
+                int newBonus = bonusString.isBlank() ? 0 : Integer.parseInt(bonusString);
+                if (bonusInitiative.hasFocus() && monster.getBonusInitiative() != newBonus) {
+                    monster.setBonusInitiative(newBonus);
+                    prepareDelayedUpdate();
                 }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    if (bonusInitiative.getText().toString().isBlank()) {
-                        bonusInitiative.setText("0");
-                        return;
-                    }
-
-                    monster.setBonusInitiative(Integer.parseInt(bonusInitiative.getText().toString()));
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
             }
         });
 
@@ -416,7 +369,12 @@ public class MonsterBuilder extends Fragment {
                 .setTitle("Archive Monster")
                 .setMessage("Archive " + monster.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    MonsterInterface.archiveMonster(monster.getId());
+                    //push any pending updates before archiving the monster
+                    if (updateHandler.hasCallbacks(null)) {
+                        prepareInstantUpdate();
+                    }
+
+                    MonsterInterface.archiveMonster(monster.getMonsterId());
                     monsterListView(true);
                     builderView();
                 })
@@ -442,7 +400,7 @@ public class MonsterBuilder extends Fragment {
                 ok.setOnClickListener(v -> {
                     monster.setName(newName.getText().toString());
                     name.setText(monster.getName());
-                    MonsterInterface.updateMonster(monster);
+                    prepareInstantUpdate();
                     monsterListView(false);
                     renameDialog.dismiss();
                 });
@@ -455,6 +413,7 @@ public class MonsterBuilder extends Fragment {
         copy.setOnClickListener(view -> {
             View renameView = inflater.inflate(R.layout.rename_add_monster_dialog, null);
             TextView text = renameView.findViewById(R.id.name_textview);
+            TextView errorText = renameView.findViewById(R.id.add_rename_error_text);
             text.setText(MessageFormat.format("Enter a name for the copy of {0}", monster.getName()));
             EditText newName = renameView.findViewById(R.id.name_entry);
 
@@ -468,10 +427,24 @@ public class MonsterBuilder extends Fragment {
             copyDialog.setOnShowListener(dialogInterface -> {
                 Button ok = copyDialog.getButton(AlertDialog.BUTTON_POSITIVE);
                 ok.setOnClickListener(v -> {
-                    //get copy and display in builder
-                    monster = MonsterInterface.copyMonster(monster.getId(), newName.getText().toString());
-                    monsterListView(false);
-                    builderView();
+                    final String newNameString = newName.getText().toString();
+
+                    //push any pending updates before copying the monster
+                    if (updateHandler.hasCallbacks(null)) {
+                        prepareInstantUpdate();
+                    }
+
+                    Monster newMonster = MonsterInterface.copyMonster(monster.getMonsterId(), newNameString);
+
+                    if (newMonster == null) {
+                        errorText.setText("A monster with the name " + newNameString + " already exists on this campaign");
+                        errorText.setVisibility(View.VISIBLE);
+                    } else {
+                        monster = newMonster;
+                        monsterListView(false);
+                        builderView();
+                        copyDialog.dismiss();
+                    }
                 });
             });
 
@@ -490,16 +463,17 @@ public class MonsterBuilder extends Fragment {
     }
 
     private void monsterSTR(GridLayout stats) {
-        Boolean[] firstPass = { true };
         Spinner strengthSpinner = stats.findViewById(R.id.strength);
         TextView strengthModifier = stats.findViewById(R.id.str_mod);
 
         strSave = stats.findViewById(R.id.str_save);
         strSave.setChecked(monster.getStrength().isProficient());
         strSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            monster.getStrength().setProficient(isChecked);
-            MonsterInterface.updateMonster(monster);
-            updateSavingThrowText(strSave, monster.getStrength().getScoreModifier());
+            if (buttonView.isPressed()) {
+                monster.getStrength().setProficient(isChecked);
+                updateSavingThrowText(strSave, monster.getStrength().getScoreModifier());
+                prepareDelayedUpdate();
+            }
         });
 
         CheckBox athleticsExpertise = stats.findViewById(R.id.athletics_exp);
@@ -508,77 +482,68 @@ public class MonsterBuilder extends Fragment {
         athleticsProficiency.setChecked(monster.getStrength().getAthletics() > 0);
 
         athleticsExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    athleticsProficiency.setChecked(true);
+                    monster.getStrength().setAthletics(2);
+                } else {
+                    monster.getStrength().setAthletics(1);
+                }
+
+                updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
+                        monster.getStrength().getScoreModifier(), getString(R.string.athletics));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                athleticsProficiency.setChecked(true);
-                monster.getStrength().setAthletics(2);
-            } else {
-                monster.getStrength().setAthletics(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
-                    monster.getStrength().getScoreModifier(), getString(R.string.athletics));
-            expertise = false;
         });
 
         athleticsProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    athleticsExpertise.setChecked(false);
+                    monster.getStrength().setAthletics(0);
+                } else {
+                    monster.getStrength().setAthletics(1);
+                }
+
+                updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
+                        monster.getStrength().getScoreModifier(), getString(R.string.athletics));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                athleticsExpertise.setChecked(false);
-                monster.getStrength().setAthletics(0);
-            } else {
-                monster.getStrength().setAthletics(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
-                    monster.getStrength().getScoreModifier(), getString(R.string.athletics));
-            proficiency = false;
         });
 
+        strengthSpinner.setSelection(monster.getStrength().getScore(), false);
         strengthSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                //prevents unnecessary api call on init/refresh
-                if (!firstPass[0]) {
+                if (monster.getStrength().getScore() != position) {
                     monster.getStrength().setScore(position);
-                    MonsterInterface.updateMonster(monster);
-                } else {
-                    firstPass[0] = false;
+                    updateStrengthProficiencies();
+                    updateAbilityModifier(strengthModifier, monster.getStrength().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
-
-                updateStrengthProficiencies();
-                updateAbilityModifier(strengthModifier, monster.getStrength().getScoreModifier());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) { }
         });
-        strengthSpinner.setSelection(monster.getStrength().getScore());
+
+        //handle initial load
+        updateStrengthProficiencies();
+        updateAbilityModifier(strengthModifier, monster.getStrength().getScoreModifier());
     }
 
     private void monsterDEX(GridLayout stats) {
-        Boolean[] firstPass = { true };
         Spinner dexteritySpinner = stats.findViewById(R.id.dexterity);
         TextView dexterityModifier = stats.findViewById(R.id.dex_mod);
 
         dexSave = stats.findViewById(R.id.dex_save);
         dexSave.setChecked(monster.getDexterity().isProficient());
         dexSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            monster.getDexterity().setProficient(isChecked);
-            MonsterInterface.updateMonster(monster);
-            updateSavingThrowText(dexSave, monster.getDexterity().getScoreModifier());
+            if (buttonView.isPressed()) {
+                monster.getDexterity().setProficient(isChecked);
+                updateSavingThrowText(dexSave, monster.getDexterity().getScoreModifier());
+                prepareDelayedUpdate();
+            }
         });
 
         CheckBox acrobaticsExpertise = stats.findViewById(R.id.acrobatics_exp);
@@ -587,43 +552,33 @@ public class MonsterBuilder extends Fragment {
         acrobaticsProficiency.setChecked(monster.getDexterity().getAcrobatics() > 0);
 
         acrobaticsExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    acrobaticsProficiency.setChecked(true);
+                    monster.getDexterity().setAcrobatics(2);
+                } else {
+                    monster.getDexterity().setAcrobatics(1);
+                }
+
+                updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
+                        monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                acrobaticsProficiency.setChecked(true);
-                monster.getDexterity().setAcrobatics(2);
-            } else {
-                monster.getDexterity().setAcrobatics(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
-                    monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
-            expertise = false;
         });
 
         acrobaticsProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    acrobaticsExpertise.setChecked(false);
+                    monster.getDexterity().setAcrobatics(0);
+                } else {
+                    monster.getDexterity().setAcrobatics(1);
+                }
+
+                updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
+                        monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                acrobaticsExpertise.setChecked(false);
-                monster.getDexterity().setAcrobatics(0);
-            } else {
-                monster.getDexterity().setAcrobatics(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
-                    monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
-            proficiency = false;
         });
 
         updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
@@ -635,42 +590,32 @@ public class MonsterBuilder extends Fragment {
         sleightOfHandProficiency.setChecked(monster.getDexterity().getSleightOfHand() > 0);
 
         sleightOfHandExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    sleightOfHandProficiency.setChecked(true);
+                    monster.getDexterity().setSleightOfHand(2);
+                } else {
+                    monster.getDexterity().setSleightOfHand(1);
+                }
+
+                updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
+                        monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                sleightOfHandProficiency.setChecked(true);
-                monster.getDexterity().setSleightOfHand(2);
-            } else {
-                monster.getDexterity().setSleightOfHand(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
-                    monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
-            expertise = false;
         });
         sleightOfHandProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    sleightOfHandExpertise.setChecked(false);
+                    monster.getDexterity().setSleightOfHand(0);
+                } else {
+                    monster.getDexterity().setSleightOfHand(1);
+                }
+
+                updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
+                        monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                sleightOfHandExpertise.setChecked(false);
-                monster.getDexterity().setSleightOfHand(0);
-            } else {
-                monster.getDexterity().setSleightOfHand(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
-                    monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
-            proficiency = false;
         });
 
         CheckBox stealthExpertise = stats.findViewById(R.id.stealth_exp);
@@ -679,108 +624,102 @@ public class MonsterBuilder extends Fragment {
         stealthProficiency.setChecked(monster.getDexterity().getStealth() > 0);
 
         stealthExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    stealthProficiency.setChecked(true);
+                    monster.getDexterity().setStealth(2);
+                } else {
+                    monster.getDexterity().setStealth(1);
+                }
+
+                updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
+                        monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                stealthProficiency.setChecked(true);
-                monster.getDexterity().setStealth(2);
-            } else {
-                monster.getDexterity().setStealth(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
-                    monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
-            expertise = false;
         });
         stealthProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    stealthExpertise.setChecked(false);
+                    monster.getDexterity().setStealth(0);
+                } else {
+                    monster.getDexterity().setStealth(1);
+                }
+
+                updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
+                        monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                stealthExpertise.setChecked(false);
-                monster.getDexterity().setStealth(0);
-            } else {
-                monster.getDexterity().setStealth(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
-                    monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
-            proficiency = false;
         });
 
+        dexteritySpinner.setSelection(monster.getDexterity().getScore(), false);
         dexteritySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (monster.getDexterity().getScore() != position) {
                     monster.getDexterity().setScore(position);
-                    MonsterInterface.updateMonster(monster);
-                } else {
-                    firstPass[0] = false;
+                    updateDexterityProficiencies();
+                    updateAbilityModifier(dexterityModifier, monster.getDexterity().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
-
-                updateDexterityProficiencies();
-                updateAbilityModifier(dexterityModifier, monster.getDexterity().getScoreModifier());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) { }
         });
-        dexteritySpinner.setSelection(monster.getDexterity().getScore());
+
+        //handle initial load
+        updateDexterityProficiencies();
+        updateAbilityModifier(dexterityModifier, monster.getDexterity().getScoreModifier());
     }
 
     private void monsterCON(GridLayout stats) {
-        Boolean[] firstPass = { true };
         Spinner constitution = stats.findViewById(R.id.constitution);
         TextView constitutionModifier = stats.findViewById(R.id.con_mod);
 
         conSave = stats.findViewById(R.id.con_save);
         conSave.setChecked(monster.getConstitution().isProficient());
-        conSave.setOnCheckedChangeListener((buttonView, isChecked) ->{
-            monster.getConstitution().setProficient(isChecked);
-            MonsterInterface.updateMonster(monster);
-            updateSavingThrowText(conSave, monster.getConstitution().getScoreModifier());
+        conSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) {
+                monster.getConstitution().setProficient(isChecked);
+                updateSavingThrowText(conSave, monster.getConstitution().getScoreModifier());
+                prepareDelayedUpdate();
+            }
         });
 
+        constitution.setSelection(monster.getConstitution().getScore(), false);
         constitution.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (monster.getConstitution().getScore() != position) {
                     monster.getConstitution().setScore(position);
-                    MonsterInterface.updateMonster(monster);
-                } else {
-                    firstPass[0] = false;
+                    updateConstitutionProficiencies();
+                    updateAbilityModifier(constitutionModifier, monster.getConstitution().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
-
-                updateConstitutionProficiencies();
-                updateAbilityModifier(constitutionModifier, monster.getConstitution().getScoreModifier());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) { }
         });
-        constitution.setSelection(monster.getConstitution().getScore());
+
+        //handle initial load
+        updateConstitutionProficiencies();
+        updateAbilityModifier(constitutionModifier, monster.getConstitution().getScoreModifier());
     }
 
     private void monsterINT(GridLayout stats) {
-        Boolean[] firstPass = { true };
         Spinner intelligence = stats.findViewById(R.id.intelligence);
         TextView intelligenceModifier = stats.findViewById(R.id.int_mod);
 
         intSave = stats.findViewById(R.id.int_save);
         intSave.setChecked(monster.getIntelligence().isProficient());
-        intSave.setOnCheckedChangeListener((buttonView, isChecked) ->{
-            monster.getIntelligence().setProficient(isChecked);
-            MonsterInterface.updateMonster(monster);
-            updateSavingThrowText(intSave, monster.getIntelligence().getScoreModifier());
+        intSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) {
+                monster.getIntelligence().setProficient(isChecked);
+                updateSavingThrowText(intSave, monster.getIntelligence().getScoreModifier());
+                prepareDelayedUpdate();
+            }
         });
 
         CheckBox arcanaExpertise = stats.findViewById(R.id.arcana_exp);
@@ -789,42 +728,32 @@ public class MonsterBuilder extends Fragment {
         arcanaProficiency.setChecked(monster.getIntelligence().getArcana() > 0);
 
         arcanaExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    arcanaProficiency.setChecked(true);
+                    monster.getIntelligence().setArcana(2);
+                } else {
+                    monster.getIntelligence().setArcana(1);
+                }
+
+                updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                arcanaProficiency.setChecked(true);
-                monster.getIntelligence().setArcana(2);
-            } else {
-                monster.getIntelligence().setArcana(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
-            expertise = false;
         });
         arcanaProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    arcanaExpertise.setChecked(false);
+                    monster.getIntelligence().setArcana(0);
+                } else {
+                    monster.getIntelligence().setArcana(1);
+                }
+
+                updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                arcanaExpertise.setChecked(false);
-                monster.getIntelligence().setArcana(0);
-            } else {
-                monster.getIntelligence().setArcana(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
-            proficiency = false;
         });
 
         CheckBox historyExpertise = stats.findViewById(R.id.history_exp);
@@ -833,42 +762,32 @@ public class MonsterBuilder extends Fragment {
         historyProficiency.setChecked(monster.getIntelligence().getHistory() > 0);
 
         historyExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    historyProficiency.setChecked(true);
+                    monster.getIntelligence().setHistory(2);
+                } else {
+                    monster.getIntelligence().setHistory(1);
+                }
+
+                updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.history));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                historyProficiency.setChecked(true);
-                monster.getIntelligence().setHistory(2);
-            } else {
-                monster.getIntelligence().setHistory(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.history));
-            expertise = false;
         });
         historyProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    historyExpertise.setChecked(false);
+                    monster.getIntelligence().setHistory(0);
+                } else {
+                    monster.getIntelligence().setHistory(1);
+                }
+
+                updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.history));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                historyExpertise.setChecked(false);
-                monster.getIntelligence().setHistory(0);
-            } else {
-                monster.getIntelligence().setHistory(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.history));
-            proficiency = false;
         });
 
         CheckBox investigationExpertise = stats.findViewById(R.id.investigation_exp);
@@ -877,42 +796,32 @@ public class MonsterBuilder extends Fragment {
         investigationProficiency.setChecked(monster.getIntelligence().getInvestigation() > 0);
 
         investigationExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    investigationProficiency.setChecked(true);
+                    monster.getIntelligence().setInvestigation(2);
+                } else {
+                    monster.getIntelligence().setInvestigation(1);
+                }
+
+                updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                investigationProficiency.setChecked(true);
-                monster.getIntelligence().setInvestigation(2);
-            } else {
-                monster.getIntelligence().setInvestigation(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
-            expertise = false;
         });
         investigationProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    investigationExpertise.setChecked(false);
+                    monster.getIntelligence().setInvestigation(0);
+                } else {
+                    monster.getIntelligence().setInvestigation(1);
+                }
+
+                updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                investigationExpertise.setChecked(false);
-                monster.getIntelligence().setInvestigation(0);
-            } else {
-                monster.getIntelligence().setInvestigation(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
-            proficiency = false;
         });
 
         CheckBox natureExpertise = stats.findViewById(R.id.nature_exp);
@@ -921,42 +830,32 @@ public class MonsterBuilder extends Fragment {
         natureProficiency.setChecked(monster.getIntelligence().getNature() > 0);
 
         natureExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    natureProficiency.setChecked(true);
+                    monster.getIntelligence().setNature(2);
+                } else {
+                    monster.getIntelligence().setNature(1);
+                }
+
+                updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                natureProficiency.setChecked(true);
-                monster.getIntelligence().setNature(2);
-            } else {
-                monster.getIntelligence().setNature(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
-            expertise = false;
         });
         natureProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    natureExpertise.setChecked(false);
+                    monster.getIntelligence().setNature(0);
+                } else {
+                    monster.getIntelligence().setNature(1);
+                }
+
+                updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                natureExpertise.setChecked(false);
-                monster.getIntelligence().setNature(0);
-            } else {
-                monster.getIntelligence().setNature(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
-            proficiency = false;
         });
 
         CheckBox religionExpertise = stats.findViewById(R.id.religion_exp);
@@ -965,75 +864,67 @@ public class MonsterBuilder extends Fragment {
         religionProficiency.setChecked(monster.getIntelligence().getReligion() > 0);
 
         religionExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    religionProficiency.setChecked(true);
+                    monster.getIntelligence().setReligion(2);
+                } else {
+                    monster.getIntelligence().setReligion(1);
+                }
+
+                updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                religionProficiency.setChecked(true);
-                monster.getIntelligence().setReligion(2);
-            } else {
-                monster.getIntelligence().setReligion(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
-            expertise = false;
         });
         religionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    religionExpertise.setChecked(false);
+                    monster.getIntelligence().setReligion(0);
+                } else {
+                    monster.getIntelligence().setReligion(1);
+                }
+
+                updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
+                        monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                religionExpertise.setChecked(false);
-                monster.getIntelligence().setReligion(0);
-            } else {
-                monster.getIntelligence().setReligion(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
-                    monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
-            proficiency = false;
         });
 
+        intelligence.setSelection(monster.getIntelligence().getScore(), false);
         intelligence.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (monster.getIntelligence().getScore() != position) {
                     monster.getIntelligence().setScore(position);
-                    MonsterInterface.updateMonster(monster);
-                } else {
-                    firstPass[0] = false;
+                    updateIntelligenceProficiencies();
+                    updateAbilityModifier(intelligenceModifier, monster.getIntelligence().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
-
-                updateIntelligenceProficiencies();
-                updateAbilityModifier(intelligenceModifier, monster.getIntelligence().getScoreModifier());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) { }
         });
-        intelligence.setSelection(monster.getIntelligence().getScore());
+
+        //handle initial load
+        updateIntelligenceProficiencies();
+        updateAbilityModifier(intelligenceModifier, monster.getIntelligence().getScoreModifier());
     }
 
     private void monsterWIS(GridLayout stats) {
-        Boolean[] firstPass = { true };
         Spinner wisdom = stats.findViewById(R.id.wisdom);
         TextView wisdomModifier = stats.findViewById(R.id.wis_mod);
 
         wisSave = stats.findViewById(R.id.wis_save);
         wisSave.setChecked(monster.getWisdom().isProficient());
         wisSave.setOnCheckedChangeListener((buttonView, isChecked) ->{
-            monster.getWisdom().setProficient(isChecked);
-            MonsterInterface.updateMonster(monster);
-            updateSavingThrowText(wisSave, monster.getWisdom().getScoreModifier());
+            if (buttonView.isPressed()) {
+                monster.getWisdom().setProficient(isChecked);
+                updateSavingThrowText(wisSave, monster.getWisdom().getScoreModifier());
+                prepareDelayedUpdate();
+            }
         });
 
         CheckBox animalHandlingExpertise = stats.findViewById(R.id.animal_exp);
@@ -1042,42 +933,32 @@ public class MonsterBuilder extends Fragment {
         animalHandlingProficiency.setChecked(monster.getWisdom().getAnimalHandling() > 0);
 
         animalHandlingExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    animalHandlingProficiency.setChecked(true);
+                    monster.getWisdom().setAnimalHandling(2);
+                } else {
+                    monster.getWisdom().setAnimalHandling(1);
+                }
+
+                updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                animalHandlingProficiency.setChecked(true);
-                monster.getWisdom().setAnimalHandling(2);
-            } else {
-                monster.getWisdom().setAnimalHandling(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
-            expertise = false;
         });
         animalHandlingProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    animalHandlingExpertise.setChecked(false);
+                    monster.getWisdom().setAnimalHandling(0);
+                } else {
+                    monster.getWisdom().setAnimalHandling(1);
+                }
+
+                updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                animalHandlingExpertise.setChecked(false);
-                monster.getWisdom().setAnimalHandling(0);
-            } else {
-                monster.getWisdom().setAnimalHandling(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
-            proficiency = false;
         });
 
         CheckBox insightExpertise = stats.findViewById(R.id.insight_exp);
@@ -1086,42 +967,32 @@ public class MonsterBuilder extends Fragment {
         insightProficiency.setChecked(monster.getWisdom().getInsight() > 0);
 
         insightExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    insightProficiency.setChecked(true);
+                    monster.getWisdom().setInsight(2);
+                } else {
+                    monster.getWisdom().setInsight(1);
+                }
+
+                updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.insight));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                insightProficiency.setChecked(true);
-                monster.getWisdom().setInsight(2);
-            } else {
-                monster.getWisdom().setInsight(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.insight));
-            expertise = false;
         });
         insightProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    insightExpertise.setChecked(false);
+                    monster.getWisdom().setInsight(0);
+                } else {
+                    monster.getWisdom().setInsight(1);
+                }
+
+                updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.insight));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                insightExpertise.setChecked(false);
-                monster.getWisdom().setInsight(0);
-            } else {
-                monster.getWisdom().setInsight(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.insight));
-            proficiency = false;
         });
 
         CheckBox medicineExpertise = stats.findViewById(R.id.medicine_exp);
@@ -1130,42 +1001,32 @@ public class MonsterBuilder extends Fragment {
         medicineProficiency.setChecked(monster.getWisdom().getMedicine() > 0);
 
         medicineExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    medicineProficiency.setChecked(true);
+                    monster.getWisdom().setMedicine(2);
+                } else {
+                    monster.getWisdom().setMedicine(1);
+                }
+
+                updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                medicineProficiency.setChecked(true);
-                monster.getWisdom().setMedicine(2);
-            } else {
-                monster.getWisdom().setMedicine(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
-            expertise = false;
         });
         medicineProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    medicineExpertise.setChecked(false);
+                    monster.getWisdom().setMedicine(0);
+                } else {
+                    monster.getWisdom().setMedicine(1);
+                }
+
+                updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                medicineExpertise.setChecked(false);
-                monster.getWisdom().setMedicine(0);
-            } else {
-                monster.getWisdom().setMedicine(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
-            proficiency = false;
         });
 
         CheckBox perceptionExpertise = stats.findViewById(R.id.perception_exp);
@@ -1174,42 +1035,32 @@ public class MonsterBuilder extends Fragment {
         perceptionProficiency.setChecked(monster.getWisdom().getPerception() > 0);
 
         perceptionExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    perceptionProficiency.setChecked(true);
+                    monster.getWisdom().setPerception(2);
+                } else {
+                    monster.getWisdom().setPerception(1);
+                }
+
+                updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.perception));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                perceptionProficiency.setChecked(true);
-                monster.getWisdom().setPerception(2);
-            } else {
-                monster.getWisdom().setPerception(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.perception));
-            expertise = false;
         });
         perceptionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    perceptionExpertise.setChecked(false);
+                    monster.getWisdom().setPerception(0);
+                } else {
+                    monster.getWisdom().setPerception(1);
+                }
+
+                updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.perception));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                perceptionExpertise.setChecked(false);
-                monster.getWisdom().setPerception(0);
-            } else {
-                monster.getWisdom().setPerception(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.perception));
-            proficiency = false;
         });
 
         CheckBox survivalExpertise = stats.findViewById(R.id.survival_exp);
@@ -1218,75 +1069,67 @@ public class MonsterBuilder extends Fragment {
         survivalProficiency.setChecked(monster.getWisdom().getSurvival() > 0);
 
         survivalExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    survivalProficiency.setChecked(true);
+                    monster.getWisdom().setSurvival(2);
+                } else {
+                    monster.getWisdom().setSurvival(1);
+                }
+
+                updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.survival));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                survivalProficiency.setChecked(true);
-                monster.getWisdom().setSurvival(2);
-            } else {
-                monster.getWisdom().setSurvival(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.survival));
-            expertise = false;
         });
         survivalProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    survivalExpertise.setChecked(false);
+                    monster.getWisdom().setSurvival(0);
+                } else {
+                    monster.getWisdom().setSurvival(1);
+                }
+
+                updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
+                        monster.getWisdom().getScoreModifier(), getString(R.string.survival));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                survivalExpertise.setChecked(false);
-                monster.getWisdom().setSurvival(0);
-            } else {
-                monster.getWisdom().setSurvival(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
-                    monster.getWisdom().getScoreModifier(), getString(R.string.survival));
-            proficiency = false;
         });
 
+        wisdom.setSelection(monster.getWisdom().getScore(), false);
         wisdom.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (monster.getWisdom().getScore() != position) {
                     monster.getWisdom().setScore(position);
-                    MonsterInterface.updateMonster(monster);
-                } else {
-                    firstPass[0] = false;
+                    updateWisdomProficiencies();
+                    updateAbilityModifier(wisdomModifier, monster.getWisdom().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
-
-                updateWisdomProficiencies();
-                updateAbilityModifier(wisdomModifier, monster.getWisdom().getScoreModifier());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) { }
         });
-        wisdom.setSelection(monster.getWisdom().getScore());
+
+        //handle initial load
+        updateWisdomProficiencies();
+        updateAbilityModifier(wisdomModifier, monster.getWisdom().getScoreModifier());
     }
 
     private void monsterCHA(GridLayout stats) {
-        Boolean[] firstPass = { true };
         Spinner charisma = stats.findViewById(R.id.charisma);
         TextView charismaModifier = stats.findViewById(R.id.cha_mod);
 
         chaSave = stats.findViewById(R.id.cha_save);
         chaSave.setChecked(monster.getCharisma().isProficient());
         chaSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            monster.getCharisma().setProficient(isChecked);
-            MonsterInterface.updateMonster(monster);
-            updateSavingThrowText(chaSave, monster.getCharisma().getScoreModifier());
+            if (buttonView.isPressed()) {
+                monster.getCharisma().setProficient(isChecked);
+                updateSavingThrowText(chaSave, monster.getCharisma().getScoreModifier());
+                prepareDelayedUpdate();
+            }
         });
 
         CheckBox deceptionExpertise = stats.findViewById(R.id.deception_exp);
@@ -1295,42 +1138,33 @@ public class MonsterBuilder extends Fragment {
         deceptionProficiency.setChecked(monster.getCharisma().getDeception() > 0);
 
         deceptionExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    deceptionProficiency.setChecked(true);
+                    monster.getCharisma().setDeception(2);
+                } else {
+                    monster.getCharisma().setDeception(1);
+                }
+
+                updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
+                        monster.getCharisma().getScoreModifier(), getString(R.string.deception));
+                prepareDelayedUpdate();
             }
 
-            expertise = true;
-
-            if (isChecked) {
-                deceptionProficiency.setChecked(true);
-                monster.getCharisma().setDeception(2);
-            } else {
-                monster.getCharisma().setDeception(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
-                    monster.getCharisma().getScoreModifier(), getString(R.string.deception));
-            expertise = false;
         });
         deceptionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    deceptionExpertise.setChecked(false);
+                    monster.getCharisma().setDeception(0);
+                } else {
+                    monster.getCharisma().setDeception(1);
+                }
+
+                updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
+                        monster.getCharisma().getScoreModifier(), getString(R.string.deception));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                deceptionExpertise.setChecked(false);
-                monster.getCharisma().setDeception(0);
-            } else {
-                monster.getCharisma().setDeception(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
-                    monster.getCharisma().getScoreModifier(), getString(R.string.deception));
-            proficiency = false;
         });
 
         CheckBox intimidationExpertise = stats.findViewById(R.id.intimidation_exp);
@@ -1339,42 +1173,32 @@ public class MonsterBuilder extends Fragment {
         intimidationProficiency.setChecked(monster.getCharisma().getIntimidation() > 0);
 
         intimidationExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    intimidationProficiency.setChecked(true);
+                    monster.getCharisma().setIntimidation(2);
+                } else {
+                    monster.getCharisma().setIntimidation(1);
+                }
+
+                updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
+                        monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                intimidationProficiency.setChecked(true);
-                monster.getCharisma().setIntimidation(2);
-            } else {
-                monster.getCharisma().setIntimidation(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
-                    monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
-            expertise = false;
         });
         intimidationProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    intimidationExpertise.setChecked(false);
+                    monster.getCharisma().setIntimidation(0);
+                } else {
+                    monster.getCharisma().setIntimidation(1);
+                }
+
+                updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
+                        monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                intimidationExpertise.setChecked(false);
-                monster.getCharisma().setIntimidation(0);
-            } else {
-                monster.getCharisma().setIntimidation(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
-                    monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
-            proficiency = false;
         });
 
         CheckBox performanceExpertise = stats.findViewById(R.id.performance_exp);
@@ -1383,42 +1207,32 @@ public class MonsterBuilder extends Fragment {
         performanceProficiency.setChecked(monster.getCharisma().getPerformance() > 0);
 
         performanceExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    performanceProficiency.setChecked(true);
+                    monster.getCharisma().setPerformance(2);
+                } else {
+                    monster.getCharisma().setPerformance(1);
+                }
+
+                updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
+                        monster.getCharisma().getScoreModifier(), getString(R.string.performance));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                performanceProficiency.setChecked(true);
-                monster.getCharisma().setPerformance(2);
-            } else {
-                monster.getCharisma().setPerformance(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
-                    monster.getCharisma().getScoreModifier(), getString(R.string.performance));
-            expertise = false;
         });
         performanceProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    performanceExpertise.setChecked(false);
+                    monster.getCharisma().setPerformance(0);
+                } else {
+                    monster.getCharisma().setPerformance(1);
+                }
+
+                updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
+                        monster.getCharisma().getScoreModifier(), getString(R.string.performance));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                performanceExpertise.setChecked(false);
-                monster.getCharisma().setPerformance(0);
-            } else {
-                monster.getCharisma().setPerformance(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
-                    monster.getCharisma().getScoreModifier(), getString(R.string.performance));
-            proficiency = false;
         });
 
         CheckBox persuasionExpertise = stats.findViewById(R.id.persuasion_exp);
@@ -1427,62 +1241,53 @@ public class MonsterBuilder extends Fragment {
         persuasionProficiency.setChecked(monster.getCharisma().getDeception() > 0);
 
         persuasionExpertise.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (proficiency) {
-                return;
+            if (buttonView.isPressed()) {
+                if (isChecked) {
+                    persuasionProficiency.setChecked(true);
+                    monster.getCharisma().setPersuasion(2);
+                } else {
+                    monster.getCharisma().setPersuasion(1);
+                }
+
+                updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
+                        monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
+                prepareDelayedUpdate();
             }
-
-            expertise = true;
-
-            if (isChecked) {
-                persuasionProficiency.setChecked(true);
-                monster.getCharisma().setPersuasion(2);
-            } else {
-                monster.getCharisma().setPersuasion(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
-                    monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
-            expertise = false;
         });
         persuasionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (expertise) {
-                return;
+            if (buttonView.isPressed()) {
+                if (!isChecked) {
+                    persuasionExpertise.setChecked(false);
+                    monster.getCharisma().setPersuasion(0);
+                } else {
+                    monster.getCharisma().setPersuasion(1);
+                }
+
+                updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
+                        monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
+                prepareDelayedUpdate();
             }
-
-            proficiency = true;
-
-            if (!isChecked) {
-                persuasionExpertise.setChecked(false);
-                monster.getCharisma().setPersuasion(0);
-            } else {
-                monster.getCharisma().setPersuasion(1);
-            }
-
-            MonsterInterface.updateMonster(monster);
-            updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
-                    monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
-            proficiency = false;
         });
 
+        charisma.setSelection(monster.getCharisma().getScore(), false);
         charisma.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!firstPass[0]) {
+                if (monster.getCharisma().getScore() != position) {
                     monster.getCharisma().setScore(position);
-                    MonsterInterface.updateMonster(monster);
-                } else {
-                    firstPass[0] = false;
+                    updateCharismaProficiencies();
+                    updateAbilityModifier(charismaModifier, monster.getCharisma().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
-
-                updateCharismaProficiencies();
-                updateAbilityModifier(charismaModifier, monster.getCharisma().getScoreModifier());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) { }
         });
-        charisma.setSelection(monster.getCharisma().getScore());
+
+        //handle initial load
+        updateCharismaProficiencies();
+        updateAbilityModifier(charismaModifier, monster.getCharisma().getScoreModifier());
     }
 
     private void monsterSensesLanguagesCR() {
@@ -1491,52 +1296,38 @@ public class MonsterBuilder extends Fragment {
         EditText senses = senseLanguageCR.findViewById(R.id.senses);
         senses.setText(monster.getSenses());
         senses.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null)
-                    handler.removeCallbacks(null);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    monster.setSenses(senses.getText().toString());
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
+            public void afterTextChanged(Editable text) {
+                String newText = text.toString();
+                if (senses.hasFocus() && !Objects.equals(monster.getSenses(), newText)) {
+                    monster.setSenses(newText);
+                    prepareDelayedUpdate();
+                }
             }
         });
 
         EditText languages = senseLanguageCR.findViewById(R.id.languages);
         languages.setText(monster.getLanguages());
         languages.addTextChangedListener(new TextWatcher() {
-            Handler handler;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (handler != null)
-                    handler.removeCallbacks(null);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler = new Handler();
-
-                handler.postDelayed(() -> {
-                    monster.setLanguages(languages.getText().toString());
-                    MonsterInterface.updateMonster(monster);
-                }, DELAY);
+            public void afterTextChanged(Editable text) {
+                String newText = text.toString();
+                if (languages.hasFocus() && !Objects.equals(monster.getLanguages(), newText)) {
+                    monster.setLanguages(newText);
+                    prepareDelayedUpdate();
+                }
             }
         });
 
@@ -1551,16 +1342,18 @@ public class MonsterBuilder extends Fragment {
         crSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                int oldProficiency = monster.getChallengeRating().getProficiencyBonus();
-                monster.setChallengeRating(Util.getChallengeRating(position));
-                xp.setText(MessageFormat.format("({0} XP)", monster.getChallengeRating().getXp()));
-                int newProficiency = monster.getChallengeRating().getProficiencyBonus();
+                if (monster.getChallengeRating().getId() != position + 1) {
+                    int oldProficiency = monster.getChallengeRating().getProficiencyBonus();
+                    monster.setChallengeRating(Util.getChallengeRating(position));
+                    xp.setText(MessageFormat.format("({0} XP)", monster.getChallengeRating().getXp()));
+                    int newProficiency = monster.getChallengeRating().getProficiencyBonus();
+                    
+                    if (oldProficiency != newProficiency) {
+                        updateProficiencies();
+                    }
 
-                if (oldProficiency != newProficiency) {
-                    updateProficiencies();
+                    prepareDelayedUpdate();
                 }
-
-                MonsterInterface.updateMonster(monster);
             }
 
             @Override
@@ -1587,26 +1380,19 @@ public class MonsterBuilder extends Fragment {
             name.setTag(index);
             name.setText(abilityList.get(index).getName());
             name.addTextChangedListener(new TextWatcher() {
-                Handler handler;
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null)
-                        handler.removeCallbacks(null);
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    handler = new Handler();
-
-                    handler.postDelayed(() -> {
-                        monster.getAbilities().get(index).setName(name.getText().toString());
-                        MonsterInterface.updateMonster(monster);
-                    }, DELAY);
+                public void afterTextChanged(Editable text) {
+                    String newText = text.toString();
+                    if (name.hasFocus() && !Objects.equals(monster.getAbilities().get(index).getName(), newText)) {
+                        monster.getAbilities().get(index).setName(newText);
+                        prepareDelayedUpdate();
+                    }
                 }
             });
 
@@ -1615,26 +1401,19 @@ public class MonsterBuilder extends Fragment {
             desc.setTag(index);
             desc.setText(abilityList.get(index).getDescription());
             desc.addTextChangedListener(new TextWatcher() {
-                Handler handler;
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null)
-                        handler.removeCallbacks(null);
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    handler = new Handler();
-
-                    handler.postDelayed(() -> {
-                        monster.getAbilities().get(index).setDescription(desc.getText().toString());
-                        MonsterInterface.updateMonster(monster);
-                    }, DELAY);
+                public void afterTextChanged(Editable text) {
+                    String newText = text.toString();
+                    if (desc.hasFocus() && !Objects.equals(monster.getAbilities().get(index).getDescription(), newText)) {
+                        monster.getAbilities().get(index).setDescription(newText);
+                        prepareDelayedUpdate();
+                    }
                 }
             });
 
@@ -1642,15 +1421,15 @@ public class MonsterBuilder extends Fragment {
             delete.setId(index);
             delete.setTag(index);
             delete.setOnClickListener(view -> {
-                MonsterInterface.deleteAbility(monster.getId(), monster.getAbilities().get(index).getId());
                 monster.getAbilities().remove(index);
+                prepareInstantUpdate();
                 monsterAbilities();
             });
         }
 
         Button add = view.findViewById(R.id.add_ability);
         add.setOnClickListener(view -> {
-            monster.getAbilities().add(MonsterInterface.addAbility(monster.getId()));
+            monster.getAbilities().add(new Ability());
             monsterAbilities();
         });
     }
@@ -1673,26 +1452,19 @@ public class MonsterBuilder extends Fragment {
             name.setTag(index);
             name.setText(actionList.get(index).getName());
             name.addTextChangedListener(new TextWatcher() {
-                Handler handler;
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null)
-                        handler.removeCallbacks(null);
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    handler = new Handler();
-
-                    handler.postDelayed(() -> {
-                        monster.getActions().get(index).setName(name.getText().toString());
-                        MonsterInterface.updateMonster(monster);
-                    }, DELAY);
+                public void afterTextChanged(Editable text) {
+                    String newText = text.toString();
+                    if (name.hasFocus() && !Objects.equals(monster.getActions().get(index).getName(), newText)) {
+                        monster.getActions().get(index).setName(newText);
+                        prepareDelayedUpdate();
+                    }
                 }
             });
 
@@ -1701,26 +1473,19 @@ public class MonsterBuilder extends Fragment {
             desc.setTag(index);
             desc.setText(actionList.get(index).getDescription());
             desc.addTextChangedListener(new TextWatcher() {
-                Handler handler;
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null)
-                        handler.removeCallbacks(null);
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    handler = new Handler();
-
-                    handler.postDelayed(() -> {
-                        monster.getActions().get(index).setDescription(desc.getText().toString());
-                        MonsterInterface.updateMonster(monster);
-                    }, DELAY);
+                public void afterTextChanged(Editable text) {
+                    String newText = text.toString();
+                    if (desc.hasFocus() && !Objects.equals(monster.getActions().get(index).getDescription(), newText)) {
+                        monster.getActions().get(index).setDescription(newText);
+                        prepareDelayedUpdate();
+                    }
                 }
             });
 
@@ -1728,15 +1493,15 @@ public class MonsterBuilder extends Fragment {
             delete.setId(index);
             delete.setTag(index);
             delete.setOnClickListener(view -> {
-                MonsterInterface.deleteAction(monster.getId(), monster.getActions().get(index).getId());
                 monster.getActions().remove(index);
+                prepareInstantUpdate();
                 monsterActions();
             });
         }
 
         Button add = view.findViewById(R.id.add_action);
         add.setOnClickListener(view -> {
-            monster.getActions().add(MonsterInterface.addAction(monster.getId()));
+            monster.getActions().add(new Action());
             monsterActions();
         });
     }
@@ -1758,7 +1523,10 @@ public class MonsterBuilder extends Fragment {
             actionCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    monster.setLegendaryActionCount(actionCount.getSelectedItemPosition());
+                    if (monster.getLegendaryActionCount() != position) {
+                        monster.setLegendaryActionCount(position);
+                        prepareDelayedUpdate();
+                    }
                 }
 
                 @Override
@@ -1777,26 +1545,19 @@ public class MonsterBuilder extends Fragment {
             name.setTag(index);
             name.setText(legendaryList.get(index).getName());
             name.addTextChangedListener(new TextWatcher() {
-                Handler handler;
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null)
-                        handler.removeCallbacks(null);
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    handler = new Handler();
-
-                    handler.postDelayed(() -> {
-                        monster.getLegendaryActions().get(index).setName(name.getText().toString());
-                        MonsterInterface.updateMonster(monster);
-                    }, DELAY);
+                public void afterTextChanged(Editable text) {
+                    String newText = text.toString();
+                    if (name.hasFocus() && !Objects.equals(monster.getLegendaryActions().get(index).getName(), newText)) {
+                        monster.getLegendaryActions().get(index).setName(newText);
+                        prepareDelayedUpdate();
+                    }
                 }
             });
 
@@ -1805,26 +1566,19 @@ public class MonsterBuilder extends Fragment {
             desc.setTag(index);
             desc.setText(legendaryList.get(index).getDescription());
             desc.addTextChangedListener(new TextWatcher() {
-                Handler handler;
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null)
-                        handler.removeCallbacks(null);
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    handler = new Handler();
-
-                    handler.postDelayed(() -> {
-                        monster.getLegendaryActions().get(index).setDescription(desc.getText().toString());
-                        MonsterInterface.updateMonster(monster);
-                    }, DELAY);
+                public void afterTextChanged(Editable text) {
+                    String newText = text.toString();
+                    if (desc.hasFocus() && !Objects.equals(monster.getLegendaryActions().get(index).getDescription(), newText)) {
+                        monster.getLegendaryActions().get(index).setDescription(newText);
+                        prepareDelayedUpdate();
+                    }
                 }
             });
 
@@ -1835,8 +1589,10 @@ public class MonsterBuilder extends Fragment {
             cost.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    monster.getLegendaryActions().get(index).setCost(position);
-                    MonsterInterface.updateMonster(monster);
+                    if (monster.getLegendaryActions().get(index).getCost() != position) {
+                        monster.getLegendaryActions().get(index).setCost(position);
+                        prepareDelayedUpdate();
+                    }
                 }
 
                 @Override
@@ -1847,16 +1603,15 @@ public class MonsterBuilder extends Fragment {
             delete.setId(index);
             delete.setTag(index);
             delete.setOnClickListener(v -> {
-                MonsterInterface.deleteLegendaryAction(monster.getId(), monster.getLegendaryActions().get(index).getId());
                 monster.getLegendaryActions().remove(index);
+                prepareInstantUpdate();
                 monsterLegendaryActions();
             });
         }
 
-
         Button add = view.findViewById(R.id.add_legendary_action);
         add.setOnClickListener(v -> {
-            monster.getLegendaryActions().add(MonsterInterface.addLegendaryAction(monster.getId()));
+            monster.getLegendaryActions().add(new LegendaryAction());
             monsterLegendaryActions();
         });
     }
@@ -1993,5 +1748,25 @@ public class MonsterBuilder extends Fragment {
         } else {
             textView.setText(MessageFormat.format("(+{0})", scoreModifier));
         }
+    }
+
+    /**
+     * Stages a delayed Monster update on the Update Handler. If there are any updates
+     * already stages, they are first removed, effectively resetting the timer so that
+     * only one update happens.
+     */
+    private void prepareDelayedUpdate() {
+        updateHandler.removeCallbacksAndMessages(null);
+        updateHandler.postDelayed(updateMonster, UPDATE_DELAY);
+    }
+
+    /**
+     * Immediately executes an update on the Monster via the Update Handler. If there are
+     * any updates, such as one set by prepareDelayedUpdate, they are removed so that only
+     * one update occurs.
+     */
+    private void prepareInstantUpdate() {
+        updateHandler.removeCallbacksAndMessages(null);
+        updateHandler.post(updateMonster);
     }
 }

@@ -7,55 +7,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Monster {
-    private Integer id;
-    private int campaignId;
+    private Integer monsterId;
     private String name;
     private String displayName;
-    private boolean archived = false;
-    private int legendaryActionCount = 0;
     private String size = "Medium";
     private String type = "Humanoid";
+    private String alignment = "Neutral";
+    private int armorClass = 10;
+    private int hitPoints = 0;
+    private String speed = "30 ft";
     private String senses = "Passive Perception 10";
     private String languages = "Common";
-    private int armorClass = 10;
-    private String speed = "30 ft";
-    private int hitPoints = 0;
-    private ChallengeRating challengeRating;
-    private String alignment = "Neutral";
     private int bonusInitiative = 0;
+    private int legendaryActionCount = 0;
+
     private Strength strength = new Strength();
     private Dexterity dexterity = new Dexterity();
     private Constitution constitution = new Constitution();
     private Intelligence intelligence = new Intelligence();
     private Wisdom wisdom = new Wisdom();
     private Charisma charisma = new Charisma();
+    private ChallengeRating challengeRating;
     private List<Ability> abilities = new ArrayList<>();
     private List<Action> actions = new ArrayList<>();
     private List<LegendaryAction> legendaryActions = new ArrayList<>();
 
     public Monster() { }
 
-    public Monster(String name, int campaignId, ChallengeRating challengeRating) {
+    public Monster(String name, ChallengeRating challengeRating) {
         this.name = name;
-        this.campaignId = campaignId;
         displayName = name;
         this.challengeRating = challengeRating;
     }
 
-    public Integer getId() {
-        return id;
+    public Integer getMonsterId() {
+        return monsterId;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getCampaignId() {
-        return campaignId;
-    }
-
-    public void setCampaignId(int campaignId) {
-        this.campaignId = campaignId;
+    public void setMonsterId(int monsterId) {
+        this.monsterId = monsterId;
     }
 
     public String getName() {
@@ -72,14 +62,6 @@ public class Monster {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
-    }
-
-    public boolean isArchived() {
-        return archived;
-    }
-
-    public void setArchived(boolean archived) {
-        this.archived = archived;
     }
 
     public int getLegendaryActionCount() {

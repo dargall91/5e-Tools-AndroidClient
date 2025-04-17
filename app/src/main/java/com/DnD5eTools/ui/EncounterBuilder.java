@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +40,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Tabs for creating and editing Encounters.
@@ -63,7 +63,16 @@ public class EncounterBuilder extends Fragment {
     private int hardThreshold;
     private int deadlyThreshold;
     private int dailyXpBudget;
-    final int DELAY = 250;
+    final int UPDATE_DELAY = 3000;
+
+    private final Handler updateHandler = new Handler();
+
+    private final Runnable updateEncounter = new Runnable() {
+        @Override
+        public void run() {
+            EncounterInterface.updateEncounter(encounter);
+        }
+    };
 
     @Nullable
     @Override
@@ -103,8 +112,9 @@ public class EncounterBuilder extends Fragment {
 
         //get default encounter to display
         if (encounterList.size() == 1) {
-            //no encounters in list, make a new encounter and add it to the list
-            encounterList.add(EncounterInterface.addEncounter("New Encounter"));
+            //no encounters in campaign yet, make a new default encounter and add it to the list
+            Encounter encounter = EncounterInterface.addEncounter("New Encounter");
+            encounterList.add(new NameIdProjection(encounter.getEncounterId(), encounter.getName()));
             encounterNameList.add(encounterList.get(1).getName());
         }
 
@@ -121,6 +131,7 @@ public class EncounterBuilder extends Fragment {
             if (position == 0) {
                 View addView = inflater.inflate(R.layout.rename_add_encounter_dialog, null);
                 TextView text = addView.findViewById(R.id.name_textview);
+                TextView errorText = addView.findViewById(R.id.add_rename_error_text);
                 text.setText("Enter the new encounter's name:");
                 EditText newName = addView.findViewById(R.id.name_entry);
 
@@ -136,21 +147,35 @@ public class EncounterBuilder extends Fragment {
                     ok.setOnClickListener(v -> {
                         //create new encounter
                         String name = newName.getText().toString();
-                        NameIdProjection addedEncounter = EncounterInterface.addEncounter(name);
+                        Encounter newEncounter = EncounterInterface.addEncounter(name);
 
-                        //reload list then display new encounter in builder
-                        encounter = EncounterInterface.getEncounter(addedEncounter.getId());
-                        encounterListView(false);
-                        builderView();
-                        add.dismiss();
+                        if (newEncounter == null) {
+                            errorText.setText("An encounter with the name " + name + " already exists on this campaign");
+                            errorText.setVisibility(View.VISIBLE);
+                        } else {
+                            //push any pending updates before loading the new encounter
+                            if (updateHandler.hasCallbacks(null)) {
+                                prepareInstantUpdate();
+                            }
+
+                            //reload list then display new encounter in builder
+                            encounter = newEncounter;
+                            encounterListView(false);
+                            builderView();
+                            add.dismiss();
+                        }
                     });
                 });
 
                 add.show();
-            } else if (encounterList.get(position).getId() == encounter.getId()) {
+            } else if (encounterList.get(position).getId() == encounter.getEncounterId()) {
                 //if the selected encounter is the current one, do nothing and exit
                 return;
             } else {
+                //push any pending updates before loading the new encounter
+                if (updateHandler.hasCallbacks(null)) {
+                    prepareInstantUpdate();
+                }
                 //get new encounter, display in builder
                 encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
                 builderView();
@@ -197,7 +222,12 @@ public class EncounterBuilder extends Fragment {
                 .setTitle("Archive Encounter")
                 .setMessage("Archive " + encounter.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    EncounterInterface.archiveEncounter(encounter.getId());
+                    //push any pending updates before archiving the encounter
+                    if (updateHandler.hasCallbacks(null)) {
+                        prepareInstantUpdate();
+                    }
+
+                    EncounterInterface.archiveEncounter(encounter.getEncounterId());
                     encounterListView(true);
                     builderView();
                 })
@@ -224,8 +254,8 @@ public class EncounterBuilder extends Fragment {
                 ok.setOnClickListener(v -> {
                     encounter.setName(newName.getText().toString());
                     name.setText(encounter.getName());
+                    prepareInstantUpdate();
                     encounterListView(false);
-                    EncounterInterface.updateEncounter(encounter);
                     renameDialog.dismiss();
                 });
             });
@@ -325,40 +355,20 @@ public class EncounterBuilder extends Fragment {
         TextView total = difficultyView.findViewById(R.id.total);
         total.setText(MessageFormat.format("Total XP: {0}", encounterXpTotal));
 
-        if (encounterXpTotal < easyThreshold) {
-            //trivial
-            easy.setTypeface(Typeface.DEFAULT);
-            medium.setTypeface(Typeface.DEFAULT);
-            hard.setTypeface(Typeface.DEFAULT);
-            deadly.setTypeface(Typeface.DEFAULT);
-        } else if (encounterXpTotal < mediumThreshold) {
-            //easy
-            easy.setTypeface(Typeface.DEFAULT_BOLD);
-            medium.setTypeface(Typeface.DEFAULT);
-            hard.setTypeface(Typeface.DEFAULT);
-            deadly.setTypeface(Typeface.DEFAULT);
-        }  else if (encounterXpTotal < hardThreshold) {
-            //medium
-            easy.setTypeface(Typeface.DEFAULT);
-            medium.setTypeface(Typeface.DEFAULT_BOLD);
-            hard.setTypeface(Typeface.DEFAULT);
-            deadly.setTypeface(Typeface.DEFAULT);
-        } else if (encounterXpTotal < deadlyThreshold) {
-            //hard
-            easy.setTypeface(Typeface.DEFAULT);
-            medium.setTypeface(Typeface.DEFAULT);
-            hard.setTypeface(Typeface.DEFAULT_BOLD);
-            deadly.setTypeface(Typeface.DEFAULT);
-        } else {
-            //deadly
-            easy.setTypeface(Typeface.DEFAULT);
-            medium.setTypeface(Typeface.DEFAULT);
-            hard.setTypeface(Typeface.DEFAULT);
-            deadly.setTypeface(Typeface.DEFAULT_BOLD);
-        }
+        easy.setTypeface(encounterXpTotal >= easyThreshold && encounterXpTotal < mediumThreshold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        medium.setTypeface(encounterXpTotal >= mediumThreshold && encounterXpTotal < hardThreshold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        hard.setTypeface(encounterXpTotal >= hardThreshold && encounterXpTotal < deadlyThreshold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        deadly.setTypeface(encounterXpTotal >= deadlyThreshold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
     }
 
     private void calculateXpThresholds() {
+        //reset previous calculations
+        easyThreshold = 0;
+        mediumThreshold = 0;
+        hardThreshold = 0;
+        deadlyThreshold = 0;
+        dailyXpBudget = 0;
+
         for (int i = 0; i < playerCountList.size(); i++) {
             int level = playerLevelList.get(i);
             int count = playerCountList.get(i);
@@ -378,12 +388,16 @@ public class EncounterBuilder extends Fragment {
         View musicLairView = view.findViewById(R.id.encounter_music_lair_layout);
         Spinner musicSpinner = musicLairView.findViewById(R.id.music);
         musicSpinner.setAdapter(adapter);
-        musicSpinner.setSelection(musicNameList.indexOf(encounter.getMusic().getName()), false);
+        var musicIndex = IntStream.range(0, musicList.size()).filter(x -> musicList.get(x).getId() == encounter.getMusicId()).findFirst().orElse(1);
+        musicSpinner.setSelection(musicIndex, false);
         musicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                encounter.setMusic(musicList.get(position));
-                EncounterInterface.updateEncounter(encounter);
+                int musicId = musicList.get(position).getId();
+                if (encounter.getMusicId() != musicId) {
+                    encounter.setMusicId(musicId);
+                    prepareDelayedUpdate();
+                }
             }
 
             @Override
@@ -391,10 +405,12 @@ public class EncounterBuilder extends Fragment {
         });
 
         CheckBox lair = musicLairView.findViewById(R.id.lair_action);
-        lair.setChecked(encounter.isLairAction());
+        lair.setChecked(encounter.getHasLairAction());
         lair.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            encounter.setLairAction(isChecked);
-            EncounterInterface.updateEncounter(encounter);
+            if (buttonView.isPressed()) {
+                encounter.setHasLairAction(isChecked);
+                prepareDelayedUpdate();
+            }
         });
     }
 
@@ -403,7 +419,7 @@ public class EncounterBuilder extends Fragment {
             monstersContainer.removeViewsInLayout(1, monstersContainer.getChildCount() - 1);
         }
 
-        List<EncounterMonster> monsterList = encounter.getMonsterList();
+        List<EncounterMonster> monsterList = encounter.getEncounterMonsters();
 
         for (int i = 0; i < monsterList.size(); i++) {
             final int index = i;
@@ -411,48 +427,36 @@ public class EncounterBuilder extends Fragment {
             TextView name = monsterView.findViewById(R.id.name);
             name.setId(index);
             name.setTag(index);
-            name.setText(monsterList.get(index).getMonster().getName());
+            name.setText(monsterList.get(index).getName());
 
             EditText quantity = monsterView.findViewById(R.id.quantity);
             quantity.setId(index);
             quantity.setTag(index);
             quantity.setText(String.valueOf(monsterList.get(index).getQuantity()));
             quantity.addTextChangedListener(new TextWatcher() {
-                Handler handler;
+                final Handler handler = new Handler();
 
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null) {
-                        handler.removeCallbacks(null);
-                    }
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
                 @Override
-                public void afterTextChanged(Editable s) {
-                    handler = new Handler();
-
-                    handler.postDelayed(() -> {
-                        int monQuantity = Integer.parseInt(quantity.getText().toString());
-
-                        //pressed minus quickly in succession
-                        if (encounter.getMonsterList().size() == 0) {
-                            return;
-                        }
-
+                public void afterTextChanged(Editable text) {
+                    int monQuantity = Integer.parseInt(text.toString());
+                    //list could be empty if minus is clicked twice in succession
+                    if (encounter.getEncounterMonsters().get(index).getQuantity() != monQuantity && !encounter.getEncounterMonsters().isEmpty()) {
                         if (monQuantity <= 0) {
-                            encounter.getMonsterList().remove(index);
+                            encounter.getEncounterMonsters().remove(index);
                             monsterListView();
                         } else {
-                            encounter.getMonsterList().get(index).setQuantity(monQuantity);
+                            encounter.getEncounterMonsters().get(index).setQuantity(monQuantity);
                         }
 
-                        EncounterInterface.updateEncounter(encounter);
-
+                        prepareDelayedUpdate();
                         difficultyView();
-                    }, DELAY);
+                    }
                 }
             });
 
@@ -469,12 +473,14 @@ public class EncounterBuilder extends Fragment {
             Spinner initiative = monsterView.findViewById(R.id.initiative);
             initiative.setId(index);
             initiative.setTag(index);
-            initiative.setSelection(monsterList.get(index).getInitiative() - 1, false);
+            initiative.setSelection(monsterList.get(index).getInitiativeRoll() - 1, false);
             initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter.getMonsterList().get(index).setInitiative(initiative.getSelectedItemPosition() + 1);
-                    EncounterInterface.updateEncounter(encounter);
+                    if (encounter.getEncounterMonsters().get(index).getInitiativeRoll() != position + 1) {
+                        encounter.getEncounterMonsters().get(index).setInitiativeRoll(position + 1);
+                        prepareDelayedUpdate();
+                    }
                 }
 
                 @Override
@@ -484,29 +490,35 @@ public class EncounterBuilder extends Fragment {
             CheckBox reinforcement = monsterView.findViewById(R.id.reinforcement);
             reinforcement.setId(index);
             reinforcement.setTag(index);
-            reinforcement.setChecked(monsterList.get(i).isReinforcement());
+            reinforcement.setChecked(monsterList.get(i).getIsReinforcement());
             reinforcement.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getMonsterList().get(index).setReinforcement(isChecked);
-                EncounterInterface.updateEncounter(encounter);
+                if (buttonView.isPressed()) {
+                    encounter.getEncounterMonsters().get(index).setIsReinforcement(isChecked);
+                    prepareDelayedUpdate();
+                }
             });
 
             CheckBox minion = monsterView.findViewById(R.id.minion);
             minion.setId(index);
             minion.setTag(index);
-            minion.setChecked(monsterList.get(i).isMinion());
+            minion.setChecked(monsterList.get(i).getIsMinion());
             minion.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getMonsterList().get(index).setMinion(isChecked);
-                EncounterInterface.updateEncounter(encounter);
-                difficultyView();
+                if (buttonView.isPressed()) {
+                    encounter.getEncounterMonsters().get(index).setIsMinion(isChecked);
+                    prepareDelayedUpdate();
+                    difficultyView();
+                }
             });
 
             CheckBox invisible = monsterView.findViewById(R.id.invisible);
             invisible.setId(index);
             invisible.setTag(index);
-            invisible.setChecked(monsterList.get(i).isInvisible());
+            invisible.setChecked(monsterList.get(i).getIsInvisible());
             invisible.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getMonsterList().get(index).setInvisible(isChecked);
-                EncounterInterface.updateEncounter(encounter);
+                if (buttonView.isPressed()) {
+                    encounter.getEncounterMonsters().get(index).getIsInvisible(isChecked);
+                    prepareDelayedUpdate();
+                }
             });
         }
 
@@ -541,8 +553,8 @@ public class EncounterBuilder extends Fragment {
 
                     int index = Util.getMonsterNameList().indexOf(name);
                     Monster newMonster = MonsterInterface.getMonster(Util.getMonsterList().get(index).getId());
-                    encounter.getMonsterList().add(new EncounterMonster(newMonster));
-                    EncounterInterface.updateEncounter(encounter);
+                    encounter.getEncounterMonsters().add(new EncounterMonster(newMonster));
+                    prepareInstantUpdate();
 
                     monsterListView();
                     difficultyView();
@@ -551,5 +563,25 @@ public class EncounterBuilder extends Fragment {
             });
             alert.show();
         });
+    }
+
+    /**
+     * Stages a delayed Encounter update on the Update Handler. If there are any updates
+     * already stages, they are first removed, effectively resetting the timer so that
+     * only one update happens.
+     */
+    private void prepareDelayedUpdate() {
+        updateHandler.removeCallbacksAndMessages(null);
+        updateHandler.postDelayed(updateEncounter, UPDATE_DELAY);
+    }
+
+    /**
+     * Immediately executes an update on the Encounter via the Update Handler. If there are
+     * any updates, such as one set by prepareDelayedUpdate, they are removed so that only
+     * one update occurs.
+     */
+    private void prepareInstantUpdate() {
+        updateHandler.removeCallbacksAndMessages(null);
+        updateHandler.post(updateEncounter);
     }
 }

@@ -14,6 +14,16 @@
         android:id="@+id/name_textview"
         android:textSize="18sp"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:id="@+id/add_rename_error_text"
+        android:visibility="gone"
+        android:textColor="#FF0000"
+        android:textSize="20sp"/>
+
     <EditText
         android:id="@+id/name_entry"
         android:layout_width="400dp"

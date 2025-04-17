@@ -2,11 +2,13 @@ package com.DnD5eTools.interfaces;
 
 import static com.DnD5eTools.util.Util.getServerConnection;
 
+import com.DnD5eTools.models.ResponseWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.SSLContext;
@@ -52,7 +54,7 @@ public class AbstractInterface {
 
             mapper = new ObjectMapper();
             client = new OkHttpClient.Builder().connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS,
-                            ConnectionSpec.COMPATIBLE_TLS))
+                            ConnectionSpec.COMPATIBLE_TLS, ConnectionSpec.CLEARTEXT))
                     .sslSocketFactory(sslContext.getSocketFactory(), TRUST_ALL_CERTS)
                     .hostnameVerifier((hostname, session) -> true)
                     .build();
@@ -61,8 +63,8 @@ public class AbstractInterface {
         }
     }
 
-    public static <T> T getSingleResult(Class<T> classType, String endpoint) {
-        AtomicReference<T> result = new AtomicReference<>();
+    public static <T> T getSingleResult(TypeReference<ResponseWrapper<T>> classType, String endpoint) {
+        AtomicReference<ResponseWrapper<T>> result = new AtomicReference<>();
 
         Thread thread = new Thread(() -> {
             try {
@@ -85,11 +87,11 @@ public class AbstractInterface {
             e.printStackTrace();
         }
 
-        return result.get();
+        return result.get().getData();
     }
 
-    public static <T> List<T> getListResult(TypeReference<List<T>> typeReference, String endpoint) {
-        AtomicReference<List<T>> result = new AtomicReference<>();
+    public static <T> List<T> getListResult(TypeReference<ResponseWrapper<List<T>>> typeReference, String endpoint) {
+        AtomicReference<ResponseWrapper<List<T>>> result = new AtomicReference<>();
 
         Thread thread = new Thread(() -> {
             try {
@@ -112,7 +114,7 @@ public class AbstractInterface {
             e.printStackTrace();
         }
 
-        return result.get();
+        return result.get().getData();
     }
 
     /**
@@ -182,8 +184,8 @@ public class AbstractInterface {
      * @param payload
      * @param <T>
      */
-    public static <T> T putSingleResult(Class<T> classType, String endpoint, T payload) {
-        AtomicReference<T> result = new AtomicReference<>();
+    public static <T> T putSingleResult(TypeReference<ResponseWrapper<T>> classType, String endpoint, T payload) {
+        AtomicReference<ResponseWrapper<T>> result = new AtomicReference<>();
         Thread thread = new Thread(() -> {
             try {
                 RequestBody body;
@@ -213,7 +215,47 @@ public class AbstractInterface {
             e.printStackTrace();
         }
 
-        return result.get();
+        return result.get().getData();
+    }
+
+    /**
+     * executes a POST request with an optional payload and expects a single object result
+     * @param endpoint
+     * @param payload
+     * @param <T>
+     */
+    public static <T> T postSingleResult(TypeReference<ResponseWrapper<T>> classType, String endpoint, T payload) {
+        AtomicReference<ResponseWrapper<T>> result = new AtomicReference<>();
+        Thread thread = new Thread(() -> {
+            try {
+                RequestBody body;
+                if (payload != null) {
+                    String payloadString = mapper.writer().writeValueAsString(payload);
+                    body = RequestBody.create(payloadString, MediaType.parse("application/json"));
+                } else {
+                    body = RequestBody.create("", null);
+                }
+                Request request = new Request.Builder()
+                        .url(getServerConnection().getUrl() + endpoint)
+                        .post(body)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                result.set(mapper.readValue(response.body().string(), classType));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        thread.start();
+
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return result.get().getData();
     }
 
     /**

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="serverConnections">
-        <item>{\"name\": \"PC\", \"url\": \"https://192.168.0.180:8080/\"}</item>
-        <item>{\"name\": \"RPi - Home\", \"url\": \"https://192.168.0.129:8080/\"}</item>
-        <item>{\"name\": \"Chris\'s House\", \"url\": \"https://192.168.0.106:8080/\"}</item>
+        <item>{\"name\": \"Dev Server\", \"url\": \"http://192.168.0.180:7275/api/v1\"}</item>
+        <item>{\"name\": \"Prod Server (Home)\", \"url\": \"http://192.168.0.129:5000/api/v1\"}</item>
+        <item>{\"name\": \"RPi Wi-Fi\", \"url\": \"http://10.42.0.1:5000/api/v1\"}</item>
+        <item>{\"name\": \"Chris\'s House\", \"url\": \"http://192.168.0.106:5000/api/v1\"}</item>
         <item>{\"name\": \"Custom\", \"url\": \"\"}</item>
     </array>
 </resources>

@@ -42,7 +42,7 @@ public class Util {
     }
 
     public static int getCampaignId() {
-        return campaign.getId();
+        return campaign.getCampaignId();
     }
 
     public static void setCampaign(Campaign campaign) {
@@ -57,7 +57,7 @@ public class Util {
         loadedEncounter = encounter;
 
         if (loadedEncounter != null) {
-            MusicInterface.playMusic(loadedEncounter.getMusic().getId());
+            MusicInterface.playMusic(loadedEncounter.getMusicId());
         }
     }
 
