@@ -63,7 +63,16 @@ public class EncounterBuilder extends Fragment {
     private int hardThreshold;
     private int deadlyThreshold;
     private int dailyXpBudget;
-    final int DELAY = 250;
+    final int UPDATE_DELAY = 250;
+
+    private final Handler updateHandler = new Handler();
+
+    private final Runnable updateEncounter = new Runnable() {
+        @Override
+        public void run() {
+            EncounterInterface.updateEncounter(encounter);
+        }
+    };
 
     @Nullable
     @Override
@@ -137,6 +146,10 @@ public class EncounterBuilder extends Fragment {
                         //create new encounter
                         String name = newName.getText().toString();
                         NameIdProjection addedEncounter = EncounterInterface.addEncounter(name);
+                        //push any pending updates before loading the new encounter
+                        if (updateHandler.hasCallbacks(null)) {
+                            prepareInstantUpdate();
+                        }
 
                         //reload list then display new encounter in builder
                         encounter = EncounterInterface.getEncounter(addedEncounter.getId());
@@ -151,6 +164,10 @@ public class EncounterBuilder extends Fragment {
                 //if the selected encounter is the current one, do nothing and exit
                 return;
             } else {
+                //push any pending updates before loading the new encounter
+                if (updateHandler.hasCallbacks(null)) {
+                    prepareInstantUpdate();
+                }
                 //get new encounter, display in builder
                 encounter = EncounterInterface.getEncounter(encounterList.get(position).getId());
                 builderView();
@@ -197,6 +214,11 @@ public class EncounterBuilder extends Fragment {
                 .setTitle("Archive Encounter")
                 .setMessage("Archive " + encounter.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
+                    //push any pending updates before archiving the encounter
+                    if (updateHandler.hasCallbacks(null)) {
+                        prepareInstantUpdate();
+                    }
+
                     EncounterInterface.archiveEncounter(encounter.getEncounterId());
                     encounterListView(true);
                     builderView();
@@ -224,8 +246,8 @@ public class EncounterBuilder extends Fragment {
                 ok.setOnClickListener(v -> {
                     encounter.setName(newName.getText().toString());
                     name.setText(encounter.getName());
+                    prepareInstantUpdate();
                     encounterListView(false);
-                    encounter = EncounterInterface.updateEncounter(encounter);
                     renameDialog.dismiss();
                 });
             });
@@ -363,8 +385,11 @@ public class EncounterBuilder extends Fragment {
         musicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                encounter.setMusicId(musicList.get(position).getId());
-                encounter = EncounterInterface.updateEncounter(encounter);
+                int musicId = musicList.get(position).getId();
+                if (encounter.getMusicId() != musicId) {
+                    encounter.setMusicId(musicId);
+                    prepareDelayedUpdate();
+                }
             }
 
             @Override
@@ -374,8 +399,10 @@ public class EncounterBuilder extends Fragment {
         CheckBox lair = musicLairView.findViewById(R.id.lair_action);
         lair.setChecked(encounter.getHasLairAction());
         lair.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            encounter.setHasLairAction(isChecked);
-            encounter = EncounterInterface.updateEncounter(encounter);
+            if (buttonView.isPressed()) {
+                encounter.setHasLairAction(isChecked);
+                prepareDelayedUpdate();
+            }
         });
     }
 
@@ -399,30 +426,19 @@ public class EncounterBuilder extends Fragment {
             quantity.setTag(index);
             quantity.setText(String.valueOf(monsterList.get(index).getQuantity()));
             quantity.addTextChangedListener(new TextWatcher() {
-                Handler handler;
+                final Handler handler = new Handler();
 
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (handler != null) {
-                        handler.removeCallbacks(null);
-                    }
-                }
+                public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
                 @Override
-                public void afterTextChanged(Editable s) {
-                    handler = new Handler();
-
-                    handler.postDelayed(() -> {
-                        int monQuantity = Integer.parseInt(quantity.getText().toString());
-
-                        //pressed minus quickly in succession
-                        if (encounter.getEncounterMonsters().size() == 0) {
-                            return;
-                        }
-
+                public void afterTextChanged(Editable text) {
+                    int monQuantity = Integer.parseInt(text.toString());
+                    //list could be empty if minus is clicked twice in succession
+                    if (encounter.getEncounterMonsters().get(index).getQuantity() != monQuantity && !encounter.getEncounterMonsters().isEmpty()) {
                         if (monQuantity <= 0) {
                             encounter.getEncounterMonsters().remove(index);
                             monsterListView();
@@ -430,10 +446,9 @@ public class EncounterBuilder extends Fragment {
                             encounter.getEncounterMonsters().get(index).setQuantity(monQuantity);
                         }
 
-                        encounter = EncounterInterface.updateEncounter(encounter);
-
+                        prepareDelayedUpdate();
                         difficultyView();
-                    }, DELAY);
+                    }
                 }
             });
 
@@ -454,8 +469,10 @@ public class EncounterBuilder extends Fragment {
             initiative.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    encounter.getEncounterMonsters().get(index).setInitiativeRoll(initiative.getSelectedItemPosition() + 1);
-                    encounter = EncounterInterface.updateEncounter(encounter);
+                    if (encounter.getEncounterMonsters().get(index).getInitiativeRoll() != position + 1) {
+                        encounter.getEncounterMonsters().get(index).setInitiativeRoll(position + 1);
+                        prepareDelayedUpdate();
+                    }
                 }
 
                 @Override
@@ -467,8 +484,10 @@ public class EncounterBuilder extends Fragment {
             reinforcement.setTag(index);
             reinforcement.setChecked(monsterList.get(i).getIsReinforcement());
             reinforcement.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getEncounterMonsters().get(index).setIsReinforcement(isChecked);
-                encounter = EncounterInterface.updateEncounter(encounter);
+                if (buttonView.isPressed()) {
+                    encounter.getEncounterMonsters().get(index).setIsReinforcement(isChecked);
+                    prepareDelayedUpdate();
+                }
             });
 
             CheckBox minion = monsterView.findViewById(R.id.minion);
@@ -476,9 +495,11 @@ public class EncounterBuilder extends Fragment {
             minion.setTag(index);
             minion.setChecked(monsterList.get(i).getIsMinion());
             minion.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getEncounterMonsters().get(index).setIsMinion(isChecked);
-                encounter = EncounterInterface.updateEncounter(encounter);
-                difficultyView();
+                if (buttonView.isPressed()) {
+                    encounter.getEncounterMonsters().get(index).setIsMinion(isChecked);
+                    prepareDelayedUpdate();
+                    difficultyView();
+                }
             });
 
             CheckBox invisible = monsterView.findViewById(R.id.invisible);
@@ -486,8 +507,10 @@ public class EncounterBuilder extends Fragment {
             invisible.setTag(index);
             invisible.setChecked(monsterList.get(i).getIsInvisible());
             invisible.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                encounter.getEncounterMonsters().get(index).getIsInvisible(isChecked);
-                encounter = EncounterInterface.updateEncounter(encounter);
+                if (buttonView.isPressed()) {
+                    encounter.getEncounterMonsters().get(index).getIsInvisible(isChecked);
+                    prepareDelayedUpdate();
+                }
             });
         }
 
@@ -523,7 +546,7 @@ public class EncounterBuilder extends Fragment {
                     int index = Util.getMonsterNameList().indexOf(name);
                     Monster newMonster = MonsterInterface.getMonster(Util.getMonsterList().get(index).getId());
                     encounter.getEncounterMonsters().add(new EncounterMonster(newMonster));
-                    encounter = EncounterInterface.updateEncounter(encounter);
+                    prepareInstantUpdate();
 
                     monsterListView();
                     difficultyView();
@@ -532,5 +555,25 @@ public class EncounterBuilder extends Fragment {
             });
             alert.show();
         });
+    }
+
+    /**
+     * Stages a delayed Encounter update on the Update Handler. If there are any updates
+     * already stages, they are first removed, effectively resetting the timer so that
+     * only one update happens.
+     */
+    private void prepareDelayedUpdate() {
+        updateHandler.removeCallbacksAndMessages(null);
+        updateHandler.postDelayed(updateEncounter, UPDATE_DELAY);
+    }
+
+    /**
+     * Immediately executes an update on the Encounter via the Update Handler. If there are
+     * any updates, such as one set by prepareDelayedUpdate, they are removed so that only
+     * one update occurs.
+     */
+    private void prepareInstantUpdate() {
+        updateHandler.removeCallbacksAndMessages(null);
+        updateHandler.post(updateEncounter);
     }
 }
