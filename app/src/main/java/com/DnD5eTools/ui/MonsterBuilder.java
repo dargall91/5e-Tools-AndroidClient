@@ -52,13 +52,15 @@ public class MonsterBuilder extends Fragment {
     private boolean expertise = false;
     private boolean proficiency = false;
     private View view;
-    private final int DELAY = 250;
+    private final int UPDATE_DELAY = 1000;
     //proficiency checkboxes
     private CheckBox strSave, dexSave, conSave, intSave, wisSave, chaSave, athleticsProficiency, acrobaticsProficiency,
             sleightOfHandProficiency, stealthProficiency, arcanaProficiency, historyProficiency,
             investigationProficiency, natureProficiency, religionProficiency, animalHandlingProficiency,
             insightProficiency, medicineProficiency, perceptionProficiency, survivalProficiency, deceptionProficiency,
             intimidationProficiency, performanceProficiency, persuasionProficiency;
+
+    private final Handler updateHandler = new Handler();
 
     private final Runnable updateMonster = new Runnable() {
         @Override
@@ -138,6 +140,11 @@ public class MonsterBuilder extends Fragment {
                             errorText.setText("A monster with the name " + name + " already exists on this campaign");
                             errorText.setVisibility(View.VISIBLE);
                         } else {
+                            //push any pending updates before loading the new monster
+                            if (updateHandler.hasCallbacks(null)) {
+                                prepareInstantUpdate();
+                            }
+
                             monster = newMonster;
                             monsterListView(false);
                             builderView();
@@ -151,6 +158,11 @@ public class MonsterBuilder extends Fragment {
                 //if the selected monster is the current one, do nothing and exit
                 return;
             } else {
+                //push any pending updates before loading the new monster
+                if (updateHandler.hasCallbacks(null)) {
+                    prepareInstantUpdate();
+                }
+
                 //get new monster and display in builder
                 monster = MonsterInterface.getMonster(monsterList.get(position).getId());
                 builderView();
@@ -199,8 +211,6 @@ public class MonsterBuilder extends Fragment {
         EditText displayName = basicInfo.findViewById(R.id.display_name);
         displayName.setText(monster.getDisplayName());
         displayName.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -211,9 +221,8 @@ public class MonsterBuilder extends Fragment {
             public void afterTextChanged(Editable text) {
                 String newText = text.toString();
                 if (displayName.hasFocus() && !Objects.equals(monster.getDisplayName(), newText)) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setDisplayName(newText);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -221,8 +230,6 @@ public class MonsterBuilder extends Fragment {
         EditText size = basicInfo.findViewById(R.id.size);
         size.setText(monster.getSize());
         size.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -233,9 +240,8 @@ public class MonsterBuilder extends Fragment {
             public void afterTextChanged(Editable text) {
                 String newText = text.toString();
                 if (size.hasFocus() && !Objects.equals(monster.getSize(), newText)) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setSize(newText);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -243,8 +249,6 @@ public class MonsterBuilder extends Fragment {
         EditText type = basicInfo.findViewById(R.id.type);
         type.setText(monster.getType());
         type.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -255,9 +259,8 @@ public class MonsterBuilder extends Fragment {
             public void afterTextChanged(Editable text) {
                 String newText = text.toString();
                 if (type.hasFocus() && !Objects.equals(monster.getType(), newText)) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setType(newText);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -265,8 +268,6 @@ public class MonsterBuilder extends Fragment {
         EditText alignment = basicInfo.findViewById(R.id.alignment);
         alignment.setText(monster.getAlignment());
         alignment.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -277,9 +278,8 @@ public class MonsterBuilder extends Fragment {
             public void afterTextChanged(Editable text) {
                 String newText = text.toString();
                 if (alignment.hasFocus() && !Objects.equals(monster.getAlignment(), newText)) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setAlignment(newText);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -287,8 +287,6 @@ public class MonsterBuilder extends Fragment {
         EditText ac = basicInfo.findViewById(R.id.ac);
         ac.setText(String.valueOf(monster.getArmorClass()));
         ac.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -300,9 +298,8 @@ public class MonsterBuilder extends Fragment {
                 String newAcString = text.toString();
                 int newAc = newAcString.isBlank() ? 0 : Integer.parseInt(newAcString);
                 if (ac.hasFocus() && monster.getArmorClass() != newAc) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setArmorClass(newAc);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -310,8 +307,6 @@ public class MonsterBuilder extends Fragment {
         EditText hitPoints = basicInfo.findViewById(R.id.hit_points);
         hitPoints.setText(String.valueOf(monster.getHitPoints()));
         hitPoints.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -323,9 +318,8 @@ public class MonsterBuilder extends Fragment {
                 String newHpString = text.toString();
                 int newHitPoints = newHpString.isBlank() ? 0 : Integer.parseInt(newHpString);
                 if (hitPoints.hasFocus() && monster.getHitPoints() != newHitPoints) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setHitPoints(newHitPoints);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -333,8 +327,6 @@ public class MonsterBuilder extends Fragment {
         EditText speed = basicInfo.findViewById(R.id.speed);
         speed.setText(monster.getSpeed());
         speed.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -345,9 +337,8 @@ public class MonsterBuilder extends Fragment {
             public void afterTextChanged(Editable text) {
                 String newText = text.toString();
                 if (speed.hasFocus() && !Objects.equals(monster.getSpeed(), newText)) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setSpeed(newText);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -355,8 +346,6 @@ public class MonsterBuilder extends Fragment {
         EditText bonusInitiative = basicInfo.findViewById(R.id.bonus_initiative);
         bonusInitiative.setText(String.valueOf(monster.getBonusInitiative()));
         bonusInitiative.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -368,9 +357,8 @@ public class MonsterBuilder extends Fragment {
                 String bonusString = text.toString();
                 int newBonus = bonusString.isBlank() ? 0 : Integer.parseInt(bonusString);
                 if (bonusInitiative.hasFocus() && monster.getBonusInitiative() != newBonus) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setBonusInitiative(newBonus);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -381,6 +369,11 @@ public class MonsterBuilder extends Fragment {
                 .setTitle("Archive Monster")
                 .setMessage("Archive " + monster.getName() + "?")
                 .setPositiveButton("Yes", (dialog, which) -> {
+                    //push any pending updates before archiving the monster
+                    if (updateHandler.hasCallbacks(null)) {
+                        prepareInstantUpdate();
+                    }
+
                     MonsterInterface.archiveMonster(monster.getMonsterId());
                     monsterListView(true);
                     builderView();
@@ -407,7 +400,7 @@ public class MonsterBuilder extends Fragment {
                 ok.setOnClickListener(v -> {
                     monster.setName(newName.getText().toString());
                     name.setText(monster.getName());
-                    updateMonster.run();
+                    prepareInstantUpdate();
                     monsterListView(false);
                     renameDialog.dismiss();
                 });
@@ -435,6 +428,11 @@ public class MonsterBuilder extends Fragment {
                 Button ok = copyDialog.getButton(AlertDialog.BUTTON_POSITIVE);
                 ok.setOnClickListener(v -> {
                     final String newNameString = newName.getText().toString();
+
+                    //push any pending updates before copying the monster
+                    if (updateHandler.hasCallbacks(null)) {
+                        prepareInstantUpdate();
+                    }
 
                     Monster newMonster = MonsterInterface.copyMonster(monster.getMonsterId(), newNameString);
 
@@ -473,7 +471,7 @@ public class MonsterBuilder extends Fragment {
         strSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getStrength().setProficient(isChecked);
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSavingThrowText(strSave, monster.getStrength().getScoreModifier());
             }
         });
@@ -498,7 +496,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getStrength().setAthletics(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
                         monster.getStrength().getScoreModifier(), getString(R.string.athletics));
                 expertise = false;
@@ -520,7 +518,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getStrength().setAthletics(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
                         monster.getStrength().getScoreModifier(), getString(R.string.athletics));
                 proficiency = false;
@@ -533,7 +531,7 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getStrength().getScore() != position) {
                     monster.getStrength().setScore(position);
-                    updateMonster.run();
+                    prepareInstantUpdate();
                     updateStrengthProficiencies();
                     updateAbilityModifier(strengthModifier, monster.getStrength().getScoreModifier());
                 }
@@ -557,7 +555,7 @@ public class MonsterBuilder extends Fragment {
         dexSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getDexterity().setProficient(isChecked);
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSavingThrowText(dexSave, monster.getDexterity().getScoreModifier());
             }
         });
@@ -582,7 +580,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setAcrobatics(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
                 expertise = false;
@@ -604,7 +602,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setAcrobatics(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
                 proficiency = false;
@@ -634,7 +632,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setSleightOfHand(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
                 expertise = false;
@@ -655,7 +653,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setSleightOfHand(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
                 proficiency = false;
@@ -682,7 +680,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setStealth(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
                 expertise = false;
@@ -703,7 +701,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setStealth(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
                 proficiency = false;
@@ -716,7 +714,7 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getDexterity().getScore() != position) {
                     monster.getDexterity().setScore(position);
-                    updateMonster.run();
+                    prepareInstantUpdate();
                     updateDexterityProficiencies();
                     updateAbilityModifier(dexterityModifier, monster.getDexterity().getScoreModifier());
                 }
@@ -740,7 +738,7 @@ public class MonsterBuilder extends Fragment {
         conSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getConstitution().setProficient(isChecked);
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSavingThrowText(conSave, monster.getConstitution().getScoreModifier());
             }
         });
@@ -751,7 +749,7 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getConstitution().getScore() != position) {
                     monster.getConstitution().setScore(position);
-                    updateMonster.run();
+                    prepareInstantUpdate();
                     updateConstitutionProficiencies();
                     updateAbilityModifier(constitutionModifier, monster.getConstitution().getScoreModifier());
                 }
@@ -775,7 +773,7 @@ public class MonsterBuilder extends Fragment {
         intSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getIntelligence().setProficient(isChecked);
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSavingThrowText(intSave, monster.getIntelligence().getScoreModifier());
             }
         });
@@ -800,7 +798,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setArcana(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
                 expertise = false;
@@ -821,7 +819,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setArcana(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
                 proficiency = false;
@@ -848,7 +846,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setHistory(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.history));
                 expertise = false;
@@ -869,7 +867,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setHistory(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.history));
                 proficiency = false;
@@ -896,7 +894,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setInvestigation(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
                 expertise = false;
@@ -917,7 +915,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setInvestigation(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
                 proficiency = false;
@@ -944,7 +942,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setNature(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
                 expertise = false;
@@ -965,7 +963,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setNature(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
                 proficiency = false;
@@ -992,7 +990,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setReligion(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
                 expertise = false;
@@ -1013,7 +1011,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setReligion(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
                 proficiency = false;
@@ -1026,7 +1024,7 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getIntelligence().getScore() != position) {
                     monster.getIntelligence().setScore(position);
-                    updateMonster.run();
+                    prepareInstantUpdate();
                     updateIntelligenceProficiencies();
                     updateAbilityModifier(intelligenceModifier, monster.getIntelligence().getScoreModifier());
                 }
@@ -1050,7 +1048,7 @@ public class MonsterBuilder extends Fragment {
         wisSave.setOnCheckedChangeListener((buttonView, isChecked) ->{
             if (buttonView.isPressed()) {
                 monster.getWisdom().setProficient(isChecked);
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSavingThrowText(wisSave, monster.getWisdom().getScoreModifier());
             }
         });
@@ -1075,7 +1073,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setAnimalHandling(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
                 expertise = false;
@@ -1096,7 +1094,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setAnimalHandling(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
                 proficiency = false;
@@ -1123,7 +1121,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setInsight(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.insight));
                 expertise = false;
@@ -1144,7 +1142,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setInsight(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.insight));
                 proficiency = false;
@@ -1171,7 +1169,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setMedicine(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
                 expertise = false;
@@ -1192,7 +1190,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setMedicine(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
                 proficiency = false;
@@ -1219,7 +1217,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setPerception(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.perception));
                 expertise = false;
@@ -1240,7 +1238,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setPerception(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.perception));
                 proficiency = false;
@@ -1267,7 +1265,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setSurvival(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.survival));
                 expertise = false;
@@ -1288,7 +1286,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setSurvival(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.survival));
                 proficiency = false;
@@ -1301,7 +1299,7 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getWisdom().getScore() != position) {
                     monster.getWisdom().setScore(position);
-                    updateMonster.run();
+                    prepareInstantUpdate();
                     updateWisdomProficiencies();
                     updateAbilityModifier(wisdomModifier, monster.getWisdom().getScoreModifier());
                 }
@@ -1325,7 +1323,7 @@ public class MonsterBuilder extends Fragment {
         chaSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getCharisma().setProficient(isChecked);
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSavingThrowText(chaSave, monster.getCharisma().getScoreModifier());
             }
         });
@@ -1350,7 +1348,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setDeception(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.deception));
                 expertise = false;
@@ -1372,7 +1370,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setDeception(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.deception));
                 proficiency = false;
@@ -1399,7 +1397,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setIntimidation(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
                 expertise = false;
@@ -1420,7 +1418,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setIntimidation(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
                 proficiency = false;
@@ -1447,7 +1445,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setPerformance(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.performance));
                 expertise = false;
@@ -1468,7 +1466,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setPerformance(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.performance));
                 proficiency = false;
@@ -1495,7 +1493,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setPersuasion(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
                 expertise = false;
@@ -1516,7 +1514,7 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setPersuasion(1);
                 }
 
-                updateMonster.run();
+                prepareInstantUpdate();
                 updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
                 proficiency = false;
@@ -1529,7 +1527,7 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getCharisma().getScore() != position) {
                     monster.getCharisma().setScore(position);
-                    updateMonster.run();
+                    prepareInstantUpdate();
                     updateCharismaProficiencies();
                     updateAbilityModifier(charismaModifier, monster.getCharisma().getScoreModifier());
                 }
@@ -1550,7 +1548,6 @@ public class MonsterBuilder extends Fragment {
         EditText senses = senseLanguageCR.findViewById(R.id.senses);
         senses.setText(monster.getSenses());
         senses.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -1561,9 +1558,8 @@ public class MonsterBuilder extends Fragment {
             public void afterTextChanged(Editable text) {
                 String newText = text.toString();
                 if (senses.hasFocus() && !Objects.equals(monster.getSenses(), newText)) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setSenses(newText);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -1571,8 +1567,6 @@ public class MonsterBuilder extends Fragment {
         EditText languages = senseLanguageCR.findViewById(R.id.languages);
         languages.setText(monster.getLanguages());
         languages.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
-
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -1583,9 +1577,8 @@ public class MonsterBuilder extends Fragment {
             public void afterTextChanged(Editable text) {
                 String newText = text.toString();
                 if (languages.hasFocus() && !Objects.equals(monster.getLanguages(), newText)) {
-                    handler.removeCallbacksAndMessages(null);
                     monster.setLanguages(newText);
-                    handler.postDelayed(updateMonster, DELAY);
+                    prepareDelayedUpdate();
                 }
             }
         });
@@ -1607,11 +1600,11 @@ public class MonsterBuilder extends Fragment {
                     xp.setText(MessageFormat.format("({0} XP)", monster.getChallengeRating().getXp()));
                     int newProficiency = monster.getChallengeRating().getProficiencyBonus();
 
+                    prepareInstantUpdate();
+                    
                     if (oldProficiency != newProficiency) {
                         updateProficiencies();
                     }
-
-                    updateMonster.run();
                 }
             }
 
@@ -1639,8 +1632,6 @@ public class MonsterBuilder extends Fragment {
             name.setTag(index);
             name.setText(abilityList.get(index).getName());
             name.addTextChangedListener(new TextWatcher() {
-                final Handler handler = new Handler();
-
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -1651,9 +1642,8 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable text) {
                     String newText = text.toString();
                     if (name.hasFocus() && !Objects.equals(monster.getAbilities().get(index).getName(), newText)) {
-                        handler.removeCallbacksAndMessages(null);
                         monster.getAbilities().get(index).setName(newText);
-                        handler.postDelayed(updateMonster, DELAY);
+                        prepareDelayedUpdate();
                     }
                 }
             });
@@ -1663,8 +1653,6 @@ public class MonsterBuilder extends Fragment {
             desc.setTag(index);
             desc.setText(abilityList.get(index).getDescription());
             desc.addTextChangedListener(new TextWatcher() {
-                final Handler handler = new Handler();
-
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -1675,9 +1663,8 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable text) {
                     String newText = text.toString();
                     if (desc.hasFocus() && !Objects.equals(monster.getAbilities().get(index).getDescription(), newText)) {
-                        handler.removeCallbacksAndMessages(null);
                         monster.getAbilities().get(index).setDescription(newText);
-                        handler.postDelayed(updateMonster, DELAY);
+                        prepareDelayedUpdate();
                     }
                 }
             });
@@ -1716,8 +1703,6 @@ public class MonsterBuilder extends Fragment {
             name.setTag(index);
             name.setText(actionList.get(index).getName());
             name.addTextChangedListener(new TextWatcher() {
-                final Handler handler = new Handler();
-
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -1728,9 +1713,8 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable text) {
                     String newText = text.toString();
                     if (name.hasFocus() && !Objects.equals(monster.getActions().get(index).getName(), newText)) {
-                        handler.removeCallbacksAndMessages(null);
                         monster.getActions().get(index).setName(newText);
-                        handler.postDelayed(updateMonster, DELAY);
+                        prepareDelayedUpdate();
                     }
                 }
             });
@@ -1740,8 +1724,6 @@ public class MonsterBuilder extends Fragment {
             desc.setTag(index);
             desc.setText(actionList.get(index).getDescription());
             desc.addTextChangedListener(new TextWatcher() {
-                final Handler handler = new Handler();
-
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -1752,9 +1734,8 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable text) {
                     String newText = text.toString();
                     if (desc.hasFocus() && !Objects.equals(monster.getActions().get(index).getDescription(), newText)) {
-                        handler.removeCallbacksAndMessages(null);
                         monster.getActions().get(index).setDescription(newText);
-                        handler.postDelayed(updateMonster, DELAY);
+                        prepareDelayedUpdate();
                     }
                 }
             });
@@ -1794,7 +1775,7 @@ public class MonsterBuilder extends Fragment {
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     if (monster.getLegendaryActionCount() != position) {
                         monster.setLegendaryActionCount(position);
-                        updateMonster.run();
+                        prepareInstantUpdate();
                     }
                 }
 
@@ -1814,8 +1795,6 @@ public class MonsterBuilder extends Fragment {
             name.setTag(index);
             name.setText(legendaryList.get(index).getName());
             name.addTextChangedListener(new TextWatcher() {
-                final Handler handler = new Handler();
-
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -1826,9 +1805,8 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable text) {
                     String newText = text.toString();
                     if (name.hasFocus() && !Objects.equals(monster.getLegendaryActions().get(index).getName(), newText)) {
-                        handler.removeCallbacksAndMessages(null);
                         monster.getLegendaryActions().get(index).setName(newText);
-                        handler.postDelayed(updateMonster, DELAY);
+                        prepareDelayedUpdate();
                     }
                 }
             });
@@ -1838,8 +1816,6 @@ public class MonsterBuilder extends Fragment {
             desc.setTag(index);
             desc.setText(legendaryList.get(index).getDescription());
             desc.addTextChangedListener(new TextWatcher() {
-                final Handler handler = new Handler();
-
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
@@ -1850,9 +1826,8 @@ public class MonsterBuilder extends Fragment {
                 public void afterTextChanged(Editable text) {
                     String newText = text.toString();
                     if (desc.hasFocus() && !Objects.equals(monster.getLegendaryActions().get(index).getDescription(), newText)) {
-                        handler.removeCallbacksAndMessages(null);
                         monster.getLegendaryActions().get(index).setDescription(newText);
-                        handler.postDelayed(updateMonster, DELAY);
+                        prepareDelayedUpdate();
                     }
                 }
             });
@@ -1866,7 +1841,7 @@ public class MonsterBuilder extends Fragment {
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     if (monster.getLegendaryActions().get(index).getCost() != position) {
                         monster.getLegendaryActions().get(index).setCost(position);
-                        updateMonster.run();
+                        prepareInstantUpdate();
                     }
                 }
 
@@ -2022,5 +1997,25 @@ public class MonsterBuilder extends Fragment {
         } else {
             textView.setText(MessageFormat.format("(+{0})", scoreModifier));
         }
+    }
+
+    /**
+     * Stages an delayed Monster update on the Update Handler. If there are any updates
+     * already stages, they are first removed, effectively resetting the timer so that
+     * only one update happens.
+     */
+    private void prepareDelayedUpdate() {
+        updateHandler.removeCallbacksAndMessages(null);
+        updateHandler.postDelayed(updateMonster, UPDATE_DELAY);
+    }
+
+    /**
+     * Immediately executes an update on the Monster via the Update Handler. If there are
+     * any updates, such as one set by prepareDelayedUpdate, they are removed so that only
+     * one update occurs.
+     */
+    private void prepareInstantUpdate() {
+        updateHandler.removeCallbacksAndMessages(null);
+        updateHandler.post(updateMonster);
     }
 }
