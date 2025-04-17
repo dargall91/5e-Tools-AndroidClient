@@ -470,8 +470,8 @@ public class MonsterBuilder extends Fragment {
         strSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getStrength().setProficient(isChecked);
-                prepareInstantUpdate();
                 updateSavingThrowText(strSave, monster.getStrength().getScoreModifier());
+                prepareDelayedUpdate();
             }
         });
 
@@ -489,9 +489,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getStrength().setAthletics(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
                         monster.getStrength().getScoreModifier(), getString(R.string.athletics));
+                prepareDelayedUpdate();
             }
         });
 
@@ -504,9 +504,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getStrength().setAthletics(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(athleticsProficiency, monster.getStrength().getAthletics(),
                         monster.getStrength().getScoreModifier(), getString(R.string.athletics));
+                prepareDelayedUpdate();
             }
         });
 
@@ -516,9 +516,9 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getStrength().getScore() != position) {
                     monster.getStrength().setScore(position);
-                    prepareInstantUpdate();
                     updateStrengthProficiencies();
                     updateAbilityModifier(strengthModifier, monster.getStrength().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
             }
 
@@ -540,8 +540,8 @@ public class MonsterBuilder extends Fragment {
         dexSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getDexterity().setProficient(isChecked);
-                prepareInstantUpdate();
                 updateSavingThrowText(dexSave, monster.getDexterity().getScoreModifier());
+                prepareDelayedUpdate();
             }
         });
 
@@ -559,9 +559,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setAcrobatics(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
+                prepareDelayedUpdate();
             }
         });
 
@@ -574,9 +574,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setAcrobatics(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(acrobaticsProficiency, monster.getDexterity().getAcrobatics(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.acrobatics));
+                prepareDelayedUpdate();
             }
         });
 
@@ -597,9 +597,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setSleightOfHand(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
+                prepareDelayedUpdate();
             }
         });
         sleightOfHandProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -611,9 +611,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setSleightOfHand(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(sleightOfHandProficiency, monster.getDexterity().getSleightOfHand(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.sleight_of_hand));
+                prepareDelayedUpdate();
             }
         });
 
@@ -631,9 +631,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setStealth(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
+                prepareDelayedUpdate();
             }
         });
         stealthProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -645,9 +645,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getDexterity().setStealth(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(stealthProficiency, monster.getDexterity().getStealth(),
                         monster.getDexterity().getScoreModifier(), getString(R.string.stealth));
+                prepareDelayedUpdate();
             }
         });
 
@@ -657,9 +657,9 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getDexterity().getScore() != position) {
                     monster.getDexterity().setScore(position);
-                    prepareInstantUpdate();
                     updateDexterityProficiencies();
                     updateAbilityModifier(dexterityModifier, monster.getDexterity().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
             }
 
@@ -681,8 +681,8 @@ public class MonsterBuilder extends Fragment {
         conSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getConstitution().setProficient(isChecked);
-                prepareInstantUpdate();
                 updateSavingThrowText(conSave, monster.getConstitution().getScoreModifier());
+                prepareDelayedUpdate();
             }
         });
 
@@ -692,9 +692,9 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getConstitution().getScore() != position) {
                     monster.getConstitution().setScore(position);
-                    prepareInstantUpdate();
                     updateConstitutionProficiencies();
                     updateAbilityModifier(constitutionModifier, monster.getConstitution().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
             }
 
@@ -716,8 +716,8 @@ public class MonsterBuilder extends Fragment {
         intSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getIntelligence().setProficient(isChecked);
-                prepareInstantUpdate();
                 updateSavingThrowText(intSave, monster.getIntelligence().getScoreModifier());
+                prepareDelayedUpdate();
             }
         });
 
@@ -735,9 +735,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setArcana(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
+                prepareDelayedUpdate();
             }
         });
         arcanaProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -749,9 +749,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setArcana(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(arcanaProficiency, monster.getIntelligence().getArcana(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.arcana));
+                prepareDelayedUpdate();
             }
         });
 
@@ -769,9 +769,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setHistory(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.history));
+                prepareDelayedUpdate();
             }
         });
         historyProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -783,9 +783,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setHistory(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(historyProficiency, monster.getIntelligence().getHistory(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.history));
+                prepareDelayedUpdate();
             }
         });
 
@@ -803,9 +803,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setInvestigation(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
+                prepareDelayedUpdate();
             }
         });
         investigationProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -817,9 +817,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setInvestigation(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(investigationProficiency, monster.getIntelligence().getInvestigation(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.investigation));
+                prepareDelayedUpdate();
             }
         });
 
@@ -837,9 +837,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setNature(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
+                prepareDelayedUpdate();
             }
         });
         natureProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -851,9 +851,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setNature(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(natureProficiency, monster.getIntelligence().getNature(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.nature));
+                prepareDelayedUpdate();
             }
         });
 
@@ -871,9 +871,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setReligion(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
+                prepareDelayedUpdate();
             }
         });
         religionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -885,9 +885,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getIntelligence().setReligion(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(religionProficiency, monster.getIntelligence().getReligion(),
                         monster.getIntelligence().getScoreModifier(), getString(R.string.religion));
+                prepareDelayedUpdate();
             }
         });
 
@@ -897,9 +897,9 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getIntelligence().getScore() != position) {
                     monster.getIntelligence().setScore(position);
-                    prepareInstantUpdate();
                     updateIntelligenceProficiencies();
                     updateAbilityModifier(intelligenceModifier, monster.getIntelligence().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
             }
 
@@ -921,8 +921,8 @@ public class MonsterBuilder extends Fragment {
         wisSave.setOnCheckedChangeListener((buttonView, isChecked) ->{
             if (buttonView.isPressed()) {
                 monster.getWisdom().setProficient(isChecked);
-                prepareInstantUpdate();
                 updateSavingThrowText(wisSave, monster.getWisdom().getScoreModifier());
+                prepareDelayedUpdate();
             }
         });
 
@@ -940,9 +940,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setAnimalHandling(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
+                prepareDelayedUpdate();
             }
         });
         animalHandlingProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -954,9 +954,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setAnimalHandling(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(animalHandlingProficiency, monster.getWisdom().getAnimalHandling(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.animal_handling));
+                prepareDelayedUpdate();
             }
         });
 
@@ -974,9 +974,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setInsight(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.insight));
+                prepareDelayedUpdate();
             }
         });
         insightProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -988,9 +988,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setInsight(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(insightProficiency, monster.getWisdom().getInsight(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.insight));
+                prepareDelayedUpdate();
             }
         });
 
@@ -1008,9 +1008,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setMedicine(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
+                prepareDelayedUpdate();
             }
         });
         medicineProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -1022,9 +1022,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setMedicine(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(medicineProficiency, monster.getWisdom().getMedicine(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.medicine));
+                prepareDelayedUpdate();
             }
         });
 
@@ -1042,9 +1042,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setPerception(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.perception));
+                prepareDelayedUpdate();
             }
         });
         perceptionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -1056,9 +1056,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setPerception(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(perceptionProficiency, monster.getWisdom().getPerception(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.perception));
+                prepareDelayedUpdate();
             }
         });
 
@@ -1076,9 +1076,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setSurvival(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.survival));
+                prepareDelayedUpdate();
             }
         });
         survivalProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -1090,9 +1090,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getWisdom().setSurvival(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(survivalProficiency, monster.getWisdom().getSurvival(),
                         monster.getWisdom().getScoreModifier(), getString(R.string.survival));
+                prepareDelayedUpdate();
             }
         });
 
@@ -1102,9 +1102,9 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getWisdom().getScore() != position) {
                     monster.getWisdom().setScore(position);
-                    prepareInstantUpdate();
                     updateWisdomProficiencies();
                     updateAbilityModifier(wisdomModifier, monster.getWisdom().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
             }
 
@@ -1126,8 +1126,8 @@ public class MonsterBuilder extends Fragment {
         chaSave.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (buttonView.isPressed()) {
                 monster.getCharisma().setProficient(isChecked);
-                prepareInstantUpdate();
                 updateSavingThrowText(chaSave, monster.getCharisma().getScoreModifier());
+                prepareDelayedUpdate();
             }
         });
 
@@ -1145,9 +1145,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setDeception(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.deception));
+                prepareDelayedUpdate();
             }
 
         });
@@ -1160,9 +1160,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setDeception(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(deceptionProficiency, monster.getCharisma().getDeception(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.deception));
+                prepareDelayedUpdate();
             }
         });
 
@@ -1180,9 +1180,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setIntimidation(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
+                prepareDelayedUpdate();
             }
         });
         intimidationProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -1194,9 +1194,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setIntimidation(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(intimidationProficiency, monster.getCharisma().getIntimidation(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.intimidation));
+                prepareDelayedUpdate();
             }
         });
 
@@ -1214,9 +1214,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setPerformance(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.performance));
+                prepareDelayedUpdate();
             }
         });
         performanceProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -1228,9 +1228,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setPerformance(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(performanceProficiency, monster.getCharisma().getPerformance(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.performance));
+                prepareDelayedUpdate();
             }
         });
 
@@ -1248,9 +1248,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setPersuasion(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
+                prepareDelayedUpdate();
             }
         });
         persuasionProficiency.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -1262,9 +1262,9 @@ public class MonsterBuilder extends Fragment {
                     monster.getCharisma().setPersuasion(1);
                 }
 
-                prepareInstantUpdate();
                 updateSkillProficiencyText(persuasionProficiency, monster.getCharisma().getPersuasion(),
                         monster.getCharisma().getScoreModifier(), getString(R.string.persuasion));
+                prepareDelayedUpdate();
             }
         });
 
@@ -1274,9 +1274,9 @@ public class MonsterBuilder extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (monster.getCharisma().getScore() != position) {
                     monster.getCharisma().setScore(position);
-                    prepareInstantUpdate();
                     updateCharismaProficiencies();
                     updateAbilityModifier(charismaModifier, monster.getCharisma().getScoreModifier());
+                    prepareDelayedUpdate();
                 }
             }
 
@@ -1346,12 +1346,12 @@ public class MonsterBuilder extends Fragment {
                     monster.setChallengeRating(Util.getChallengeRating(position));
                     xp.setText(MessageFormat.format("({0} XP)", monster.getChallengeRating().getXp()));
                     int newProficiency = monster.getChallengeRating().getProficiencyBonus();
-
-                    prepareInstantUpdate();
                     
                     if (oldProficiency != newProficiency) {
                         updateProficiencies();
                     }
+
+                    prepareDelayedUpdate();
                 }
             }
 
@@ -1524,7 +1524,7 @@ public class MonsterBuilder extends Fragment {
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     if (monster.getLegendaryActionCount() != position) {
                         monster.setLegendaryActionCount(position);
-                        prepareInstantUpdate();
+                        prepareDelayedUpdate();
                     }
                 }
 
@@ -1590,7 +1590,7 @@ public class MonsterBuilder extends Fragment {
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     if (monster.getLegendaryActions().get(index).getCost() != position) {
                         monster.getLegendaryActions().get(index).setCost(position);
-                        prepareInstantUpdate();
+                        prepareDelayedUpdate();
                     }
                 }
 
