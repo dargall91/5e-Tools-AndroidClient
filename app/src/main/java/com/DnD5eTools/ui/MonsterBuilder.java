@@ -1674,6 +1674,7 @@ public class MonsterBuilder extends Fragment {
             delete.setTag(index);
             delete.setOnClickListener(view -> {
                 monster.getAbilities().remove(index);
+                prepareInstantUpdate();
                 monsterAbilities();
             });
         }
@@ -1745,6 +1746,7 @@ public class MonsterBuilder extends Fragment {
             delete.setTag(index);
             delete.setOnClickListener(view -> {
                 monster.getActions().remove(index);
+                prepareInstantUpdate();
                 monsterActions();
             });
         }
@@ -1854,6 +1856,7 @@ public class MonsterBuilder extends Fragment {
             delete.setTag(index);
             delete.setOnClickListener(v -> {
                 monster.getLegendaryActions().remove(index);
+                prepareInstantUpdate();
                 monsterLegendaryActions();
             });
         }
