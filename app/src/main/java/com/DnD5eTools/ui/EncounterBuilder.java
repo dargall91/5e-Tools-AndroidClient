@@ -63,7 +63,7 @@ public class EncounterBuilder extends Fragment {
     private int hardThreshold;
     private int deadlyThreshold;
     private int dailyXpBudget;
-    final int UPDATE_DELAY = 250;
+    final int UPDATE_DELAY = 3000;
 
     private final Handler updateHandler = new Handler();
 

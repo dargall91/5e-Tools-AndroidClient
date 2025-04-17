@@ -50,13 +50,14 @@ public class MonsterBuilder extends Fragment {
     private LinearLayout actionLayout;
     private LinearLayout legendaryActionLayout;
     private View view;
-    private final int UPDATE_DELAY = 1000;
     //proficiency checkboxes
     private CheckBox strSave, dexSave, conSave, intSave, wisSave, chaSave, athleticsProficiency, acrobaticsProficiency,
             sleightOfHandProficiency, stealthProficiency, arcanaProficiency, historyProficiency,
             investigationProficiency, natureProficiency, religionProficiency, animalHandlingProficiency,
             insightProficiency, medicineProficiency, perceptionProficiency, survivalProficiency, deceptionProficiency,
             intimidationProficiency, performanceProficiency, persuasionProficiency;
+
+    private final int UPDATE_DELAY = 3000;
 
     private final Handler updateHandler = new Handler();
 
@@ -1749,7 +1750,7 @@ public class MonsterBuilder extends Fragment {
     }
 
     /**
-     * Stages an delayed Monster update on the Update Handler. If there are any updates
+     * Stages a delayed Monster update on the Update Handler. If there are any updates
      * already stages, they are first removed, effectively resetting the timer so that
      * only one update happens.
      */
