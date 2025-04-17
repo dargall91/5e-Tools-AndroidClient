@@ -15,16 +15,16 @@ public class EncounterInterface extends AbstractInterface {
         return getListResult(new TypeReference<ResponseWrapper<List<NameIdProjection>>>() {}, path + "/all?archived=false");
     }
 
-    public static NameIdProjection addEncounter(String name) {
-        return putSingleResult(new TypeReference<ResponseWrapper<NameIdProjection>>() {}, path + "?name=" + name, null);
+    public static Encounter addEncounter(String name) {
+        return putSingleResult(new TypeReference<ResponseWrapper<Encounter>>() {}, path + "?name=" + name, null);
     }
 
     public static Encounter getEncounter(int encounterId) {
         return getSingleResult(new TypeReference<ResponseWrapper<Encounter>>() {}, path + "/" + encounterId);
     }
 
-    public static Encounter updateEncounter(Encounter encounter) {
-        return postSingleResult(new TypeReference<ResponseWrapper<Encounter>>() {}, path, encounter);
+    public static void updateEncounter(Encounter encounter) {
+        postNoResult(path, encounter);
     }
 
     public static void archiveEncounter(int encounterId) {

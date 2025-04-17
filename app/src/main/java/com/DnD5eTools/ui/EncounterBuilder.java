@@ -112,8 +112,9 @@ public class EncounterBuilder extends Fragment {
 
         //get default encounter to display
         if (encounterList.size() == 1) {
-            //no encounters in list, make a new encounter and add it to the list
-            encounterList.add(EncounterInterface.addEncounter("New Encounter"));
+            //no encounters in campaign yet, make a new default encounter and add it to the list
+            Encounter encounter = EncounterInterface.addEncounter("New Encounter");
+            encounterList.add(new NameIdProjection(encounter.getEncounterId(), encounter.getName()));
             encounterNameList.add(encounterList.get(1).getName());
         }
 
@@ -130,6 +131,7 @@ public class EncounterBuilder extends Fragment {
             if (position == 0) {
                 View addView = inflater.inflate(R.layout.rename_add_encounter_dialog, null);
                 TextView text = addView.findViewById(R.id.name_textview);
+                TextView errorText = addView.findViewById(R.id.add_rename_error_text);
                 text.setText("Enter the new encounter's name:");
                 EditText newName = addView.findViewById(R.id.name_entry);
 
@@ -145,17 +147,23 @@ public class EncounterBuilder extends Fragment {
                     ok.setOnClickListener(v -> {
                         //create new encounter
                         String name = newName.getText().toString();
-                        NameIdProjection addedEncounter = EncounterInterface.addEncounter(name);
-                        //push any pending updates before loading the new encounter
-                        if (updateHandler.hasCallbacks(null)) {
-                            prepareInstantUpdate();
-                        }
+                        Encounter newEncounter = EncounterInterface.addEncounter(name);
 
-                        //reload list then display new encounter in builder
-                        encounter = EncounterInterface.getEncounter(addedEncounter.getId());
-                        encounterListView(false);
-                        builderView();
-                        add.dismiss();
+                        if (newEncounter == null) {
+                            errorText.setText("An encounter with the name " + name + " already exists on this campaign");
+                            errorText.setVisibility(View.VISIBLE);
+                        } else {
+                            //push any pending updates before loading the new encounter
+                            if (updateHandler.hasCallbacks(null)) {
+                                prepareInstantUpdate();
+                            }
+
+                            //reload list then display new encounter in builder
+                            encounter = newEncounter;
+                            encounterListView(false);
+                            builderView();
+                            add.dismiss();
+                        }
                     });
                 });
 

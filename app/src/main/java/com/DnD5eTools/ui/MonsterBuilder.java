@@ -98,7 +98,8 @@ public class MonsterBuilder extends Fragment {
         initMonsterList();
 
         if (monsterList.size() == 1) {
-            var newMonster = MonsterInterface.addMonster("New Monster");
+            //no monsters in the campaign yet, make a new default monster and add it to the list
+            Monster newMonster = MonsterInterface.addMonster("New Monster");
             monsterList.add(new NameIdProjection(newMonster.getMonsterId(), newMonster.getName()));
             initMonsterList();
         }
