@@ -325,37 +325,10 @@ public class EncounterBuilder extends Fragment {
         TextView total = difficultyView.findViewById(R.id.total);
         total.setText(MessageFormat.format("Total XP: {0}", encounterXpTotal));
 
-        if (encounterXpTotal < easyThreshold) {
-            //trivial
-            easy.setTypeface(Typeface.DEFAULT);
-            medium.setTypeface(Typeface.DEFAULT);
-            hard.setTypeface(Typeface.DEFAULT);
-            deadly.setTypeface(Typeface.DEFAULT);
-        } else if (encounterXpTotal < mediumThreshold) {
-            //easy
-            easy.setTypeface(Typeface.DEFAULT_BOLD);
-            medium.setTypeface(Typeface.DEFAULT);
-            hard.setTypeface(Typeface.DEFAULT);
-            deadly.setTypeface(Typeface.DEFAULT);
-        }  else if (encounterXpTotal < hardThreshold) {
-            //medium
-            easy.setTypeface(Typeface.DEFAULT);
-            medium.setTypeface(Typeface.DEFAULT_BOLD);
-            hard.setTypeface(Typeface.DEFAULT);
-            deadly.setTypeface(Typeface.DEFAULT);
-        } else if (encounterXpTotal < deadlyThreshold) {
-            //hard
-            easy.setTypeface(Typeface.DEFAULT);
-            medium.setTypeface(Typeface.DEFAULT);
-            hard.setTypeface(Typeface.DEFAULT_BOLD);
-            deadly.setTypeface(Typeface.DEFAULT);
-        } else {
-            //deadly
-            easy.setTypeface(Typeface.DEFAULT);
-            medium.setTypeface(Typeface.DEFAULT);
-            hard.setTypeface(Typeface.DEFAULT);
-            deadly.setTypeface(Typeface.DEFAULT_BOLD);
-        }
+        easy.setTypeface(encounterXpTotal >= easyThreshold && encounterXpTotal < mediumThreshold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        medium.setTypeface(encounterXpTotal >= mediumThreshold && encounterXpTotal < hardThreshold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        hard.setTypeface(encounterXpTotal >= hardThreshold && encounterXpTotal < deadlyThreshold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        deadly.setTypeface(encounterXpTotal >= deadlyThreshold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
     }
 
     private void calculateXpThresholds() {
